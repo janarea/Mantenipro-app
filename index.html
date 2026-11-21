@@ -1089,7 +1089,16 @@
     </div>
   </div>
 
+  <div id="inv-detail-modal" class="modal-backdrop hidden">
+    <div class="modal-card modal-sm animate-fade">
+      <div class="flex items-center justify-between gap-2 px-5 py-4 border-b border-slate-200"><div><span class="text-[11px] font-bold uppercase tracking-wider text-blue-700">Ficha de producto</span><h3 id="inv-detail-title" class="text-base font-bold text-slate-900"></h3></div><button type="button" onclick="InventoryModule.closeDetail()" class="p-1.5 text-slate-400">✕</button></div>
+      <div id="inv-detail-body" class="modal-scroll p-5 space-y-4"></div>
+    </div>
+  </div>
+
   <!-- ======================================================================
+       MODAL: CREAR / EDITAR REPUESTO
+       ====================================================================== -->  <!-- ======================================================================
        MODAL 2: CREAR / EDITAR REPUESTO DE ALMACÉN (SIN CAMPO UBICACIÓN)
        ====================================================================== -->
   <div id="inv-modal" class="modal-backdrop hidden">
@@ -1128,6 +1137,11 @@
             <input type="number" id="inv-min" min="0" required value="0" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600">
           </div>
         </div>
+
+        <section id="inv-photo-panel" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+          <div class="flex items-center justify-between gap-2"><div><h4 class="text-xs font-bold text-slate-800">Fotografías del producto</h4><p class="text-[11px] text-slate-500">Puedes añadir varias fotos; se guardan sin conexión y se suben a Drive al conectarte.</p></div><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">＋ Añadir fotos<input id="inv-photo-input" type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label></div>
+          <div id="inv-photo-gallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+        </section>
 
         <div class="modal-footer pt-2">
           <button type="button" onclick="InventoryModule.closeModal()" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-xl">Cancelar</button>
@@ -1255,6 +1269,11 @@
 
           <div id="inst-global-fields-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 responsive-2col"></div>
         </div>
+
+        <section id="inst-photo-panel" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+          <div class="flex items-center justify-between gap-2"><div><h4 class="text-xs font-bold text-slate-800">Fotografías de la instalación</h4><p class="text-[11px] text-slate-500">Galería sin límite práctico. Se conservan sin conexión y se sincronizan con Drive al recuperar Internet.</p></div><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">＋ Añadir fotos<input id="inst-photo-input" type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="PhotoManager.addFiles('installations', document.getElementById('inst-id').value, this.files); this.value=''"></label></div>
+          <div id="inst-photo-gallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+        </section>
 
         <div class="modal-footer pt-3 border-t border-slate-100">
           <button type="button" id="inst-delete-btn" onclick="InstallationsModule.deleteCurrent()" class="hidden px-3.5 py-2 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl mr-auto">
@@ -1994,7 +2013,8 @@
               name: item.name || '',
               category: item.category || '',
               stock: Number(item.stock) || 0,
-              minStock: Number(item.minStock) || 0
+              minStock: Number(item.minStock) || 0,
+              photos: Array.isArray(item.photos) ? item.photos : []
             }));
             State.globalInstallationFields = Array.isArray(data.globalInstallationFields) ? data.globalInstallationFields : [];
             State.installations = Array.isArray(data.installations) ? data.installations : [];
@@ -4118,6 +4138,102 @@
       }
     };
 
+    // Fotografías: blobs en IndexedDB (offline) y metadatos en el snapshot sincronizado.
+    const PhotoManager = {
+      DB: 'mantenipro_photos_v1', STORE: 'photos', dbPromise: null,
+      db() {
+        if (!this.dbPromise) this.dbPromise = new Promise((resolve, reject) => {
+          const req = indexedDB.open(this.DB, 1);
+          req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(this.STORE)) req.result.createObjectStore(this.STORE, { keyPath: 'id' }); };
+          req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
+        });
+        return this.dbPromise;
+      },
+      async put(record) { const db = await this.db(); return new Promise((resolve,reject)=>{ const tx=db.transaction(this.STORE,'readwrite'); tx.objectStore(this.STORE).put(record); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); },
+      async get(id) { const db=await this.db(); return new Promise((resolve,reject)=>{ const r=db.transaction(this.STORE).objectStore(this.STORE).get(id); r.onsuccess=()=>resolve(r.result||null); r.onerror=()=>reject(r.error); }); },
+      async remove(id) { const db=await this.db(); return new Promise((resolve,reject)=>{ const tx=db.transaction(this.STORE,'readwrite'); tx.objectStore(this.STORE).delete(id); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); },
+      async compress(file) {
+        if (!file.type.startsWith('image/')) throw new Error('El archivo no es una imagen');
+        const img = await createImageBitmap(file);
+        const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas'); canvas.width=Math.max(1,Math.round(img.width*scale)); canvas.height=Math.max(1,Math.round(img.height*scale));
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height); img.close?.();
+        const blob = await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.76));
+        if (!blob) throw new Error('No se pudo procesar la imagen');
+        if (blob.size > 1800000) throw new Error('La foto sigue siendo demasiado grande. Prueba con otra imagen.');
+        return blob;
+      },
+      async addFiles(type, entityId, files) {
+        if (!entityId) { Helpers.toast('Guarda primero la ficha y vuelve a abrirla para añadir fotos', 'warning'); return; }
+        const entity = (type === 'inventory' ? State.inventory : State.installations).find(x=>x.id===entityId);
+        if (!entity) return;
+        entity.photos = Array.isArray(entity.photos) ? entity.photos : [];
+        const list = Array.from(files || []); if (!list.length) return;
+        for (const file of list) {
+          try {
+            const blob=await this.compress(file); const id=Helpers.uid('photo');
+            const meta={id,name:file.name||'foto.jpg',mimeType:'image/jpeg',createdAt:Date.now(),driveFileId:null,syncStatus:'pending'};
+            await this.put({id,blob,mimeType:'image/jpeg'}); entity.photos.push(meta);
+          } catch(e) { Helpers.toast(e.message || 'Error al añadir foto','warning'); }
+        }
+        Storage.save(); this.render(type,entityId);
+        if (navigator.onLine && DriveSync.configured()) this.syncEntity(type,entityId);
+      },
+      async syncEntity(type, entityId) {
+        const entity=(type==='inventory'?State.inventory:State.installations).find(x=>x.id===entityId); if(!entity) return;
+        for (const meta of (entity.photos||[])) {
+          if (meta.driveFileId) continue;
+          try {
+            const local=await this.get(meta.id); if(!local?.blob) continue;
+            const data=await this.blobBase64(local.blob);
+            const res=await DriveSync.call({action:'uploadPhoto',entityType:type,entityId,photoId:meta.id,name:meta.name,mimeType:meta.mimeType||'image/jpeg',data});
+            meta.driveFileId=res.fileId; meta.syncStatus='synced'; Storage.save();
+          } catch(e) { meta.syncStatus='pending'; console.warn('Foto pendiente de sincronizar',e); }
+        }
+        this.render(type,entityId);
+      },
+      blobBase64(blob) { return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]);r.onerror=()=>reject(r.error);r.readAsDataURL(blob);}); },
+      async getBlob(meta) {
+        const local=await this.get(meta.id); if(local?.blob) return local.blob;
+        if(meta.driveFileId && DriveSync.configured() && navigator.onLine) {
+          const res=await DriveSync.call({action:'getPhoto',fileId:meta.driveFileId});
+          const bytes=Uint8Array.from(atob(res.data),c=>c.charCodeAt(0)); const blob=new Blob([bytes],{type:res.mimeType||'image/jpeg'});
+          await this.put({id:meta.id,blob,mimeType:blob.type}); return blob;
+        }
+        return null;
+      },
+      async render(type, entityId, targetId = null, allowDelete = true, compact = false) {
+        const entity=(type==='inventory'?State.inventory:State.installations).find(x=>x.id===entityId); if(!entity) return;
+        const box=document.getElementById(targetId || (type==='inventory'?'inv-photo-gallery':'inst-photo-gallery')); if(!box) return;
+        const photos=Array.isArray(entity.photos)?entity.photos:[];
+        if(!photos.length){box.innerHTML=compact?'':'<p class="col-span-full text-[11px] text-slate-400">Todavía no hay fotografías.</p>';return;}
+        box.innerHTML=photos.map(p=> compact
+          ? `<button type="button" id="${box.id}-photo-${p.id}" class="w-11 h-11 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0" title="Ver fotografía"><span class="text-[9px] text-slate-400">…</span></button>`
+          : `<div id="${box.id}-photo-${p.id}" class="relative rounded-lg overflow-hidden bg-white border border-slate-200 aspect-square"><div class="w-full h-full flex items-center justify-center text-[10px] text-slate-400">Cargando…</div>${allowDelete?`<button type="button" onclick="PhotoManager.removePhoto('${type}','${entityId}','${p.id}')" class="absolute top-1 right-1 rounded-full bg-black/70 text-white w-6 h-6 text-xs">×</button>`:''}<span class="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] px-1 py-0.5">${p.syncStatus==='synced'?'En Drive':'Pendiente'}</span></div>`).join('');
+        for(const p of photos){
+          const node=document.getElementById(`${box.id}-photo-${p.id}`); if(!node) continue;
+          try{
+            const blob=await this.getBlob(p);
+            if(!blob){if(compact)node.innerHTML='<span class="text-[9px]">—</span>';else node.querySelector('div').textContent='Sin conexión';continue;}
+            const url=URL.createObjectURL(blob);
+            if(compact){node.innerHTML=`<img src="${url}" alt="Fotografía de ${type==='inventory'?'producto':'instalación'}" class="w-full h-full object-cover">`;node.onclick=()=>window.open(url,'_blank');}
+            else node.querySelector('div').innerHTML=`<img src="${url}" alt="Fotografía" class="w-full h-full object-cover cursor-zoom-in" onclick="window.open('${url}','_blank')">`;
+          } catch(_e){if(compact)node.textContent='×';else node.querySelector('div').textContent='No disponible';}
+        }
+      },
+      async removePhoto(type,entityId,photoId){
+        const entity=(type==='inventory'?State.inventory:State.installations).find(x=>x.id===entityId); if(!entity)return;
+        const p=(entity.photos||[]).find(x=>x.id===photoId); if(!p)return;
+        if(p.driveFileId && DriveSync.configured() && navigator.onLine){try{await DriveSync.call({action:'deletePhoto',fileId:p.driveFileId});}catch(e){Helpers.toast('No se pudo borrar la copia de Drive: '+e.message,'warning');return;}}
+        entity.photos=entity.photos.filter(x=>x.id!==photoId); await this.remove(photoId); Storage.save(); this.render(type,entityId);
+      },
+      async syncAll(){
+        if(!DriveSync.configured()||!navigator.onLine)return;
+        for(const x of State.installations) await this.syncEntity('installations',x.id);
+        for(const x of State.inventory) await this.syncEntity('inventory',x.id);
+      }
+    };
+
     const InventoryModule = {
       isBelowMinimum(item) {
         const stockVal = Number(item.stock) || 0;
@@ -4377,7 +4493,8 @@
                   ${isLow ? `<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">Bajo mínimo</span>` : ''}
                   ${isAtExactMin ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">En mínimo</span>` : ''}
                 </div>
-                <p class="font-semibold text-slate-900 mt-1">${item.name}</p>
+                <button type="button" onclick="InventoryModule.openDetail('${item.id}')" class="font-semibold text-slate-900 mt-1 text-left hover:text-blue-700">${item.name}</button>
+                <div id="inv-row-photos-${item.id}" class="flex items-center gap-1.5 mt-2"></div>
                 <span class="md:hidden inline-block mt-1 text-[11px] text-slate-500">${item.category}</span>
               </td>
               <td class="py-3.5 px-4 hidden md:table-cell">
@@ -4400,7 +4517,27 @@
             </tr>
           `;
         }).join('');
+        items.forEach(item => PhotoManager.render('inventory', item.id, `inv-row-photos-${item.id}`, false, true));
       },
+
+      openDetail(itemId) {
+        const item = State.inventory.find(i => i.id === itemId);
+        if (!item) return;
+        const modal = document.getElementById('inv-detail-modal');
+        document.getElementById('inv-detail-title').textContent = item.name || 'Producto';
+        document.getElementById('inv-detail-body').innerHTML = `
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Referencia / SKU</span><strong class="text-sm text-slate-800">${item.sku || '—'}</strong></div>
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Categoría</span><strong class="text-sm text-slate-800">${item.category || 'General'}</strong></div>
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock actual</span><strong class="text-sm text-slate-800">${item.stock}</strong></div>
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock mínimo</span><strong class="text-sm text-slate-800">${item.minStock}</strong></div>
+          </div>
+          <section class="space-y-2"><h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Fotografías del producto</h4><div id="inv-detail-photos" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div></section>
+          <div class="flex justify-end"><button type="button" onclick="InventoryModule.closeDetail()" class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-300">Cerrar</button><button type="button" onclick="InventoryModule.closeDetail(); InventoryModule.openModal('${item.id}')" class="ml-2 px-4 py-2 text-xs font-semibold rounded-xl bg-blue-700 text-white">Editar producto</button></div>`;
+        modal.classList.remove('hidden');
+        PhotoManager.render('inventory', item.id, 'inv-detail-photos', false);
+      },
+      closeDetail() { document.getElementById('inv-detail-modal').classList.add('hidden'); },
 
       adjustStock(id, delta) {
         const item = State.inventory.find(i => i.id === id);
@@ -4427,6 +4564,8 @@
           sel.value = item.category || 'General';
           document.getElementById('inv-stock').value = item.stock;
           document.getElementById('inv-min').value = item.minStock;
+          document.getElementById('inv-photo-panel').classList.remove('hidden');
+          PhotoManager.render('inventory', item.id);
         } else {
           document.getElementById('inv-modal-title').textContent = 'Nuevo Repuesto';
           document.getElementById('inv-id').value = '';
@@ -4437,6 +4576,8 @@
             : (State.categories[0] || 'General');
           document.getElementById('inv-stock').value = 0;
           document.getElementById('inv-min').value = 0;
+          document.getElementById('inv-photo-panel').classList.add('hidden');
+          document.getElementById('inv-photo-gallery').innerHTML = '';
         }
         document.getElementById('inv-modal').classList.remove('hidden');
       },
@@ -4461,16 +4602,17 @@
         if (id) {
           const idx = State.inventory.findIndex(i => i.id === id);
           if (idx !== -1) {
-            State.inventory[idx] = { id, sku, name, category, stock, minStock };
+            State.inventory[idx] = { ...State.inventory[idx], id, sku, name, category, stock, minStock, photos: State.inventory[idx].photos || [] };
           }
         } else {
           State.inventory.push({
-            id: Helpers.uid('inv'),
+            id: id || Helpers.uid('inv'),
             sku,
             name,
             category,
             stock,
-            minStock
+            minStock,
+            photos: []
           });
         }
 
@@ -4657,11 +4799,15 @@
           document.getElementById('inst-address').value = inst.address;
           this.renderGlobalFieldInputsInModal(inst);
           delBtn.classList.remove('hidden');
+          document.getElementById('inst-photo-panel').classList.remove('hidden');
+          PhotoManager.render('installations', inst.id);
         } else {
           document.getElementById('inst-modal-title').textContent = 'Nueva Instalación';
           document.getElementById('inst-id').value = '';
           this.renderGlobalFieldInputsInModal(null);
           delBtn.classList.add('hidden');
+          document.getElementById('inst-photo-panel').classList.add('hidden');
+          document.getElementById('inst-photo-gallery').innerHTML = '';
         }
 
         document.getElementById('inst-modal').classList.remove('hidden');
@@ -4705,14 +4851,15 @@
         if (id) {
           const idx = State.installations.findIndex(i => i.id === id);
           if (idx !== -1) {
-            State.installations[idx] = { ...State.installations[idx], unit, address, values };
+            State.installations[idx] = { ...State.installations[idx], unit, address, values, photos: State.installations[idx].photos || [] };
           }
         } else {
           State.installations.push({
             id: Helpers.uid('inst'),
             unit,
             address,
-            values
+            values,
+            photos: []
           });
         }
 
@@ -4945,6 +5092,11 @@
             ${customRows}
           </div>
 
+          <section class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Fotografías de la instalación</h4>
+            <div id="detail-inst-photos" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2"></div>
+          </section>
+
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Historial de Intervenciones</h4>
@@ -4957,6 +5109,7 @@
         `;
 
         document.getElementById('inst-detail-modal').classList.remove('hidden');
+        PhotoManager.render('installations', inst.id, 'detail-inst-photos', false);
       },
 
       closeDetailModal() {
@@ -5689,7 +5842,8 @@
               name: item.name || '',
               category: item.category || '',
               stock: Number(item.stock) || 0,
-              minStock: Number(item.minStock) || 0
+              minStock: Number(item.minStock) || 0,
+              photos: Array.isArray(item.photos) ? item.photos : []
             }));
             State.globalInstallationFields = Array.isArray(data.globalInstallationFields) ? data.globalInstallationFields : [];
             State.installations = Array.isArray(data.installations) ? data.installations : [];
@@ -6119,9 +6273,9 @@
         if (!this.started) {
           this.started = true;
           document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this.pull(false); });
-          window.addEventListener('online', () => this.pull(false));
+          window.addEventListener('online', () => { this.pull(false); setTimeout(() => PhotoManager.syncAll(), 2500); });
         }
-        if (this.configured()) setTimeout(() => this.pull(false), 0);
+        if (this.configured()) setTimeout(() => { this.pull(false); setTimeout(() => PhotoManager.syncAll(), 5000); }, 0);
       },
 
       async call(payload) {
@@ -6206,6 +6360,7 @@
           this.meta = { rev: res.rev, dirty: this.seq !== seqAt };
           this.saveMeta();
           this.setStatus('ok');
+          setTimeout(() => PhotoManager.syncAll(), 800);
           if (this.meta.dirty) { clearTimeout(this.timer); this.timer = setTimeout(() => this.push(false), 2500); }
         } catch (e) {
           console.error('Drive push:', e);
