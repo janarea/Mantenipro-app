@@ -282,6 +282,9 @@
           <div id="notif-list" class="max-h-72 overflow-y-auto divide-y divide-slate-100"></div>
         </div>
 
+        <!-- Estado de sincronización con Google Drive -->
+        <button type="button" id="drive-badge" onclick="DriveSync.openDialog()" title="Sincronización con Google Drive" class="px-2 py-2 rounded-xl text-xs text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors whitespace-nowrap">☁️ —</button>
+
         <!-- Botón Actualizar app -->
         <button type="button" onclick="(function(){try{Storage.save();}catch(e){}var u=new URL(location.href);u.searchParams.set('v',Date.now());location.replace(u.toString());})()" title="Actualizar la app a la última versión" class="p-2 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
           <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -2036,9 +2039,8 @@
         });
       },
 
-      save() {
-        this.syncAllInstallationsWithSchema();
-        localStorage.setItem(this.KEY, JSON.stringify({
+      snapshot() {
+        return {
           categories: State.categories,
           inventory: State.inventory,
           globalInstallationFields: State.globalInstallationFields,
@@ -2049,7 +2051,13 @@
           orderQuantities: State.orderQuantities,
           soundEnabled: State.soundEnabled,
           analytics: State.analytics
-        }));
+        };
+      },
+
+      save() {
+        this.syncAllInstallationsWithSchema();
+        localStorage.setItem(this.KEY, JSON.stringify(this.snapshot()));
+        try { DriveSync.markDirty(); } catch (_e) {}
       },
 
       seedEmpty() {
@@ -6063,8 +6071,273 @@
       }
     };
 
+    // Sincronización y copias con Google Drive (mediante Google Apps Script propio)
+    const DriveSync = {
+      CFG_KEY: 'mantenipro_drive_cfg',
+      META_KEY: 'mantenipro_drive_meta',
+      cfg: { url: '', key: '' },
+      meta: { rev: null, dirty: false },
+      pushing: false, pulling: false, timer: null, quiet: false, seq: 0,
+      status: 'off', lastMsg: '', started: false,
+
+      load() {
+        try { const c = JSON.parse(localStorage.getItem(this.CFG_KEY) || 'null'); if (c && c.url && c.key) this.cfg = { url: c.url, key: c.key }; } catch (_e) {}
+        try { const m = JSON.parse(localStorage.getItem(this.META_KEY) || 'null'); if (m) this.meta = { rev: m.rev == null ? null : m.rev, dirty: Boolean(m.dirty) }; } catch (_e) {}
+      },
+      saveCfg() { try { localStorage.setItem(this.CFG_KEY, JSON.stringify(this.cfg)); } catch (_e) {} },
+      saveMeta() { try { localStorage.setItem(this.META_KEY, JSON.stringify(this.meta)); } catch (_e) {} },
+      configured() { return Boolean(this.cfg.url && this.cfg.key); },
+
+      setStatus(s, msg) {
+        this.status = s;
+        this.lastMsg = msg || '';
+        const map = {
+          off: ['\u2601\ufe0f \u2014', 'Sin configurar'],
+          ok: ['\u2601\ufe0f \u2713', 'Sincronizado con Google Drive'],
+          syncing: ['\u2601\ufe0f \u2026', 'Sincronizando...'],
+          offline: ['\u2601\ufe0f \u2715', 'Sin conexi\u00f3n: se sincronizar\u00e1 al volver'],
+          error: ['\u2601\ufe0f !', 'Error al sincronizar']
+        };
+        const v = map[s] || map.off;
+        const b = document.getElementById('drive-badge');
+        if (b) { b.textContent = v[0]; b.title = v[1] + (msg ? ': ' + msg : ''); }
+        const st = document.getElementById('drive-dlg-status');
+        if (st) st.textContent = v[1] + (msg ? ' \u00b7 ' + msg : '');
+      },
+
+      hasLocalData() {
+        return [State.jobs, State.inventory, State.installations, State.expenses, State.categories].some(a => Array.isArray(a) && a.length > 0);
+      },
+      isTyping() {
+        const a = document.activeElement;
+        return Boolean(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+      },
+
+      start() {
+        this.load();
+        this.setStatus(this.configured() ? 'syncing' : 'off');
+        if (!this.started) {
+          this.started = true;
+          document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this.pull(false); });
+          window.addEventListener('online', () => this.pull(false));
+        }
+        if (this.configured()) setTimeout(() => this.pull(false), 0);
+      },
+
+      async call(payload) {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 40000);
+        try {
+          const r = await fetch(this.cfg.url, {
+            method: 'POST',
+            body: JSON.stringify(Object.assign({}, payload, { key: this.cfg.key })),
+            signal: ctrl.signal
+          });
+          const txt = await r.text();
+          let res;
+          try { res = JSON.parse(txt); } catch (_e) { throw new Error('Respuesta no v\u00e1lida: revisa la URL y que el acceso sea "Cualquier persona"'); }
+          if (!res.ok) throw new Error(res.error === 'clave' ? 'Clave incorrecta' : ('Error: ' + (res.error || 'desconocido')));
+          return res;
+        } finally {
+          clearTimeout(t);
+        }
+      },
+
+      markDirty() {
+        if (this.quiet) return;
+        this.seq++;
+        this.meta.dirty = true;
+        this.saveMeta();
+        if (!this.configured()) return;
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.push(false), 2500);
+      },
+
+      async syncNow() { await this.pull(true); },
+
+      async pull(manual) {
+        if (!this.configured() || this.pushing || this.pulling) return;
+        if (!navigator.onLine) { this.setStatus('offline'); return; }
+        this.pulling = true;
+        try {
+          this.setStatus('syncing');
+          const res = await this.call({ action: 'get' });
+          if (res.data == null) {
+            if (this.hasLocalData()) await this.push(true); else this.setStatus('ok');
+            return;
+          }
+          const localRev = this.meta.rev;
+          if (localRev === res.rev) {
+            if (this.meta.dirty) await this.push(false); else this.setStatus('ok');
+            return;
+          }
+          if (localRev != null && res.rev < localRev) { await this.push(true); return; }
+          const conflict = this.hasLocalData() && (localRev == null || this.meta.dirty);
+          if (conflict) {
+            const useCloud = await this.ask();
+            if (!useCloud) { await this.push(true); return; }
+          } else if (!manual && this.isTyping()) {
+            this.setStatus('ok');
+            return;
+          }
+          this.applyData(res.data, res.rev);
+        } catch (e) {
+          console.error('Drive pull:', e);
+          this.setStatus(navigator.onLine ? 'error' : 'offline', e.message);
+        } finally {
+          this.pulling = false;
+        }
+      },
+
+      async push(force) {
+        if (!this.configured() || this.pushing) return;
+        if (!navigator.onLine) { this.setStatus('offline'); return; }
+        this.pushing = true;
+        try {
+          this.setStatus('syncing');
+          const seqAt = this.seq;
+          const res = await this.call({ action: 'put', baseRev: this.meta.rev || 0, force: Boolean(force), data: Storage.snapshot() });
+          if (res.conflict) {
+            this.pushing = false;
+            this.pulling = false;
+            await this.pull(true);
+            return;
+          }
+          this.meta = { rev: res.rev, dirty: this.seq !== seqAt };
+          this.saveMeta();
+          this.setStatus('ok');
+          if (this.meta.dirty) { clearTimeout(this.timer); this.timer = setTimeout(() => this.push(false), 2500); }
+        } catch (e) {
+          console.error('Drive push:', e);
+          this.setStatus(navigator.onLine ? 'error' : 'offline', e.message);
+        } finally {
+          this.pushing = false;
+        }
+      },
+
+      applyData(data, rev) {
+        try { const old = localStorage.getItem(Storage.KEY); if (old) localStorage.setItem('mantenipro_pre_sync_backup', old); } catch (_e) {}
+        localStorage.setItem(Storage.KEY, JSON.stringify(data));
+        this.meta = { rev: rev, dirty: false };
+        this.saveMeta();
+        this.quiet = true;
+        try { Storage.init(); } finally { this.quiet = false; }
+        UI.refreshAll();
+        this.setStatus('ok');
+        Helpers.toast('Datos actualizados desde Google Drive', 'success');
+      },
+
+      // Avisos propios (la app no usa confirm())
+      ask() {
+        return new Promise(resolve => {
+          const ov = document.createElement('div');
+          ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+          ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:360px;width:100%;padding:20px">' +
+            '<p style="font-weight:700;font-size:15px;margin:0 0 8px">Datos distintos en este dispositivo y en Google Drive</p>' +
+            '<p style="font-size:13px;color:#475569;margin:0 0 16px">Elige cu\u00e1les conservar. Si usas los de Drive, antes se guarda una copia de los de este dispositivo.</p>' +
+            '<button id="ds-cloud" style="width:100%;padding:10px;border-radius:12px;background:#1d4ed8;color:#fff;font-weight:600;font-size:13px;margin-bottom:8px">Usar los datos de Drive</button>' +
+            '<button id="ds-local" style="width:100%;padding:10px;border-radius:12px;border:1px solid #cbd5e1;font-weight:600;font-size:13px">Mantener los de este dispositivo</button></div>';
+          document.body.appendChild(ov);
+          ov.querySelector('#ds-cloud').onclick = () => { ov.remove(); resolve(true); };
+          ov.querySelector('#ds-local').onclick = () => { ov.remove(); resolve(false); };
+        });
+      },
+
+      openDialog() {
+        if (document.getElementById('drive-dlg')) return;
+        const ov = document.createElement('div');
+        ov.id = 'drive-dlg';
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99998;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto';
+        const inp = 'width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;font-size:13px;margin-bottom:10px';
+        const btn = 'width:100%;padding:9px;border-radius:12px;font-weight:600;font-size:13px;margin-bottom:8px;';
+        ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:20px;max-height:92vh;overflow:auto">' +
+          '<p style="font-weight:700;font-size:15px;margin:0 0 4px">Sincronizaci\u00f3n con Google Drive</p>' +
+          '<p id="drive-dlg-status" style="font-size:12px;color:#475569;margin:0 0 12px"></p>' +
+          '<label style="font-size:12px;font-weight:600">URL del script (acaba en /exec)</label>' +
+          '<input id="drive-url" type="url" autocomplete="off" style="' + inp + '">' +
+          '<label style="font-size:12px;font-weight:600">Clave</label>' +
+          '<input id="drive-key" type="password" autocomplete="off" style="' + inp + '">' +
+          '<button id="drive-save" style="' + btn + 'background:#1d4ed8;color:#fff">Guardar y conectar</button>' +
+          '<button id="drive-now" style="' + btn + 'border:1px solid #cbd5e1">Sincronizar ahora</button>' +
+          '<div style="border-top:1px solid #e2e8f0;margin:8px 0 10px"></div>' +
+          '<p style="font-size:12px;font-weight:600;margin:0 0 6px">Copias de seguridad en Drive</p>' +
+          '<button id="drive-bk" style="' + btn + 'border:1px solid #cbd5e1">Hacer copia ahora</button>' +
+          '<select id="drive-list" style="' + inp + 'background:#fff"><option value="">Cargando copias...</option></select>' +
+          '<button id="drive-restore" style="' + btn + 'border:1px solid #cbd5e1">Restaurar la copia elegida</button>' +
+          '<div style="border-top:1px solid #e2e8f0;margin:8px 0 10px"></div>' +
+          '<button id="drive-off" style="' + btn + 'color:#be123c;border:1px solid #fecdd3">Desconectar este dispositivo</button>' +
+          '<button id="drive-close" style="' + btn + 'background:#f1f5f9">Cerrar</button></div>';
+        document.body.appendChild(ov);
+        const $ = id => ov.querySelector('#' + id);
+        $('drive-url').value = this.cfg.url;
+        $('drive-key').value = this.cfg.key;
+        this.setStatus(this.status, this.lastMsg);
+        $('drive-close').onclick = () => ov.remove();
+        $('drive-save').onclick = async () => {
+          const url = $('drive-url').value.trim();
+          const key = $('drive-key').value.trim();
+          if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url) || !key) { this.setStatus('error', 'Revisa la URL y la clave'); return; }
+          this.cfg = { url, key };
+          this.saveCfg();
+          await this.pull(true);
+          this.loadCopies();
+        };
+        $('drive-now').onclick = () => this.pull(true);
+        $('drive-bk').onclick = async () => {
+          try { this.setStatus('syncing'); await this.call({ action: 'backupNow' }); this.setStatus('ok', 'Copia creada'); this.loadCopies(); }
+          catch (e) { this.setStatus('error', e.message); }
+        };
+        let armed = false;
+        $('drive-restore').onclick = async () => {
+          const name = $('drive-list').value;
+          if (!name) return;
+          if (!armed) {
+            armed = true;
+            $('drive-restore').textContent = 'Pulsa otra vez para confirmar';
+            setTimeout(() => { armed = false; const r = ov.querySelector('#drive-restore'); if (r) r.textContent = 'Restaurar la copia elegida'; }, 4000);
+            return;
+          }
+          armed = false;
+          $('drive-restore').textContent = 'Restaurar la copia elegida';
+          try {
+            this.setStatus('syncing');
+            const res = await this.call({ action: 'getBackup', name });
+            this.applyData(res.data, this.meta.rev);
+            this.meta.dirty = true;
+            this.saveMeta();
+            await this.push(true);
+          } catch (e) { this.setStatus('error', e.message); }
+        };
+        $('drive-off').onclick = () => {
+          this.cfg = { url: '', key: '' };
+          this.meta = { rev: null, dirty: false };
+          try { localStorage.removeItem(this.CFG_KEY); localStorage.removeItem(this.META_KEY); } catch (_e) {}
+          this.setStatus('off');
+          ov.remove();
+        };
+        this.loadCopies();
+      },
+
+      async loadCopies() {
+        const sel = document.getElementById('drive-list');
+        if (!sel) return;
+        if (!this.configured()) { sel.innerHTML = '<option value="">Conecta primero</option>'; return; }
+        try {
+          const res = await this.call({ action: 'list' });
+          const files = res.files || [];
+          sel.innerHTML = files.length
+            ? files.map(n => '<option value="' + n + '">' + n.replace('copia_', '').replace('.json', '') + '</option>').join('')
+            : '<option value="">Sin copias todav\u00eda</option>';
+        } catch (e) {
+          sel.innerHTML = '<option value="">No se pudo cargar</option>';
+        }
+      }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
-      Storage.init();
+      DriveSync.quiet = true;
+      try { Storage.init(); } finally { DriveSync.quiet = false; }
+      DriveSync.start();
       PWAModule.init();
       UI.refreshAll();
       NotificationsModule.init();
