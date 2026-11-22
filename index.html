@@ -227,9 +227,9 @@
        CABECERA SUPERIOR Y NAVEGACIÓN
        ====================================================================== -->
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
       <!-- Marca -->
-      <div class="flex items-center gap-2.5 min-w-0">
+      <div class="flex items-center gap-2.5 min-w-0 shrink-0">
         <div class="w-9 h-9 rounded-[11px] bg-[#1d4ed8] text-white flex items-center justify-center shrink-0 shadow-xs">
           <svg class="w-6 h-6" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <!-- Mango y vástago del destornillador (arriba-izquierda a abajo-derecha) -->
@@ -243,16 +243,13 @@
             <circle cx="16.8" cy="47.6" r="2.1" fill="#FFFFFF"/>
           </svg>
         </div>
-        <div class="min-w-0">
-          <span class="font-bold text-slate-900 text-base sm:text-lg tracking-tight block leading-none">ManteniPro</span>
-          <span class="text-[11px] text-slate-500 font-medium mt-1 block truncate">Calendario, Almacén, Instalaciones y Gastos</span>
-        </div>
+
       </div>
 
       <!-- Acciones de Cabecera -->
-      <div class="flex items-center gap-2 relative">
+      <div class="flex items-center gap-1.5 sm:gap-2 relative">
         <!-- Campana de Notificaciones -->
-        <button type="button" onclick="NotificationsModule.togglePanel()" id="notif-bell-btn" title="Centro de avisos" class="relative p-2 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
+        <button type="button" onclick="NotificationsModule.togglePanel()" id="notif-bell-btn" title="Centro de avisos" class="relative p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
           <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
           </svg>
@@ -1397,6 +1394,23 @@
       </div>
 
       <div class="modal-scroll space-y-2.5">
+        <section class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 space-y-2.5">
+          <div>
+            <h4 class="text-sm font-bold text-slate-900">Sincronización con Google Calendar</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5">Duplica las tareas de ManteniPro en tu calendario de Google. Puedes activarlo o pausarlo cuando quieras.</p>
+          </div>
+          <label class="flex items-center gap-2 text-xs font-semibold text-slate-800">
+            <input id="gcal-enabled" type="checkbox" class="rounded text-blue-700" onchange="GoogleCalendar.saveSettings()">
+            Activar duplicación automática de tareas
+          </label>
+          <label class="block text-[11px] font-semibold text-slate-700" for="gcal-client-id">ID de cliente OAuth de Google</label>
+          <input id="gcal-client-id" type="text" placeholder="xxxxx.apps.googleusercontent.com" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white" autocomplete="off">
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="GoogleCalendar.saveSettings()" class="px-3 py-2 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700">Guardar configuración</button>
+            <button type="button" onclick="GoogleCalendar.connect()" class="px-3 py-2 rounded-lg text-xs font-semibold bg-blue-700 text-white">Conectar Google Calendar</button>
+          </div>
+          <p id="gcal-status" class="text-[11px] text-slate-600">Desactivado. Para conectarlo necesitas configurar un cliente OAuth en Google Cloud.</p>
+        </section>
         <button type="button" onclick="Backup.exportCSV()" class="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-left flex items-center justify-between gap-2">
           <span>Exportar Tareas a Excel (CSV)</span>
           <span>↓</span>
@@ -3563,6 +3577,107 @@
       }
     };
 
+    const GoogleCalendar = {
+      KEY: 'mantenipro_google_calendar_cfg',
+      tokenClient: null,
+      accessToken: null,
+      loading: null,
+      settings: { enabled: false, clientId: '' },
+      init() {
+        try { this.settings = Object.assign(this.settings, JSON.parse(localStorage.getItem(this.KEY) || '{}')); } catch (_e) {}
+        this.renderStatus();
+      },
+      saveSettings() {
+        const enabledEl = document.getElementById('gcal-enabled');
+        const clientEl = document.getElementById('gcal-client-id');
+        if (enabledEl) this.settings.enabled = enabledEl.checked;
+        if (clientEl) this.settings.clientId = clientEl.value.trim();
+        try { localStorage.setItem(this.KEY, JSON.stringify(this.settings)); } catch (_e) {}
+        this.renderStatus();
+        if (this.settings.enabled && !this.settings.clientId) Helpers.toast('Introduce el ID de cliente OAuth de Google para activar Calendar', 'warning');
+        if (this.settings.enabled && this.accessToken) this.syncPending();
+      },
+      renderStatus() {
+        const enabledEl = document.getElementById('gcal-enabled');
+        const clientEl = document.getElementById('gcal-client-id');
+        const status = document.getElementById('gcal-status');
+        if (enabledEl) enabledEl.checked = Boolean(this.settings.enabled);
+        if (clientEl) clientEl.value = this.settings.clientId || '';
+        if (status) status.textContent = !this.settings.enabled ? 'Desactivado. Las tareas solo se guardan en ManteniPro.' : (this.settings.clientId ? (this.accessToken ? 'Google Calendar conectado en esta sesión.' : 'Activado. Pulsa «Conectar Google Calendar» para autorizar el acceso.') : 'Activado, pero falta el ID de cliente OAuth.');
+      },
+      async loadIdentity() {
+        if (window.google?.accounts?.oauth2) return;
+        if (!this.loading) this.loading = new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.async = true; script.defer = true;
+          script.onload = resolve; script.onerror = () => reject(new Error('No se pudo cargar la autorización de Google'));
+          document.head.appendChild(script);
+        });
+        await this.loading;
+      },
+      async connect() {
+        this.saveSettings();
+        if (!this.settings.clientId) { Helpers.toast('Falta el ID de cliente OAuth de Google', 'warning'); return; }
+        try {
+          await this.loadIdentity();
+          this.tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: this.settings.clientId,
+            scope: 'https://www.googleapis.com/auth/calendar.events',
+            callback: async (response) => {
+              if (response.error) { Helpers.toast('Google no autorizó el acceso a Calendar', 'warning'); return; }
+              this.accessToken = response.access_token;
+              this.renderStatus();
+              Helpers.toast('Google Calendar conectado', 'success');
+              await this.syncPending();
+            }
+          });
+          this.tokenClient.requestAccessToken({ prompt: 'consent' });
+        } catch (e) { Helpers.toast(e.message || 'No se pudo conectar con Google Calendar', 'warning'); }
+      },
+      async api(path, method, body) {
+        if (!this.accessToken) throw new Error('Conecta primero Google Calendar');
+        const res = await fetch('https://www.googleapis.com/calendar/v3/' + path, {
+          method, headers: { Authorization: 'Bearer ' + this.accessToken, 'Content-Type': 'application/json' },
+          body: body ? JSON.stringify(body) : undefined
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error?.message || 'Error al sincronizar con Google Calendar');
+        return data;
+      },
+      eventFor(job) {
+        const inst = State.installations.find(i => i.id === job.instId);
+        const unit = inst ? `${inst.unit} · ${inst.address}` : (job.unitName || 'Sin instalación');
+        const dateTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid';
+        return {
+          summary: `${Helpers.resolveJobType(job)} · ${unit}`,
+          description: [job.notes || '', `Estado: ${job.status}`, `Prioridad: ${job.priority || 'Normal'}`].filter(Boolean).join('\n'),
+          start: { dateTime: `${job.date}T${job.startTime}:00`, timeZone: dateTimeZone },
+          end: { dateTime: `${job.date}T${job.endTime}:00`, timeZone: dateTimeZone }
+        };
+      },
+      async syncJob(job) {
+        if (!this.settings.enabled || !this.accessToken || !job || !job.date || !job.startTime || !job.endTime) return;
+        const event = this.eventFor(job);
+        try {
+          let result;
+          if (job.googleCalendarEventId) {
+            try { result = await this.api(`calendars/primary/events/${encodeURIComponent(job.googleCalendarEventId)}`, 'PUT', event); }
+            catch (e) {
+              if (!/404|not found/i.test(e.message)) throw e;
+              result = await this.api('calendars/primary/events', 'POST', event);
+            }
+          } else result = await this.api('calendars/primary/events', 'POST', event);
+          job.googleCalendarEventId = result.id;
+          Storage.save();
+        } catch (e) { console.warn('Google Calendar:', e); Helpers.toast(`Tarea guardada, pero Calendar: ${e.message}`, 'warning'); }
+      },
+      async syncPending() {
+        if (!this.settings.enabled || !this.accessToken) return;
+        for (const job of State.jobs) await this.syncJob(job);
+      }
+    };
+
     const JobsModule = {
       setFilter(filter) {
         State.jobFilter = filter;
@@ -3720,7 +3835,7 @@
           document.getElementById('job-id').value = '';
           typeSelect.value = 'AVERIA';
           document.getElementById('job-date').value = presetDate || State.selectedDate;
-          document.getElementById('job-status').value = 'Completada';
+          document.getElementById('job-status').value = 'Pendiente';
           document.getElementById('job-priority').value = 'Normal';
           document.getElementById('job-reminder').value = 'none';
           if (createCheckbox) createCheckbox.checked = true;
@@ -4084,6 +4199,7 @@
         ExpensesModule.syncJobExpenses(payload);
 
         Storage.save();
+        if (GoogleCalendar.settings.enabled && GoogleCalendar.accessToken) GoogleCalendar.syncJob(payload);
         this.closeModal();
         UI.refreshAll();
         NotificationsModule.checkDueReminders();
@@ -5385,6 +5501,7 @@
       openModal() {
         PWAModule.refreshUI();
         document.getElementById('backup-modal').classList.remove('hidden');
+        GoogleCalendar.renderStatus();
         this.onAdvancedDatasetChange();
       },
       closeModal() {
@@ -6493,6 +6610,7 @@
       DriveSync.quiet = true;
       try { Storage.init(); } finally { DriveSync.quiet = false; }
       DriveSync.start();
+      GoogleCalendar.init();
       PWAModule.init();
       UI.refreshAll();
       NotificationsModule.init();
