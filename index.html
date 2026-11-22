@@ -259,7 +259,7 @@
       </div>
 
       <!-- Acciones de Cabecera -->
-      <div class="flex items-center gap-1.5 sm:gap-2 relative">
+      <div class="flex items-center gap-1.6 sm:gap-2 relative">
         <!-- Campana de Notificaciones -->
         <button type="button" onclick="NotificationsModule.togglePanel()" id="notif-bell-btn" title="Centro de avisos" class="relative p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
           <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -309,7 +309,7 @@
         </button>
 
         <!-- Botón Nueva Tarea -->
-        <button type="button" onclick="JobsModule.openModal()" class="inline-flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm font-semibold px-3.5 sm:px-4 py-2 rounded-xl shadow-xs transition-all active:scale-95">
+        <button type="button" onclick="JobsModule.openModal()" class="inline-flex items-center gap-1.6 bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm font-semibold px-3.5 sm:px-4 py-2 rounded-xl shadow-xs transition-all active:scale-95">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
           </svg>
@@ -326,18 +326,18 @@
         </button>
         <button type="button" onclick="UI.navigate('calendar')" data-tab="calendar" class="nav-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-slate-600 border border-transparent hover:bg-white transition-all">
           <span>Calendario y Tareas</span>
-          <span id="nav-pending-badge" class="px-1.5 py-0.2 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800">0</span>
+          <span id="nav-pending-badge" class="px-1.6 py-0.2 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800">0</span>
         </button>
         <button type="button" onclick="UI.navigate('inventory')" data-tab="inventory" class="nav-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-slate-600 border border-transparent hover:bg-white transition-all">
           <span>Almacén</span>
-          <span id="nav-lowstock-badge" class="hidden px-1.5 py-0.2 text-[11px] font-bold rounded-full bg-rose-100 text-rose-700">0</span>
+          <span id="nav-lowstock-badge" class="hidden px-1.6 py-0.2 text-[11px] font-bold rounded-full bg-rose-100 text-rose-700">0</span>
         </button>
         <button type="button" onclick="UI.navigate('installations')" data-tab="installations" class="nav-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-slate-600 border border-transparent hover:bg-white transition-all">
           <span>Instalaciones</span>
         </button>
         <button type="button" onclick="UI.navigate('expenses')" data-tab="expenses" class="nav-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-slate-600 border border-transparent hover:bg-white transition-all">
           <span>Gastos</span>
-          <span id="nav-expenses-badge" class="px-1.5 py-0.2 text-[11px] font-bold rounded-full bg-indigo-100 text-indigo-800">0,00 €</span>
+          <span id="nav-expenses-badge" class="px-1.6 py-0.2 text-[11px] font-bold rounded-full bg-indigo-100 text-indigo-800">0,00 €</span>
         </button>
       </div>
     </div>
@@ -464,7 +464,7 @@
               </button>
             </div>
 
-            <div id="analytics-week-nav" class="inline-flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-1.5 py-1">
+            <div id="analytics-week-nav" class="inline-flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-1.6 py-1">
               <button type="button" onclick="AnalyticsModule.shiftWeek(-1)" title="Semana anterior" class="px-2 py-0.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">◀</button>
               <button type="button" onclick="AnalyticsModule.resetPeriodToCurrent()" class="px-2 py-0.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 rounded-lg">Actual</button>
               <button type="button" onclick="AnalyticsModule.shiftWeek(1)" title="Semana siguiente" class="px-2 py-0.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg">▶</button>
@@ -497,13 +497,13 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-            <label class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+            <label class="inline-flex items-center gap-1.6 text-xs font-semibold text-slate-700">
               <span>Inicio jornada:</span>
-              <input type="time" id="analytics-work-start" onchange="AnalyticsModule.onWorkHoursChange()" class="px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg font-semibold text-slate-900 focus:outline-none focus:border-teal-600">
+              <input type="time" id="analytics-work-start" onchange="AnalyticsModule.onWorkHoursChange()" class="px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg font-semibold text-slate-900 focus:outline-none focus:border-teal-600">
             </label>
-            <label class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+            <label class="inline-flex items-center gap-1.6 text-xs font-semibold text-slate-700">
               <span>Fin jornada:</span>
-              <input type="time" id="analytics-work-end" onchange="AnalyticsModule.onWorkHoursChange()" class="px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg font-semibold text-slate-900 focus:outline-none focus:border-teal-600">
+              <input type="time" id="analytics-work-end" onchange="AnalyticsModule.onWorkHoursChange()" class="px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg font-semibold text-slate-900 focus:outline-none focus:border-teal-600">
             </label>
           </div>
         </div>
@@ -553,7 +553,7 @@
               <h3 id="analytics-series-chart-title" class="text-xs font-bold uppercase tracking-wider text-slate-700">Distribución del Tiempo en el Período</h3>
               <span id="analytics-series-max-label" class="text-[11px] text-slate-400 font-semibold">Máx: 0h 00m</span>
             </div>
-            <div id="analytics-series-chart" class="h-44 flex items-end justify-between gap-1.5 sm:gap-2 pt-5 pb-1 px-1 overflow-x-auto"></div>
+            <div id="analytics-series-chart" class="h-44 flex items-end justify-between gap-1.6 sm:gap-2 pt-5 pb-1 px-1 overflow-x-auto"></div>
           </div>
         </div>
 
@@ -653,7 +653,7 @@
           <h1 class="text-xl sm:text-2xl font-bold text-slate-900">Calendario de Tareas y Averías</h1>
           <p class="text-xs sm:text-sm text-slate-500">Consulta el horario por días con filas de Desplazamiento independientes, busca intervenciones y gestiona material y gastos</p>
         </div>
-        <button type="button" onclick="JobsModule.openModal()" class="inline-flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl self-start">
+        <button type="button" onclick="JobsModule.openModal()" class="inline-flex items-center gap-1.6 bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl self-start">
           + Registrar Tarea
         </button>
       </div>
@@ -665,13 +665,13 @@
           <input type="text" id="jobs-search-input" oninput="JobsModule.render()" placeholder="Buscar por tipo, unidad, dirección, fecha, notas, repuesto o gasto (sin tildes)..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-600 focus:bg-white">
         </div>
 
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          <button type="button" onclick="JobsModule.setFilter('all')" data-jfilter="all" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 whitespace-nowrap">Todas</button>
-          <button type="button" onclick="JobsModule.setFilter('Completada')" data-jfilter="Completada" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Completadas</button>
-          <button type="button" onclick="JobsModule.setFilter('Pendiente')" data-jfilter="Pendiente" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pendientes</button>
-          <button type="button" onclick="JobsModule.setFilter('En curso')" data-jfilter="En curso" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">En curso</button>
-          <button type="button" onclick="JobsModule.setFilter('Pausada')" data-jfilter="Pausada" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pausadas <span id="jobs-paused-badge"></span></button>
-          <button type="button" onclick="JobsModule.setFilter('Alta')" data-jfilter="Alta" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Prioridad Alta</button>
+        <div class="flex items-center gap-1.6 overflow-x-auto no-scrollbar">
+          <button type="button" onclick="JobsModule.setFilter('all')" data-jfilter="all" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 whitespace-nowrap">Todas</button>
+          <button type="button" onclick="JobsModule.setFilter('Completada')" data-jfilter="Completada" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Completadas</button>
+          <button type="button" onclick="JobsModule.setFilter('Pendiente')" data-jfilter="Pendiente" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pendientes</button>
+          <button type="button" onclick="JobsModule.setFilter('En curso')" data-jfilter="En curso" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">En curso</button>
+          <button type="button" onclick="JobsModule.setFilter('Pausada')" data-jfilter="Pausada" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pausadas <span id="jobs-paused-badge"></span></button>
+          <button type="button" onclick="JobsModule.setFilter('Alta')" data-jfilter="Alta" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Prioridad Alta</button>
         </div>
       </div>
 
@@ -680,14 +680,14 @@
         <div class="lg:col-span-5 card p-4 sm:p-5 self-start">
           <div class="flex items-center justify-between mb-4">
             <h2 id="cal-month-title" class="text-base font-bold text-slate-900 capitalize"></h2>
-            <div class="flex items-center gap-1.5">
-              <button type="button" onclick="CalendarModule.changeMonth(-1)" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">◀</button>
+            <div class="flex items-center gap-1.6">
+              <button type="button" onclick="CalendarModule.changeMonth(-1)" class="p-1.6 rounded-lg border border-slate-200 hover:bg-slate-50">◀</button>
               <button type="button" onclick="CalendarModule.goToday()" class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 hover:bg-slate-50">Hoy</button>
-              <button type="button" onclick="CalendarModule.changeMonth(1)" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">▶</button>
+              <button type="button" onclick="CalendarModule.changeMonth(1)" class="p-1.6 rounded-lg border border-slate-200 hover:bg-slate-50">▶</button>
             </div>
           </div>
 
-          <div class="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 uppercase mb-1.5">
+          <div class="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 uppercase mb-1.6">
             <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
           </div>
           <div id="cal-month-grid" class="grid grid-cols-7 gap-1"></div>
@@ -712,7 +712,7 @@
                 <button type="button" id="cal-zoom-label" onclick="CalendarModule.zoomAuto()" title="Espaciado automático" class="min-w-[3.25rem] px-2 text-[11px] font-bold text-blue-700 bg-blue-50 border-x border-slate-200">Auto</button>
                 <button type="button" onclick="CalendarModule.zoomIn()" aria-label="Acercar" class="w-8 text-sm font-bold text-slate-700 hover:bg-slate-100">+</button>
               </div>
-              <button type="button" onclick="JobsModule.openModal(null, State.selectedDate)" class="text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg">
+              <button type="button" onclick="JobsModule.openModal(null, State.selectedDate)" class="text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.6 rounded-lg">
                 + Añadir en este día
               </button>
             </div>
@@ -750,9 +750,9 @@
           <p class="text-xs sm:text-sm text-slate-500">Filtra por categoría, busca sin tildes y genera el listado de pedido de repuestos bajo mínimo</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <button type="button" onclick="InventoryModule.openReorderModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-2xs">
+          <button type="button" onclick="InventoryModule.openReorderModal()" class="inline-flex items-center gap-1.6 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-2xs">
             <span>📋 Pedido Bajo Mínimo</span>
-            <span id="inv-reorder-count-pill" class="px-1.5 py-0.2 rounded-full bg-white/20 text-white text-[11px] font-bold">0</span>
+            <span id="inv-reorder-count-pill" class="px-1.6 py-0.2 rounded-full bg-white/20 text-white text-[11px] font-bold">0</span>
           </button>
           <button type="button" onclick="InventoryModule.openCategoryModal()" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">
             + Categoría
@@ -777,13 +777,13 @@
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2 shrink-0">
-            <button type="button" onclick="InventoryModule.copyReorderList()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300">
+            <button type="button" onclick="InventoryModule.copyReorderList()" class="px-3 py-1.6 rounded-xl text-xs font-semibold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300">
               Copiar lista
             </button>
-            <button type="button" onclick="InventoryModule.downloadReorderListTXT()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white">
+            <button type="button" onclick="InventoryModule.downloadReorderListTXT()" class="px-3 py-1.6 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white">
               Descargar pedido (.TXT)
             </button>
-            <button type="button" onclick="InventoryModule.openReorderModal()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200">
+            <button type="button" onclick="InventoryModule.openReorderModal()" class="px-3 py-1.6 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200">
               Vista ampliada / Imprimir
             </button>
           </div>
@@ -849,7 +849,7 @@
       <div class="card p-3.5 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Campos globales (en orden):</span>
-          <div id="global-fields-badges" class="flex flex-wrap items-center gap-1.5"></div>
+          <div id="global-fields-badges" class="flex flex-wrap items-center gap-1.6"></div>
         </div>
         <button type="button" onclick="InstallationsModule.openGlobalFieldModal()" class="text-xs font-semibold text-blue-700 hover:underline shrink-0 self-start sm:self-auto">
           Ordenar / Gestionar campos &rarr;
@@ -905,12 +905,12 @@
           <input type="text" id="exp-search-input" oninput="ExpensesModule.renderList()" placeholder="Buscar gasto por concepto, tipo, instalación o fecha (sin tildes)..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-600 focus:bg-white">
         </div>
 
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          <button type="button" onclick="ExpensesModule.setTypeFilter('all')" data-efilter="all" class="efilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 whitespace-nowrap">Todos</button>
-          <button type="button" onclick="ExpensesModule.setTypeFilter('APARCAMIENTO')" data-efilter="APARCAMIENTO" class="efilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Aparcamiento</button>
-          <button type="button" onclick="ExpensesModule.setTypeFilter('COMPRA PEQUENO MATERIAL')" data-efilter="COMPRA PEQUENO MATERIAL" class="efilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pequeño Material</button>
-          <button type="button" onclick="ExpensesModule.setTypeFilter('SALIDAS')" data-efilter="SALIDAS" class="efilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Salidas</button>
-          <button type="button" onclick="ExpensesModule.setTypeFilter('OTROS')" data-efilter="OTROS" class="efilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Otros</button>
+        <div class="flex items-center gap-1.6 overflow-x-auto no-scrollbar">
+          <button type="button" onclick="ExpensesModule.setTypeFilter('all')" data-efilter="all" class="efilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 whitespace-nowrap">Todos</button>
+          <button type="button" onclick="ExpensesModule.setTypeFilter('APARCAMIENTO')" data-efilter="APARCAMIENTO" class="efilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Aparcamiento</button>
+          <button type="button" onclick="ExpensesModule.setTypeFilter('COMPRA PEQUENO MATERIAL')" data-efilter="COMPRA PEQUENO MATERIAL" class="efilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pequeño Material</button>
+          <button type="button" onclick="ExpensesModule.setTypeFilter('SALIDAS')" data-efilter="SALIDAS" class="efilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Salidas</button>
+          <button type="button" onclick="ExpensesModule.setTypeFilter('OTROS')" data-efilter="OTROS" class="efilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Otros</button>
         </div>
       </div>
 
@@ -937,24 +937,24 @@
   <!-- ======================================================================
        NAVEGACIÓN INFERIOR MÓVIL
        ====================================================================== -->
-  <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-slate-200 z-40 px-1 py-1.5 flex items-center justify-around">
-    <button type="button" onclick="UI.navigate('dashboard')" data-tab="dashboard" class="mobile-nav-btn active flex flex-col items-center py-1 px-1.5 text-slate-500">
+  <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-slate-200 z-40 px-1 py-1.6 flex items-center justify-around">
+    <button type="button" onclick="UI.navigate('dashboard')" data-tab="dashboard" class="mobile-nav-btn active flex flex-col items-center py-1 px-1.6 text-slate-500">
       <div class="icon-pill px-2.5 py-1 rounded-full text-sm font-bold">⊞</div>
       <span class="text-[10px] font-semibold mt-0.5">Panel</span>
     </button>
-    <button type="button" onclick="UI.navigate('calendar')" data-tab="calendar" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500">
+    <button type="button" onclick="UI.navigate('calendar')" data-tab="calendar" class="mobile-nav-btn flex flex-col items-center py-1 px-1.6 text-slate-500">
       <div class="icon-pill px-2.5 py-1 rounded-full text-sm font-bold">📅</div>
       <span class="text-[10px] font-semibold mt-0.5">Tareas</span>
     </button>
-    <button type="button" onclick="UI.navigate('inventory')" data-tab="inventory" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500">
+    <button type="button" onclick="UI.navigate('inventory')" data-tab="inventory" class="mobile-nav-btn flex flex-col items-center py-1 px-1.6 text-slate-500">
       <div class="icon-pill px-2.5 py-1 rounded-full text-sm font-bold">📦</div>
       <span class="text-[10px] font-semibold mt-0.5">Almacén</span>
     </button>
-    <button type="button" onclick="UI.navigate('installations')" data-tab="installations" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500">
+    <button type="button" onclick="UI.navigate('installations')" data-tab="installations" class="mobile-nav-btn flex flex-col items-center py-1 px-1.6 text-slate-500">
       <div class="icon-pill px-2.5 py-1 rounded-full text-sm font-bold">🏢</div>
       <span class="text-[10px] font-semibold mt-0.5">Instalac.</span>
     </button>
-    <button type="button" onclick="UI.navigate('expenses')" data-tab="expenses" class="mobile-nav-btn flex flex-col items-center py-1 px-1.5 text-slate-500">
+    <button type="button" onclick="UI.navigate('expenses')" data-tab="expenses" class="mobile-nav-btn flex flex-col items-center py-1 px-1.6 text-slate-500">
       <div class="icon-pill px-2.5 py-1 rounded-full text-sm font-bold">€</div>
       <span class="text-[10px] font-semibold mt-0.5">Gastos</span>
     </button>
@@ -967,7 +967,7 @@
     <div class="modal-card animate-fade">
       <div class="flex items-center justify-between gap-2 px-5 py-4 border-b border-slate-200 shrink-0">
         <h3 id="job-modal-title" class="text-base sm:text-lg font-bold text-slate-900 truncate">Nueva Tarea / Avería</h3>
-        <button type="button" onclick="JobsModule.closeModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 shrink-0">✕</button>
+        <button type="button" onclick="JobsModule.closeModal()" class="p-1.6 rounded-lg text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
       <form id="job-form" onsubmit="JobsModule.save(event)" class="modal-scroll p-5 space-y-4">
@@ -1004,7 +1004,7 @@
             </p>
             <div id="job-inst-address-wrap">
               <label for="job-inst-new-address" class="block text-[11px] font-semibold text-slate-700 mb-1">Dirección de la nueva instalación (opcional)</label>
-              <input type="text" id="job-inst-new-address" placeholder="Dirección o ubicación de la unidad..." class="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600">
+              <input type="text" id="job-inst-new-address" placeholder="Dirección o ubicación de la unidad..." class="w-full px-3 py-1.6 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600">
             </div>
           </div>
         </div>
@@ -1067,19 +1067,19 @@
               <span class="text-xs font-bold text-slate-800 block">Repuestos utilizados del almacén</span>
               <span class="text-[11px] text-slate-500">Se descontarán automáticamente al guardar como <strong>Completada</strong></span>
             </div>
-            <button type="button" onclick="JobsModule.addMaterialRow()" class="text-xs font-semibold text-blue-700 bg-white border border-blue-200 hover:bg-blue-50 px-2.5 py-1.5 rounded-lg shrink-0">
+            <button type="button" onclick="JobsModule.addMaterialRow()" class="text-xs font-semibold text-blue-700 bg-white border border-blue-200 hover:bg-blue-50 px-2.5 py-1.6 rounded-lg shrink-0">
               + Añadir fila
             </button>
           </div>
 
           <div class="relative min-w-0">
             <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-            <input type="text" id="job-material-search-input" oninput="JobsModule.onMaterialSearchInput()" placeholder="Buscar repuesto sin tildes por nombre, categoría o SKU..." class="w-full pl-9 pr-8 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600">
+            <input type="text" id="job-material-search-input" oninput="JobsModule.onMaterialSearchInput()" placeholder="Buscar repuesto sin tildes por nombre, categoría o SKU..." class="w-full pl-9 pr-8 py-1.6 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600">
             <button type="button" id="job-material-search-clear" onclick="JobsModule.clearMaterialSearch()" title="Limpiar búsqueda" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold">✕</button>
           </div>
 
           <div id="job-material-matches-panel" class="hidden bg-white rounded-xl border border-blue-200 overflow-hidden">
-            <div class="px-3 py-1.5 bg-blue-50/70 border-b border-blue-100 flex items-center justify-between gap-2">
+            <div class="px-3 py-1.6 bg-blue-50/70 border-b border-blue-100 flex items-center justify-between gap-2">
               <span class="text-[11px] font-bold text-blue-900">Coincidencias de búsqueda</span>
               <span id="job-material-matches-count" class="text-[10px] font-semibold text-blue-700">0 resultados</span>
             </div>
@@ -1098,7 +1098,7 @@
             </div>
             <div class="flex items-center gap-2">
               <span id="job-expenses-subtotal" class="text-xs font-bold text-indigo-800 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">0,00 €</span>
-              <button type="button" onclick="JobsModule.addExpenseRow()" class="text-xs font-semibold text-indigo-800 bg-white border border-indigo-200 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg shrink-0">
+              <button type="button" onclick="JobsModule.addExpenseRow()" class="text-xs font-semibold text-indigo-800 bg-white border border-indigo-200 hover:bg-indigo-100 px-2.5 py-1.6 rounded-lg shrink-0">
                 + Añadir gasto
               </button>
             </div>
@@ -1120,7 +1120,7 @@
 
   <div id="inv-detail-modal" class="modal-backdrop hidden">
     <div class="modal-card modal-sm animate-fade">
-      <div class="flex items-center justify-between gap-2 px-5 py-4 border-b border-slate-200"><div><span class="text-[11px] font-bold uppercase tracking-wider text-blue-700">Ficha de producto</span><h3 id="inv-detail-title" class="text-base font-bold text-slate-900"></h3></div><button type="button" onclick="InventoryModule.closeDetail()" class="p-1.5 text-slate-400">✕</button></div>
+      <div class="flex items-center justify-between gap-2 px-5 py-4 border-b border-slate-200"><div><span class="text-[11px] font-bold uppercase tracking-wider text-blue-700">Ficha de producto</span><h3 id="inv-detail-title" class="text-base font-bold text-slate-900"></h3></div><button type="button" onclick="InventoryModule.closeDetail()" class="p-1.6 text-slate-400">✕</button></div>
       <div id="inv-detail-body" class="modal-scroll p-5 space-y-4"></div>
     </div>
   </div>
@@ -1190,7 +1190,7 @@
           <span class="text-[11px] font-bold uppercase tracking-wider text-rose-700">Reposición de Almacén</span>
           <h3 class="text-base sm:text-lg font-bold text-slate-900 truncate">Listado de Repuestos Bajo Mínimo</h3>
         </div>
-        <button type="button" onclick="InventoryModule.closeReorderModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 shrink-0">✕</button>
+        <button type="button" onclick="InventoryModule.closeReorderModal()" class="p-1.6 rounded-lg text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
       <div class="modal-scroll p-5 space-y-4">
@@ -1199,14 +1199,14 @@
             <span id="reorder-modal-summary" class="font-bold text-rose-900">0 repuestos bajo mínimo</span>
             <span class="text-slate-600"> — Cantidad = mínimo configurado menos stock actual (solo artículos con stock &lt; mínimo).</span>
           </div>
-          <button type="button" onclick="InventoryModule.applyAllSuggestedOrders()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shrink-0">
+          <button type="button" onclick="InventoryModule.applyAllSuggestedOrders()" class="px-3 py-1.6 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shrink-0">
             Reponer todos
           </button>
         </div>
 
         <div id="reorder-modal-items" class="space-y-2.5"></div>
 
-        <div class="space-y-1.5 pt-2 border-t border-slate-100">
+        <div class="space-y-1.6 pt-2 border-t border-slate-100">
           <div class="flex items-center justify-between gap-2">
             <label for="reorder-preview-textarea" class="text-xs font-bold uppercase tracking-wider text-slate-600">Listado (Código · Descripción · Cantidad)</label>
             <button type="button" onclick="InventoryModule.refreshReorderPreview()" class="text-[11px] font-semibold text-blue-700 hover:underline">Actualizar texto</button>
@@ -1261,7 +1261,7 @@
     <div class="modal-card animate-fade">
       <div class="flex items-center justify-between gap-2 px-5 py-4 border-b border-slate-200 shrink-0">
         <h3 id="inst-modal-title" class="text-base sm:text-lg font-bold text-slate-900 truncate">Ficha de Instalación</h3>
-        <button type="button" onclick="InstallationsModule.closeModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 shrink-0">✕</button>
+        <button type="button" onclick="InstallationsModule.closeModal()" class="p-1.6 rounded-lg text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
       <form id="inst-form" onsubmit="InstallationsModule.save(event)" class="modal-scroll p-5 space-y-4">
@@ -1290,8 +1290,8 @@
           </div>
 
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white p-2 rounded-xl border border-blue-200 min-w-0">
-            <input type="text" id="inst-inline-new-global-field" placeholder="Nuevo campo para todas las fichas..." class="flex-1 min-w-0 px-2.5 py-1.5 text-xs focus:outline-none">
-            <button type="button" onclick="InstallationsModule.addGlobalFieldFromModal()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white shrink-0">
+            <input type="text" id="inst-inline-new-global-field" placeholder="Nuevo campo para todas las fichas..." class="flex-1 min-w-0 px-2.5 py-1.6 text-xs focus:outline-none">
+            <button type="button" onclick="InstallationsModule.addGlobalFieldFromModal()" class="px-3 py-1.6 rounded-lg text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white shrink-0">
               + Crear campo en todas
             </button>
           </div>
@@ -1353,7 +1353,7 @@
           <span class="text-[11px] font-bold uppercase tracking-wider text-blue-700">Ficha de Instalación</span>
           <h3 id="detail-inst-unit" class="text-base sm:text-lg font-bold text-slate-900 mt-0.5 truncate"></h3>
         </div>
-        <button type="button" onclick="InstallationsModule.closeDetailModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 shrink-0">✕</button>
+        <button type="button" onclick="InstallationsModule.closeDetailModal()" class="p-1.6 rounded-lg text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
       <div id="detail-inst-body" class="modal-scroll p-5 space-y-5"></div>
     </div>
@@ -1421,7 +1421,7 @@
   <div id="backup-modal" class="modal-backdrop hidden">
     <div class="modal-card modal-sm p-5 space-y-4 animate-fade">
       <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-200 shrink-0">
-        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 1.5</p></div>
+        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 1.6</p></div>
         <button type="button" onclick="Backup.closeModal()" class="text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
@@ -1581,12 +1581,12 @@
       <div class="modal-scroll space-y-3.5 text-xs text-slate-600 leading-relaxed">
         <div id="pwa-modal-diagnosis" class="p-3 rounded-xl border border-blue-200 bg-blue-50/70 text-slate-800 space-y-1"></div>
 
-        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5">
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1.6">
           <p class="font-bold text-slate-900">1. En web pública (HTTPS) o localhost en Chrome</p>
           <p>Cuando se abre directamente (no dentro de un visor/iframe), Chrome habilita el botón <strong>Instalar</strong> en la barra de direcciones o en el menú <strong>⋮ &gt; Instalar ManteniPro</strong> (o <em>Añadir a pantalla de inicio</em> en móvil).</p>
         </div>
 
-        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5">
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1.6">
           <p class="font-bold text-slate-900">2. Si estás en una vista previa embebida (iframe) o archivo local</p>
           <p>Los navegadores bloquean la instalación automática de PWAs dentro de un <em>iframe</em> por seguridad. Si quieres instalarla en Chrome:</p>
           <ul class="list-disc pl-4 space-y-1 text-slate-700">
@@ -2248,7 +2248,15 @@
       },
 
       computeTravelSegments(startDateStr, endDateStr, instFilter = 'all') {
-        const jobsInRange = State.jobs.filter(j => j.date >= startDateStr && j.date <= endDateStr);
+        // Cada tramo de reanudación cuenta como una cita independiente para ordenar
+        // todas las actividades de la jornada y calcular también el trayecto posterior.
+        const jobsInRange = State.jobs.flatMap(job => {
+          const items = [{ ...job, _calendarEntry: false }];
+          (Array.isArray(job.calendarEntries) ? job.calendarEntries : []).forEach((entry, index) => {
+            items.push({ ...job, ...entry, _calendarEntry: true, _entryIndex: index });
+          });
+          return items;
+        }).filter(j => j.date >= startDateStr && j.date <= endDateStr);
         const byDate = new Map();
 
         jobsInRange.forEach(j => {
@@ -2768,10 +2776,10 @@
             return `
               <div class="py-2.5 flex items-center justify-between gap-3">
                 <div class="min-w-0">
-                  <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${meta.badgeClass}">${meta.label}</span>
+                  <div class="flex items-center gap-1.6 flex-wrap">
+                    <span class="text-[10px] font-bold uppercase px-1.6 py-0.5 rounded border ${meta.badgeClass}">${meta.label}</span>
                     <span class="text-[11px] font-semibold text-slate-500">${grp.count} ${plural}</span>
-                    ${grp.expenses > 0 ? `<span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded">${Helpers.formatCurrency(grp.expenses)}</span>` : ''}
+                    ${grp.expenses > 0 ? `<span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.6 py-0.2 rounded">${Helpers.formatCurrency(grp.expenses)}</span>` : ''}
                   </div>
                   <p class="text-xs font-bold text-slate-900 truncate mt-0.5">${grp.unit}</p>
                 </div>
@@ -2797,15 +2805,15 @@
             const uName = inst ? inst.unit : (job.unitName || 'Unidad');
             const done = Helpers.isJobCompleted(job);
             const statusPill = done
-              ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">${job.status}</span>`
+              ? `<span class="text-[10px] font-bold px-1.6 py-0.5 rounded bg-emerald-50 text-emerald-700">${job.status}</span>`
               : (job.notified
-                ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">Avisado</span>`
-                : `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800">Pendiente aviso</span>`);
+                ? `<span class="text-[10px] font-bold px-1.6 py-0.5 rounded bg-slate-100 text-slate-600">Avisado</span>`
+                : `<span class="text-[10px] font-bold px-1.6 py-0.5 rounded bg-amber-50 text-amber-800">Pendiente aviso</span>`);
 
             return `
               <div onclick="JobsModule.openModal('${job.id}')" class="py-2.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-50">
                 <div class="min-w-0">
-                  <div class="flex items-center gap-1.5 flex-wrap">
+                  <div class="flex items-center gap-1.6 flex-wrap">
                     <span class="text-[11px] font-bold text-blue-700">${Helpers.formatDateShort(job.date)} · ${job.startTime}</span>
                     ${statusPill}
                   </div>
@@ -2880,8 +2888,8 @@
         State.expenseTypeFilter = filterType;
         document.querySelectorAll('.efilter-btn').forEach(btn => {
           btn.className = btn.dataset.efilter === filterType
-            ? 'efilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 whitespace-nowrap'
-            : 'efilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap';
+            ? 'efilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 whitespace-nowrap'
+            : 'efilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap';
         });
         this.renderList();
       },
@@ -2916,7 +2924,7 @@
                 <p class="text-xl font-bold text-slate-900">${Helpers.formatCurrency(amt)}</p>
                 <span class="text-xs font-semibold text-slate-500">${pct}%</span>
               </div>
-              <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="w-full h-1.6 bg-slate-100 rounded-full overflow-hidden">
                 <div class="h-full ${meta.barClass} rounded-full transition-all" style="width: ${pct}%"></div>
               </div>
             </div>
@@ -2971,7 +2979,7 @@
                 <p class="font-semibold text-slate-900">${ex.concept || meta.label}</p>
                 <div class="flex items-center gap-2 flex-wrap mt-0.5 text-xs text-slate-500">
                   ${ex.unitName ? `<span>📍 ${ex.unitName}</span>` : ''}
-                  ${linkedJob ? `<span class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded">Tarea: ${Helpers.resolveJobType(linkedJob)}</span>` : ''}
+                  ${linkedJob ? `<span class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-1.6 py-0.2 rounded">Tarea: ${Helpers.resolveJobType(linkedJob)}</span>` : ''}
                 </div>
               </td>
               <td class="py-3.5 px-4 text-right font-bold text-slate-900 whitespace-nowrap">
@@ -2979,9 +2987,9 @@
               </td>
               <td class="py-3.5 px-4 text-right whitespace-nowrap">
                 ${linkedJob
-                  ? `<button type="button" onclick="JobsModule.openModal('${linkedJob.id}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-50 border border-blue-200">Ver tarea</button>`
-                  : `<button type="button" onclick="ExpensesModule.openModal('${ex.id}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-200 mr-1">Editar</button>
-                     <button type="button" onclick="ExpensesModule.deletePart('${ex.id}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50">Borrar</button>`
+                  ? `<button type="button" onclick="JobsModule.openModal('${linkedJob.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-50 border border-blue-200">Ver tarea</button>`
+                  : `<button type="button" onclick="ExpensesModule.openModal('${ex.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-200 mr-1">Editar</button>
+                     <button type="button" onclick="ExpensesModule.deletePart('${ex.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50">Borrar</button>`
                 }
               </td>
             </tr>
@@ -3133,7 +3141,7 @@
                 <span class="font-semibold text-slate-700">${meta.label}</span>
                 <span class="font-bold text-slate-900">${Helpers.formatCurrency(amt)} <span class="text-[10px] font-medium text-slate-400">(${pct}%)</span></span>
               </div>
-              <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="w-full h-1.6 bg-slate-100 rounded-full overflow-hidden">
                 <div class="h-full ${meta.barClass} rounded-full" style="width: ${pct}%"></div>
               </div>
             </div>
@@ -3173,14 +3181,14 @@
                       ${job.status}
                     </span>
                     <span class="text-xs text-slate-500 font-medium">${Helpers.formatDateShort(job.date)} · ${job.startTime}-${job.endTime}</span>
-                    ${jobExpTotal > 0 ? `<span class="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded">Gasto: ${Helpers.formatCurrency(jobExpTotal)}</span>` : ''}
+                    ${jobExpTotal > 0 ? `<span class="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-1.6 py-0.2 rounded">Gasto: ${Helpers.formatCurrency(jobExpTotal)}</span>` : ''}
                   </div>
                   <p class="font-semibold text-sm text-slate-900 truncate mt-1">${unitLabel}</p>
                   ${job.notes ? `<p class="text-xs text-slate-500 truncate mt-0.5">${job.notes}</p>` : ''}
                 </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  ${!isDone ? `<button type="button" onclick="JobsModule.quickComplete('${job.id}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700">Completar</button>` : ''}
-                  <button type="button" onclick="JobsModule.openModal('${job.id}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50">Editar</button>
+                <div class="flex items-center gap-1.6 shrink-0">
+                  ${!isDone ? `<button type="button" onclick="JobsModule.quickComplete('${job.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700">Completar</button>` : ''}
+                  <button type="button" onclick="JobsModule.openModal('${job.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50">Editar</button>
                 </div>
               </div>
             `;
@@ -3197,13 +3205,13 @@
             return `
               <div class="py-3 flex items-center justify-between gap-2">
                 <div class="min-w-0">
-                  <div class="flex items-center gap-1.5 flex-wrap">
+                  <div class="flex items-center gap-1.6 flex-wrap">
                     <span class="font-mono text-[11px] font-bold text-slate-700">${skuDisplay}</span>
                     <span class="text-[11px] font-bold px-2 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200">Cantidad: ${qtyDiff}</span>
                   </div>
                   <p class="text-sm font-semibold text-slate-900 truncate mt-0.5">${item.name}</p>
                 </div>
-                ${qtyDiff > 0 ? `<button type="button" onclick="InventoryModule.adjustStock('${item.id}', ${qtyDiff})" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 shrink-0">+${qtyDiff} Reponer</button>` : ''}
+                ${qtyDiff > 0 ? `<button type="button" onclick="InventoryModule.adjustStock('${item.id}', ${qtyDiff})" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 shrink-0">+${qtyDiff} Reponer</button>` : ''}
               </div>
             `;
           }).join('');
@@ -3269,7 +3277,7 @@
                 ${job.notes ? `<p class="text-[11px] text-slate-500 truncate">${job.notes}</p>` : ''}
                 <p class="text-[11px] text-slate-400 mt-0.5">Aviso: ${reminderLabels[job.reminder] || 'Programado'}</p>
               </div>
-              <button type="button" onclick="JobsModule.openModal('${job.id}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shrink-0">
+              <button type="button" onclick="JobsModule.openModal('${job.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shrink-0">
                 Ver
               </button>
             </div>
@@ -3332,9 +3340,18 @@
       getCalendarEntries(dateStr) {
         const entries = [];
         State.jobs.forEach(job => {
-          if (job.date === dateStr) entries.push({ ...job, _calendarEntry: false, _parentJobId: job.id });
+          if (job.date === dateStr) entries.push({
+            ...job,
+            status: job.originalCalendarStatus || job.status,
+            _calendarEntry: false,
+            _parentJobId: job.id
+          });
           (Array.isArray(job.calendarEntries) ? job.calendarEntries : []).forEach((entry, index) => {
-            if (entry.date === dateStr) entries.push({ ...job, ...entry, id: job.id, _calendarEntry: true, _parentJobId: job.id, _entryIndex: index });
+            if (entry.date === dateStr) entries.push({
+              ...job, ...entry,
+              status: entry.calendarStatus || entry.status || job.status,
+              id: job.id, _calendarEntry: true, _parentJobId: job.id, _entryIndex: index
+            });
           });
         });
         return entries;
@@ -3370,11 +3387,11 @@
             const isDone = Helpers.isJobCompleted(j);
             const isHigh = j.priority === 'Alta' || j.priority === 'Urgente';
             const color = isDone ? 'bg-emerald-500' : isHigh ? 'bg-rose-500' : 'bg-amber-500';
-            return `<span class="w-1.5 h-1.5 rounded-full ${color}"></span>`;
+            return `<span class="w-1.6 h-1.6 rounded-full ${color}"></span>`;
           }).join('');
 
           html += `
-            <div onclick="CalendarModule.selectDay('${dateStr}')" class="h-12 p-1.5 rounded-lg border ${isSelected ? 'border-blue-600 bg-blue-50/70 ring-1 ring-blue-600' : isToday ? 'border-blue-300 bg-blue-50/30' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer flex flex-col justify-between items-center">
+            <div onclick="CalendarModule.selectDay('${dateStr}')" class="h-12 p-1.6 rounded-lg border ${isSelected ? 'border-blue-600 bg-blue-50/70 ring-1 ring-blue-600' : isToday ? 'border-blue-300 bg-blue-50/30' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer flex flex-col justify-between items-center">
               <span class="text-xs font-bold ${isSelected || isToday ? 'text-blue-700' : 'text-slate-700'}">${d}</span>
               <div class="flex items-center gap-0.5">${dots}</div>
             </div>
@@ -3504,7 +3521,7 @@
           const row1 = b.cols === 1
             ? `<div class="flex items-center justify-between gap-2 text-[11px] font-bold leading-tight">
                  <span class="truncate">${esc(job.startTime)} - ${esc(job.endTime)} (${Helpers.calcDuration(job.startTime, job.endTime)})</span>
-                 <span class="px-1.5 rounded bg-white/80 text-[10px] uppercase shrink-0">${esc(jobType)}</span>
+                 <span class="px-1.6 rounded bg-white/80 text-[10px] uppercase shrink-0">${esc(jobType)}</span>
                </div>`
             : `<div class="text-[11px] font-bold leading-tight truncate">${esc(job.startTime)}-${esc(job.endTime)} · ${esc(jobType)}</div>`;
           const inner = `
@@ -3571,12 +3588,12 @@
           if (entry.kind === 'travel') {
             const seg = entry.seg;
             return `
-              <div class="my-1.5 py-2.5 px-3.5 rounded-xl border border-dashed border-teal-400 bg-teal-50/85 flex items-center justify-between gap-3">
+              <div class="my-1.6 py-2.5 px-3.5 rounded-xl border border-dashed border-teal-400 bg-teal-50/85 flex items-center justify-between gap-3">
                 <div class="min-w-0">
-                  <div class="flex items-center gap-1.5 flex-wrap">
+                  <div class="flex items-center gap-1.6 flex-wrap">
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-teal-700 text-white tracking-wide">Desplazamiento</span>
                     <span class="text-xs font-bold text-teal-950">${seg.fromTime} - ${seg.toTime}</span>
-                    <span class="text-[11px] font-bold text-teal-900 bg-white border border-teal-200 px-1.5 py-0.2 rounded">${Helpers.formatMinutes(seg.minutes)}</span>
+                    <span class="text-[11px] font-bold text-teal-900 bg-white border border-teal-200 px-1.6 py-0.2 rounded">${Helpers.formatMinutes(seg.minutes)}</span>
                   </div>
                   <p class="text-xs font-semibold text-teal-950 truncate mt-1">
                     <span class="font-bold">Desplazamiento:</span> ${seg.fromUnit} &rarr; ${seg.toUnit}
@@ -3597,10 +3614,10 @@
           return `
             <div onclick="JobsModule.openModal('${job.id}')" class="my-1 p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50/40 cursor-pointer transition-colors space-y-1 shadow-2xs">
               <div class="flex items-center justify-between gap-2 flex-wrap">
-                <div class="flex items-center gap-1.5 flex-wrap">
+                <div class="flex items-center gap-1.6 flex-wrap">
                   <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 border border-slate-200 text-slate-800">${jobType}</span>
                   <span class="text-xs font-bold text-blue-700">${job.startTime} - ${job.endTime}</span>
-                  ${jobExpTotal > 0 ? `<span class="text-[10px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded">Gastos: ${Helpers.formatCurrency(jobExpTotal)}</span>` : ''}
+                  ${jobExpTotal > 0 ? `<span class="text-[10px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 px-1.6 py-0.2 rounded">Gastos: ${Helpers.formatCurrency(jobExpTotal)}</span>` : ''}
                 </div>
                 <span class="text-[11px] font-semibold ${isDone ? 'text-emerald-700' : 'text-amber-700'}">${job.status}</span>
               </div>
@@ -3628,8 +3645,8 @@
         State.jobFilter = filter;
         document.querySelectorAll('.jfilter-btn').forEach(btn => {
           btn.className = btn.dataset.jfilter === filter
-            ? 'jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 whitespace-nowrap'
-            : 'jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap';
+            ? 'jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 whitespace-nowrap'
+            : 'jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap';
         });
         this.render();
       },
@@ -3692,7 +3709,7 @@
             <div class="card p-4 border-l-4 ${isDone ? 'border-l-emerald-500' : isHigh ? 'border-l-rose-500' : 'border-l-amber-400'} flex flex-col justify-between gap-3">
               <div>
                 <div class="flex items-center justify-between gap-2 flex-wrap">
-                  <div class="flex items-center gap-1.5 flex-wrap">
+                  <div class="flex items-center gap-1.6 flex-wrap">
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 text-slate-800 border border-slate-200">${jobType}</span>
                     <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : job.status === 'Pausada' ? 'bg-amber-100 text-amber-900 border border-amber-300' : isHigh ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
                       ${job.status}
@@ -3718,18 +3735,18 @@
                 ${job.notes ? `<p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-2 whitespace-pre-line">${job.notes}</p>` : ''}
                 ${job.status === 'Pausada' ? `<div class="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900"><strong>Tarea pausada</strong>${job.pauseReason ? ` · ${job.pauseReason}` : ''}${job.pausedAt ? `<div class="text-[11px] mt-0.5">Desde ${new Date(job.pausedAt).toLocaleString('es-ES')}</div>` : ''}</div>` : ''}
                 ${(job.workSessions?.length || job.activeWorkStartedAt) ? `<p class="text-[11px] text-slate-500 mt-2">Tiempo efectivo registrado: <strong>${Helpers.formatMinutes(this.getWorkedMinutes(job))}</strong> · ${job.workSessions?.length || 0} ${((job.workSessions?.length || 0) === 1 ? 'sesión' : 'sesiones')}</p>` : ''}
-                ${matsHTML ? `<div class="flex flex-wrap gap-1.5 mt-2.5">${matsHTML}</div>` : ''}
-                ${expHTML ? `<div class="flex flex-wrap gap-1.5 mt-2">${expHTML}</div>` : ''}
+                ${matsHTML ? `<div class="flex flex-wrap gap-1.6 mt-2.5">${matsHTML}</div>` : ''}
+                ${expHTML ? `<div class="flex flex-wrap gap-1.6 mt-2">${expHTML}</div>` : ''}
               </div>
 
               <div class="flex items-center justify-between pt-2.5 border-t border-slate-100">
                 <div>
                   ${!isDone ? `
-                    ${job.status === 'Pausada' ? `<button type="button" onclick="JobsModule.resume('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white">Reanudar</button>` : job.status === 'En curso' ? `<button type="button" onclick="JobsModule.pause('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white">Pausar</button>` : `<button type="button" onclick="JobsModule.start('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">Iniciar</button>`}
-                    <button type="button" onclick="JobsModule.quickComplete('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">Completar</button>
+                    ${job.status === 'Pausada' ? `<button type="button" onclick="JobsModule.resume('${job.id}')" class="px-3 py-1.6 rounded-lg text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white">Reanudar</button>` : job.status === 'En curso' ? `<button type="button" onclick="JobsModule.pause('${job.id}')" class="px-3 py-1.6 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white">Pausar</button>` : `<button type="button" onclick="JobsModule.start('${job.id}')" class="px-3 py-1.6 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">Iniciar</button>`}
+                    <button type="button" onclick="JobsModule.quickComplete('${job.id}')" class="px-3 py-1.6 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">Completar</button>
                   ` : `<span class="text-[11px] font-medium text-emerald-700">${job.stockDeducted ? 'Stock descontado' : 'Completada'}</span>`}
                 </div>
-                <button type="button" onclick="JobsModule.openModal('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200">
+                <button type="button" onclick="JobsModule.openModal('${job.id}')" class="px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200">
                   Editar
                 </button>
               </div>
@@ -3817,11 +3834,11 @@
         ).join('');
 
         row.innerHTML = `
-          <select class="jexp-type sm:col-span-4 px-2 py-1.5 text-xs bg-white border border-slate-300 rounded-lg font-medium">
+          <select class="jexp-type sm:col-span-4 px-2 py-1.6 text-xs bg-white border border-slate-300 rounded-lg font-medium">
             ${typeOptions}
           </select>
-          <input type="number" step="0.01" min="0" value="${amount}" oninput="JobsModule.updateExpensesSubtotal()" placeholder="Importe €" class="jexp-amount sm:col-span-3 px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg">
-          <input type="text" value="${concept.replace(/"/g, '&quot;')}" placeholder="Concepto / nota..." class="jexp-concept sm:col-span-4 px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg">
+          <input type="number" step="0.01" min="0" value="${amount}" oninput="JobsModule.updateExpensesSubtotal()" placeholder="Importe €" class="jexp-amount sm:col-span-3 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
+          <input type="text" value="${concept.replace(/"/g, '&quot;')}" placeholder="Concepto / nota..." class="jexp-concept sm:col-span-4 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
           <button type="button" onclick="this.parentElement.remove(); JobsModule.updateExpensesSubtotal();" class="sm:col-span-1 py-1 text-slate-400 hover:text-rose-600 text-xs font-bold text-center">✕</button>
         `;
         container.appendChild(row);
@@ -3936,10 +3953,10 @@
         const row = document.createElement('div');
         row.className = 'flex items-center gap-2 mat-row min-w-0';
         row.innerHTML = `
-          <select onchange="JobsModule.renderMaterialMatches()" class="mat-sku flex-1 min-w-0 px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg">
+          <select onchange="JobsModule.renderMaterialMatches()" class="mat-sku flex-1 min-w-0 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
           </select>
-          <input type="number" min="1" value="${qty}" oninput="JobsModule.renderMaterialMatches()" class="mat-qty w-16 px-2 py-1.5 text-xs bg-white border border-slate-300 rounded-lg text-center shrink-0">
-          <button type="button" onclick="this.parentElement.remove(); JobsModule.renderMaterialMatches();" class="p-1.5 text-slate-400 hover:text-rose-600 text-xs font-bold shrink-0">✕</button>
+          <input type="number" min="1" value="${qty}" oninput="JobsModule.renderMaterialMatches()" class="mat-qty w-16 px-2 py-1.6 text-xs bg-white border border-slate-300 rounded-lg text-center shrink-0">
+          <button type="button" onclick="this.parentElement.remove(); JobsModule.renderMaterialMatches();" class="p-1.6 text-slate-400 hover:text-rose-600 text-xs font-bold shrink-0">✕</button>
         `;
         const selectEl = row.querySelector('.mat-sku');
         this.populateRowSelect(selectEl, selectedSku);
@@ -4005,13 +4022,13 @@
           return `
             <div class="p-2.5 flex items-start justify-between gap-2 hover:bg-slate-50">
               <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  ${item.sku ? `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">${item.sku}</span>` : `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">Sin ref.</span>`}
-                  <span class="text-[10px] font-medium px-1.5 py-0.5 rounded ${outOfStock ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}">Stock: ${item.stock}</span>
+                <div class="flex items-center gap-1.6 flex-wrap">
+                  ${item.sku ? `<span class="font-mono text-[10px] font-bold px-1.6 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">${item.sku}</span>` : `<span class="text-[10px] font-semibold px-1.6 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">Sin ref.</span>`}
+                  <span class="text-[10px] font-medium px-1.6 py-0.5 rounded ${outOfStock ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}">Stock: ${item.stock}</span>
                 </div>
                 <p class="text-xs font-semibold text-slate-900 mt-1 whitespace-normal break-words">${item.name}</p>
               </div>
-              <div class="flex items-center gap-1.5 shrink-0">
+              <div class="flex items-center gap-1.6 shrink-0">
                 ${selectedQty > 0 ? `<span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">En parte: ${selectedQty}</span>` : ''}
                 <button type="button" onclick="JobsModule.addOrIncrementMaterial('${itemKey}')" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white transition-colors">
                   ${selectedQty > 0 ? '+1 ud.' : '+ Añadir'}
@@ -4150,6 +4167,8 @@
           startTime: startVal,
           endTime: document.getElementById('job-end').value,
           status,
+          calendarEntries: existing && Array.isArray(existing.calendarEntries) ? existing.calendarEntries : [],
+          originalCalendarStatus: existing?.originalCalendarStatus || (status === 'Pausada' ? 'Pausada' : null),
           workSessions,
           activeWorkStartedAt,
           pauseReason: status === 'Pausada' ? pauseReason : '',
@@ -4166,6 +4185,14 @@
           stockDeducted
         };
 
+        if (status === 'Completada' && payload.calendarEntries.length) {
+          const lastEntry = payload.calendarEntries[payload.calendarEntries.length - 1];
+          lastEntry.calendarStatus = 'Completada';
+          const completedAt = new Date(payload.completedAt || nowIso);
+          if (Helpers.toDateStr(completedAt) === lastEntry.date) {
+            lastEntry.endTime = `${String(completedAt.getHours()).padStart(2, '0')}:${String(completedAt.getMinutes()).padStart(2, '0')}`;
+          }
+        }
         if (existing) {
           const idx = State.jobs.findIndex(j => j.id === id);
           State.jobs[idx] = payload;
@@ -4209,6 +4236,7 @@
         job.workSessions.push({ start: job.activeWorkStartedAt, end: now });
         job.activeWorkStartedAt = null;
         job.status = 'Pausada';
+        if (!job.calendarEntries || !job.calendarEntries.length) job.originalCalendarStatus = 'Pausada';
         job.pausedAt = now;
         job.pauseReason = reason;
         job.reminder = 'none';
@@ -4220,40 +4248,30 @@
         const job = State.jobs.find(j => j.id === jobId);
         if (!job || job.status !== 'Pausada') return;
 
-        // La reanudación crea una nueva cita de calendario, vinculada a la intervención original.
         const now = new Date();
-        const defaultDate = Helpers.toDateStr(now);
-        const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        const resumeDate = window.prompt('Fecha de reanudación (AAAA-MM-DD):', defaultDate);
-        if (resumeDate === null) return;
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(resumeDate) || Number.isNaN(Date.parse(resumeDate + 'T12:00:00'))) {
-          Helpers.toast('La fecha no es válida. Usa AAAA-MM-DD.', 'warning'); return;
-        }
-        const resumeTime = window.prompt('Hora de inicio (HH:MM):', defaultTime);
-        if (resumeTime === null) return;
-        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(resumeTime)) {
-          Helpers.toast('La hora no es válida. Usa HH:MM.', 'warning'); return;
-        }
-        const defaultEnd = job.endTime || '10:00';
-        const resumeEnd = window.prompt('Hora prevista de fin (HH:MM):', defaultEnd);
-        if (resumeEnd === null) return;
-        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(resumeEnd)) {
-          Helpers.toast('La hora de fin no es válida. Usa HH:MM.', 'warning'); return;
-        }
+        const resumeDate = Helpers.toDateStr(now);
+        const resumeTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const currentMinutes = Helpers.timeToMinutes(resumeTime);
+        const originalEnd = Helpers.timeToMinutes(job.endTime || '');
+        const resumeEnd = originalEnd !== null && originalEnd > currentMinutes
+          ? job.endTime
+          : Helpers.minutesToTime(Math.min(currentMinutes + 60, 23 * 60 + 59));
 
+        // La cita original conserva el estado de pausa; la nueva cita queda ligada al mismo trabajo.
+        job.originalCalendarStatus = job.originalCalendarStatus || 'Pausada';
         job.calendarEntries = Array.isArray(job.calendarEntries) ? job.calendarEntries : [];
         job.calendarEntries.push({
           date: resumeDate,
           startTime: resumeTime,
           endTime: resumeEnd,
           calendarEntryType: 'Reanudación',
+          calendarStatus: 'En curso',
           createdAt: now.toISOString()
         });
         job.status = 'En curso';
         job.activeWorkStartedAt = now.toISOString();
         job.pausedAt = null;
         job.pauseReason = '';
-        // La cita original no se mueve: la nueva sesión aparece como otra línea en el calendario.
         Storage.save(); UI.refreshAll();
         Helpers.toast('Tarea reanudada y nueva entrada añadida al calendario', 'success');
       },
@@ -4268,6 +4286,14 @@
         }
         job.status = 'Completada';
         job.completedAt = new Date().toISOString();
+        if (Array.isArray(job.calendarEntries) && job.calendarEntries.length) {
+          const lastEntry = job.calendarEntries[job.calendarEntries.length - 1];
+          lastEntry.calendarStatus = 'Completada';
+          const completedTime = new Date(job.completedAt);
+          if (Helpers.toDateStr(completedTime) === lastEntry.date) {
+            lastEntry.endTime = `${String(completedTime.getHours()).padStart(2, '0')}:${String(completedTime.getMinutes()).padStart(2, '0')}`;
+          }
+        }
         job.reminder = 'none';
         if (!job.stockDeducted && job.materials && job.materials.length > 0) {
           this.deductStock(job.materials);
@@ -4595,13 +4621,13 @@
             : State.inventory.filter(i => i.category === cat).length;
 
           return `
-            <button type="button" onclick="InventoryModule.selectCategory('${cat.replace(/'/g, "\\'")}')" class="px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            <button type="button" onclick="InventoryModule.selectCategory('${cat.replace(/'/g, "\\'")}')" class="px-3.5 py-1.6 rounded-full text-xs font-semibold border transition-all whitespace-nowrap flex items-center gap-1.6 ${
               isSel
                 ? 'bg-blue-700 text-white border-blue-700'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
             }">
               <span>${cat}</span>
-              <span class="px-1.5 py-0.2 rounded-full text-[10px] ${isSel ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}">${count}</span>
+              <span class="px-1.6 py-0.2 rounded-full text-[10px] ${isSel ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}">${count}</span>
             </button>
           `;
         }).join('');
@@ -4661,7 +4687,7 @@
                   ${isAtExactMin ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">En mínimo</span>` : ''}
                 </div>
                 <button type="button" onclick="InventoryModule.openDetail('${item.id}')" class="font-semibold text-slate-900 mt-1 text-left hover:text-blue-700">${item.name}</button>
-                <div id="inv-row-photos-${item.id}" class="flex items-center gap-1.5 mt-2"></div>
+                <div id="inv-row-photos-${item.id}" class="flex items-center gap-1.6 mt-2"></div>
                 <span class="md:hidden inline-block mt-1 text-[11px] text-slate-500">${item.category}</span>
               </td>
               <td class="py-3.5 px-4 hidden md:table-cell">
@@ -4678,8 +4704,8 @@
                 </div>
               </td>
               <td class="py-3.5 px-4 text-right whitespace-nowrap">
-                <button type="button" onclick="InventoryModule.openModal('${item.id}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-200 mr-1">Editar</button>
-                <button type="button" onclick="InventoryModule.deletePart('${item.id}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50">Borrar</button>
+                <button type="button" onclick="InventoryModule.openModal('${item.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-200 mr-1">Editar</button>
+                <button type="button" onclick="InventoryModule.deletePart('${item.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50">Borrar</button>
               </td>
             </tr>
           `;
@@ -4942,12 +4968,12 @@
               <div class="flex items-center justify-between gap-1 mb-1">
                 <label class="text-xs font-semibold text-slate-700 truncate">${idx + 1}. ${fieldName}</label>
                 <div class="flex items-center gap-0.5 shrink-0">
-                  <button type="button" onclick="InstallationsModule.renameGlobalField('${safeField}')" title="Renombrar categoría" class="px-1.5 py-0.5 text-[11px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-100">✎</button>
-                  <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', -1)" ${idx === 0 ? 'disabled' : ''} title="Subir campo" class="px-1.5 py-0.5 text-[11px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↑</button>
-                  <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', 1)" ${idx === State.globalInstallationFields.length - 1 ? 'disabled' : ''} title="Bajar campo" class="px-1.5 py-0.5 text-[11px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↓</button>
+                  <button type="button" onclick="InstallationsModule.renameGlobalField('${safeField}')" title="Renombrar categoría" class="px-1.6 py-0.5 text-[11px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-100">✎</button>
+                  <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', -1)" ${idx === 0 ? 'disabled' : ''} title="Subir campo" class="px-1.6 py-0.5 text-[11px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↑</button>
+                  <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', 1)" ${idx === State.globalInstallationFields.length - 1 ? 'disabled' : ''} title="Bajar campo" class="px-1.6 py-0.5 text-[11px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↓</button>
                 </div>
               </div>
-              <input type="text" data-gfield="${fieldName.replace(/"/g, '&quot;')}" value="${safeVal}" placeholder="${fieldName}..." class="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600">
+              <input type="text" data-gfield="${fieldName.replace(/"/g, '&quot;')}" value="${safeVal}" placeholder="${fieldName}..." class="w-full px-3 py-1.6 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600">
             </div>
           `;
         }).join('');
@@ -5139,8 +5165,8 @@
               <div class="flex items-center gap-1 shrink-0">
                 <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', -1)" ${idx === 0 ? 'disabled' : ''} title="Subir" class="px-2 py-1 text-xs font-bold rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↑</button>
                 <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', 1)" ${idx === State.globalInstallationFields.length - 1 ? 'disabled' : ''} title="Bajar" class="px-2 py-1 text-xs font-bold rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↓</button>
-                <button type="button" onclick="InstallationsModule.renameGlobalField('${safeField}')" title="Renombrar" class="text-xs font-semibold text-blue-700 hover:underline px-1.5">Editar</button>
-                <button type="button" onclick="InstallationsModule.deleteGlobalField('${safeField}')" class="text-xs font-semibold text-rose-600 hover:underline px-1.5">Quitar</button>
+                <button type="button" onclick="InstallationsModule.renameGlobalField('${safeField}')" title="Renombrar" class="text-xs font-semibold text-blue-700 hover:underline px-1.6">Editar</button>
+                <button type="button" onclick="InstallationsModule.deleteGlobalField('${safeField}')" class="text-xs font-semibold text-rose-600 hover:underline px-1.6">Quitar</button>
               </div>
             </div>
           `;
@@ -5915,7 +5941,7 @@
           const materials = (j.materials || []).map(m => `${m.qty || 1} x ${m.name || m.sku || 'Repuesto'}`).join('; ');
           const expenses = (j.expenses || []).map(ex => `${Helpers.resolveExpenseType(ex.type)}: ${Helpers.formatCurrency(ex.amount)}${ex.concept ? ' (' + ex.concept + ')' : ''}`).join('; ');
           const installationData = inst?.values ? Object.entries(inst.values).filter(([k,v]) => String(v ?? '').trim()).map(([k,v]) => `${k}: ${v}`).join('\n') : '';
-          const excludedJobKeys = new Set(['id','instId','type','title','unitName','createInstallationFiche','date','startTime','endTime','endDate','status','priority','reminder','notified','notifiedKeys','snoozeUntil','notes','materials','expenses','stockDeducted','workSessions','activeWorkStartedAt','pauseReason','pausedAt','completedAt','calendarEntries','calendarEntryType','createdAt','_calendarEntry']);
+          const excludedJobKeys = new Set(['id','instId','type','title','unitName','createInstallationFiche','date','startTime','endTime','endDate','status','priority','reminder','notified','notifiedKeys','snoozeUntil','notes','materials','expenses','stockDeducted','workSessions','activeWorkStartedAt','pauseReason','pausedAt','completedAt','calendarEntries','calendarEntryType','calendarStatus','originalCalendarStatus','createdAt','_calendarEntry']);
           const extraJobData = Object.entries(j).filter(([k,v]) => !excludedJobKeys.has(k) && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') && String(v).trim() !== '').map(([k,v]) => `${k}: ${v}`).join('\n');
           const desc = [
             `Tipo: ${Helpers.resolveJobType(j)}`, `Unidad: ${unit}`, address ? `Dirección: ${address}` : '',

@@ -1,0 +1,15 @@
+MANTENIPRO — VERSIÓN 1.6
+Paquete para GitHub Pages
+
+CAMBIOS
+1. Reanudar ya no hace preguntas: registra automáticamente fecha y hora actuales y crea una nueva cita vinculada a la misma intervención.
+2. La cita original conserva el estado de pausa aunque la intervención se complete posteriormente.
+3. La cita de reanudación permanece visible y refleja la finalización; su hora de fin se actualiza al completar, tanto desde el botón rápido como al guardar el formulario.
+4. El cálculo de desplazamientos considera también las entradas de reanudación como citas independientes, calculando el trayecto entre el trabajo intermedio y la reanudación.
+5. Se conservan las demás funciones de la versión 1.5.
+
+PUBLICACIÓN
+Descomprime el ZIP y sustituye en la raíz de GitHub Pages los archivos index.html y sw.js por los incluidos. Mantén sus nombres.
+
+COMPROBACIÓN
+Sintaxis JavaScript validada con Node.js. No se ha probado en un dispositivo Android ni con datos reales de producción.
