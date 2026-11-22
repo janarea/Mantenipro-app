@@ -1,0 +1,20 @@
+MANTENIPRO - ARCHIVOS PARA GITHUB PAGES
+
+CONTENIDO
+- index.html: última versión de ManteniPro preparada el 22/11/2026.
+- sw.js: Service Worker para registrar la PWA, mostrar notificaciones del sistema y recibir mensajes Push.
+
+INSTALACIÓN
+1. Descomprime este ZIP.
+2. Abre tu repositorio de GitHub y entra en la carpeta donde está actualmente el index.html publicado.
+3. Sube index.html y sw.js a ESA MISMA CARPETA (normalmente la raíz del repositorio).
+4. Sustituye el index.html anterior y confirma los cambios (Commit).
+5. Espera a que GitHub Pages publique los cambios.
+6. En Android, abre la web de ManteniPro con Chrome, recarga la página y acepta el permiso de notificaciones cuando la aplicación lo solicite.
+7. Usa el botón de prueba de notificaciones dentro de ManteniPro para comprobar que Android muestra una notificación del sistema.
+
+IMPORTANTE
+- Los dos archivos deben quedar juntos en la misma carpeta publicada. No subas sw.js dentro de una subcarpeta distinta.
+- Si tu GitHub Pages publica desde /docs, coloca ambos archivos dentro de /docs.
+- Este Service Worker incluye el receptor de Web Push, pero para recibir avisos con ManteniPro cerrada hace falta además configurar un servidor que envíe Push (suscripciones, claves VAPID y backend). Este ZIP por sí solo no programa ni envía avisos en segundo plano.
+- La prueba de notificación local comprueba el permiso y la visualización del aviso del sistema; no demuestra que Web Push remoto esté configurado.

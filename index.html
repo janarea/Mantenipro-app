@@ -5236,8 +5236,10 @@
     const NotificationsModule = {
       timerId: null,
       audioCtx: null,
+      swRegistration: null,
 
       init() {
+        this.registerServiceWorker();
         this.updatePermissionUI();
         this.renderPanel();
         this.checkDueReminders();
@@ -5319,9 +5321,40 @@
         }
       },
 
+      async registerServiceWorker() {
+        if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return null;
+        try {
+          this.swRegistration = await navigator.serviceWorker.register(new URL('./sw.js', location.href), { scope: './' });
+          await navigator.serviceWorker.ready;
+          this.updatePermissionUI();
+          return this.swRegistration;
+        } catch (e) {
+          console.warn('ManteniPro: no se pudo registrar el Service Worker', e);
+          const status = document.getElementById('notif-perm-status');
+          if (status) status.textContent = 'Avisos en app activos · falta instalar el Service Worker';
+          return null;
+        }
+      },
+
+      async showSystemNotification(title, options = {}) {
+        if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
+        try {
+          const reg = this.swRegistration || await this.registerServiceWorker();
+          if (reg && reg.showNotification) {
+            await reg.showNotification(title, { body: options.body || '', icon: options.icon || undefined, badge: options.badge || undefined, tag: options.tag || 'mantenipro', data: options.data || {}, vibrate: [180, 80, 180] });
+          } else {
+            new Notification(title, options);
+          }
+          return true;
+        } catch (e) {
+          console.warn('No se pudo mostrar la notificación del sistema:', e);
+          return false;
+        }
+      },
+
       async requestPermission() {
         if (typeof Notification === 'undefined') {
-          Helpers.toast('Este navegador muestra los avisos dentro de la aplicación', 'dark');
+          Helpers.toast('Este navegador no admite notificaciones del sistema en este contexto', 'warning');
           return;
         }
         try {
@@ -5329,26 +5362,29 @@
           this.updatePermissionUI();
           DashboardModule.renderUpcomingReminders();
           if (perm === 'granted') {
+            await this.registerServiceWorker();
+            await this.showSystemNotification('ManteniPro · Avisos activados', { body: 'Las notificaciones del sistema están autorizadas en este dispositivo.', tag: 'mantenipro-permission-test' });
             this.playAlertSound();
-            Helpers.toast('Notificaciones activadas correctamente', 'success');
+            Helpers.toast('Permiso concedido. Comprueba que Android no tenga bloqueadas las notificaciones.', 'success');
           } else {
-            Helpers.toast('Seguirás recibiendo avisos dentro de la app', 'warning');
+            Helpers.toast('Permiso no concedido. Seguirás viendo avisos dentro de ManteniPro.', 'warning');
           }
-        } catch (_err) {
-          Helpers.toast('No se pudo solicitar el permiso del navegador', 'warning');
+        } catch (e) {
+          Helpers.toast('No se pudo activar el permiso: ' + (e.message || 'error del navegador'), 'warning');
         }
       },
 
-      sendTestAlert() {
+      async sendTestAlert() {
         const now = new Date();
         const hh = String(now.getHours()).padStart(2, '0');
         const mm = String(now.getMinutes()).padStart(2, '0');
-        this.triggerAlert({
-          jobId: null,
-          title: '🔔 Aviso de prueba · ManteniPro',
-          body: `Comprobación de aviso y sonido a las ${hh}:${mm}. Todo funciona correctamente.`,
-          timeLabel: `${hh}:${mm}`
-        });
+        this.triggerAlert({ jobId: null, title: '🔔 Aviso de prueba · ManteniPro', body: `Comprobación de aviso a las ${hh}:${mm}.`, timeLabel: `${hh}:${mm}` });
+        if (Notification.permission === 'granted') {
+          const ok = await this.showSystemNotification('🔔 Aviso de prueba · ManteniPro', { body: `Notificación del sistema recibida a las ${hh}:${mm}.`, tag: 'mantenipro-test-' + Date.now() });
+          if (!ok) Helpers.toast('El aviso interno funciona, pero Android/Chrome no ha mostrado la notificación del sistema. Revisa los permisos.', 'warning');
+        } else {
+          Helpers.toast('Para probar el aviso del sistema, pulsa primero «Activar» en permisos.', 'warning');
+        }
       },
 
       togglePanel() {
@@ -5444,11 +5480,7 @@
         Helpers.toast(`${title}: ${body}`, 'warning');
 
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          try {
-            new Notification(title, { body, tag: jobId || Helpers.uid('n') });
-          } catch (_e) {
-            // Fallback visual ya mostrado
-          }
+          this.showSystemNotification(title, { body, tag: jobId || Helpers.uid('n'), data: { jobId: jobId || null } });
         }
       },
 
