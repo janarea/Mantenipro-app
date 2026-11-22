@@ -219,6 +219,7 @@
   </style>
 </head>
 <body class="antialiased pb-20 md:pb-10">
+  <div id="scanner-modal" class="modal-backdrop hidden"><div class="modal-card modal-sm p-5 space-y-3"><div class="flex justify-between items-center"><h3 class="font-bold">Escanear código de barras</h3><button onclick="CodeScanner.close()" aria-label="Cerrar">✕</button></div><video id="barcode-video" autoplay muted playsinline class="hidden w-full max-h-64 object-contain rounded-xl bg-black"></video><div id="scanner-camera-help" class="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">Preparando cámara…</div><p id="scanner-status" class="text-xs text-slate-600">También puedes introducir el código manualmente.</p><input id="barcode-manual" class="w-full p-3 border rounded-xl" placeholder="Código de barras" inputmode="numeric"><div class="flex gap-2"><button onclick="CodeScanner.lookup(document.getElementById('barcode-manual').value)" class="flex-1 bg-blue-700 text-white rounded-xl p-2 text-sm">Buscar código</button><button onclick="CodeScanner.close()" class="p-2 border rounded-xl text-sm">Cerrar</button></div></div></div>
 
   <!-- Avisos ligeros en pantalla y acción Deshacer tras eliminaciones -->
   <div id="toast-box" class="fixed bottom-20 md:bottom-6 right-4 z-[80] flex flex-col gap-2 pointer-events-none max-w-xs sm:max-w-sm"></div>
@@ -357,6 +358,13 @@
             + Nuevo Repuesto
           </button>
         </div>
+      </div>
+
+      <!-- Acceso directo al lector de códigos de barras -->
+      <div class="grid grid-cols-1 gap-2">
+        <button type="button" onclick="CodeScanner.open()" class="min-h-[58px] flex flex-row items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-3 py-3 text-sm font-bold shadow-sm active:scale-[0.98]">
+          <span class="text-xl" aria-hidden="true">▦</span><span>Escanear código de barras</span>
+        </button>
       </div>
 
       <!-- KPIs -->
@@ -1111,7 +1119,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 responsive-3col">
           <div class="min-w-0">
             <label class="block text-xs font-semibold text-slate-700 mb-1">SKU / Ref (opcional)</label>
-            <input type="text" id="inv-sku" placeholder="Opcional (ej. REF-001)" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl uppercase focus:outline-none focus:border-blue-600">
+            <input type="text" id="inv-sku" placeholder="Opcional (ej. REF-001)" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl uppercase focus:outline-none focus:border-blue-600"><label class="block text-xs font-semibold text-slate-700 mt-2 mb-1">Código de barras (opcional)</label><div class="flex gap-2"><input type="text" id="inv-barcode" placeholder="Escanea o escribe el código" class="min-w-0 flex-1 px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600"><button type="button" onclick="CodeScanner.open('inv-barcode')" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold">▦ Escanear</button></div>
           </div>
           <div class="sm:col-span-2 min-w-0">
             <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre / Descripción *</label>
@@ -1238,7 +1246,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 responsive-2col">
           <div class="min-w-0">
             <label class="block text-xs font-semibold text-slate-700 mb-1">Unidad *</label>
-            <input type="text" id="inst-unit" required placeholder="Nombre o código de unidad..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600">
+            <input type="text" id="inst-unit" required placeholder="Nombre o código de unidad..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600"><label class="block text-xs font-semibold text-slate-700 mt-2 mb-1">Código de barras de la unidad (opcional)</label><div class="flex gap-2"><input type="text" id="inst-barcode" placeholder="Escanea o escribe el código" class="min-w-0 flex-1 px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600"><button type="button" onclick="CodeScanner.open('inst-barcode')" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold">▦ Escanear</button></div>
           </div>
           <div class="min-w-0">
             <label class="block text-xs font-semibold text-slate-700 mb-1">Dirección *</label>
@@ -1394,23 +1402,7 @@
       </div>
 
       <div class="modal-scroll space-y-2.5">
-        <section class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 space-y-2.5">
-          <div>
-            <h4 class="text-sm font-bold text-slate-900">Sincronización con Google Calendar</h4>
-            <p class="text-[11px] text-slate-600 mt-0.5">Duplica las tareas de ManteniPro en tu calendario de Google. Puedes activarlo o pausarlo cuando quieras.</p>
-          </div>
-          <label class="flex items-center gap-2 text-xs font-semibold text-slate-800">
-            <input id="gcal-enabled" type="checkbox" class="rounded text-blue-700" onchange="GoogleCalendar.saveSettings()">
-            Activar duplicación automática de tareas
-          </label>
-          <label class="block text-[11px] font-semibold text-slate-700" for="gcal-client-id">ID de cliente OAuth de Google</label>
-          <input id="gcal-client-id" type="text" placeholder="xxxxx.apps.googleusercontent.com" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white" autocomplete="off">
-          <div class="flex flex-wrap gap-2">
-            <button type="button" onclick="GoogleCalendar.saveSettings()" class="px-3 py-2 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700">Guardar configuración</button>
-            <button type="button" onclick="GoogleCalendar.connect()" class="px-3 py-2 rounded-lg text-xs font-semibold bg-blue-700 text-white">Conectar Google Calendar</button>
-          </div>
-          <p id="gcal-status" class="text-[11px] text-slate-600">Desactivado. Para conectarlo necesitas configurar un cliente OAuth en Google Cloud.</p>
-        </section>
+        <section class="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-2"><h4 class="text-sm font-bold text-slate-900">Exportar a calendarios</h4><p class="text-[11px] text-slate-600">Genera un archivo .ics compatible con Google Calendar, Outlook y otros calendarios. No requiere conexión ni autorización.</p><div class="grid grid-cols-2 gap-2"><select id="ics-period" class="px-3 py-2 text-xs border rounded-lg bg-white"><option value="all">Todas las tareas</option><option value="day">Día concreto</option><option value="week">Semana</option><option value="month">Mes</option><option value="range">Intervalo personalizado</option></select><input id="ics-date" type="date" class="px-2 py-2 text-xs border rounded-lg bg-white"></div><div class="grid grid-cols-2 gap-2"><input id="ics-from" type="date" class="px-2 py-2 text-xs border rounded-lg bg-white"><input id="ics-to" type="date" class="px-2 py-2 text-xs border rounded-lg bg-white"></div><button type="button" onclick="Backup.exportICS()" class="w-full px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-700 text-white">Descargar calendario (.ics)</button></section>
         <button type="button" onclick="Backup.exportCSV()" class="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-left flex items-center justify-between gap-2">
           <span>Exportar Tareas a Excel (CSV)</span>
           <span>↓</span>
@@ -3577,106 +3569,6 @@
       }
     };
 
-    const GoogleCalendar = {
-      KEY: 'mantenipro_google_calendar_cfg',
-      tokenClient: null,
-      accessToken: null,
-      loading: null,
-      settings: { enabled: false, clientId: '' },
-      init() {
-        try { this.settings = Object.assign(this.settings, JSON.parse(localStorage.getItem(this.KEY) || '{}')); } catch (_e) {}
-        this.renderStatus();
-      },
-      saveSettings() {
-        const enabledEl = document.getElementById('gcal-enabled');
-        const clientEl = document.getElementById('gcal-client-id');
-        if (enabledEl) this.settings.enabled = enabledEl.checked;
-        if (clientEl) this.settings.clientId = clientEl.value.trim();
-        try { localStorage.setItem(this.KEY, JSON.stringify(this.settings)); } catch (_e) {}
-        this.renderStatus();
-        if (this.settings.enabled && !this.settings.clientId) Helpers.toast('Introduce el ID de cliente OAuth de Google para activar Calendar', 'warning');
-        if (this.settings.enabled && this.accessToken) this.syncPending();
-      },
-      renderStatus() {
-        const enabledEl = document.getElementById('gcal-enabled');
-        const clientEl = document.getElementById('gcal-client-id');
-        const status = document.getElementById('gcal-status');
-        if (enabledEl) enabledEl.checked = Boolean(this.settings.enabled);
-        if (clientEl) clientEl.value = this.settings.clientId || '';
-        if (status) status.textContent = !this.settings.enabled ? 'Desactivado. Las tareas solo se guardan en ManteniPro.' : (this.settings.clientId ? (this.accessToken ? 'Google Calendar conectado en esta sesión.' : 'Activado. Pulsa «Conectar Google Calendar» para autorizar el acceso.') : 'Activado, pero falta el ID de cliente OAuth.');
-      },
-      async loadIdentity() {
-        if (window.google?.accounts?.oauth2) return;
-        if (!this.loading) this.loading = new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://accounts.google.com/gsi/client';
-          script.async = true; script.defer = true;
-          script.onload = resolve; script.onerror = () => reject(new Error('No se pudo cargar la autorización de Google'));
-          document.head.appendChild(script);
-        });
-        await this.loading;
-      },
-      async connect() {
-        this.saveSettings();
-        if (!this.settings.clientId) { Helpers.toast('Falta el ID de cliente OAuth de Google', 'warning'); return; }
-        try {
-          await this.loadIdentity();
-          this.tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: this.settings.clientId,
-            scope: 'https://www.googleapis.com/auth/calendar.events',
-            callback: async (response) => {
-              if (response.error) { Helpers.toast('Google no autorizó el acceso a Calendar', 'warning'); return; }
-              this.accessToken = response.access_token;
-              this.renderStatus();
-              Helpers.toast('Google Calendar conectado', 'success');
-              await this.syncPending();
-            }
-          });
-          this.tokenClient.requestAccessToken({ prompt: 'consent' });
-        } catch (e) { Helpers.toast(e.message || 'No se pudo conectar con Google Calendar', 'warning'); }
-      },
-      async api(path, method, body) {
-        if (!this.accessToken) throw new Error('Conecta primero Google Calendar');
-        const res = await fetch('https://www.googleapis.com/calendar/v3/' + path, {
-          method, headers: { Authorization: 'Bearer ' + this.accessToken, 'Content-Type': 'application/json' },
-          body: body ? JSON.stringify(body) : undefined
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error?.message || 'Error al sincronizar con Google Calendar');
-        return data;
-      },
-      eventFor(job) {
-        const inst = State.installations.find(i => i.id === job.instId);
-        const unit = inst ? `${inst.unit} · ${inst.address}` : (job.unitName || 'Sin instalación');
-        const dateTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid';
-        return {
-          summary: `${Helpers.resolveJobType(job)} · ${unit}`,
-          description: [job.notes || '', `Estado: ${job.status}`, `Prioridad: ${job.priority || 'Normal'}`].filter(Boolean).join('\n'),
-          start: { dateTime: `${job.date}T${job.startTime}:00`, timeZone: dateTimeZone },
-          end: { dateTime: `${job.date}T${job.endTime}:00`, timeZone: dateTimeZone }
-        };
-      },
-      async syncJob(job) {
-        if (!this.settings.enabled || !this.accessToken || !job || !job.date || !job.startTime || !job.endTime) return;
-        const event = this.eventFor(job);
-        try {
-          let result;
-          if (job.googleCalendarEventId) {
-            try { result = await this.api(`calendars/primary/events/${encodeURIComponent(job.googleCalendarEventId)}`, 'PUT', event); }
-            catch (e) {
-              if (!/404|not found/i.test(e.message)) throw e;
-              result = await this.api('calendars/primary/events', 'POST', event);
-            }
-          } else result = await this.api('calendars/primary/events', 'POST', event);
-          job.googleCalendarEventId = result.id;
-          Storage.save();
-        } catch (e) { console.warn('Google Calendar:', e); Helpers.toast(`Tarea guardada, pero Calendar: ${e.message}`, 'warning'); }
-      },
-      async syncPending() {
-        if (!this.settings.enabled || !this.accessToken) return;
-        for (const job of State.jobs) await this.syncJob(job);
-      }
-    };
 
     const JobsModule = {
       setFilter(filter) {
@@ -3834,8 +3726,14 @@
           document.getElementById('job-modal-title').textContent = 'Nueva Tarea / Avería';
           document.getElementById('job-id').value = '';
           typeSelect.value = 'AVERIA';
-          document.getElementById('job-date').value = presetDate || State.selectedDate;
-          document.getElementById('job-status').value = 'Pendiente';
+          const now = new Date();
+          const localDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+          const localTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+          document.getElementById('job-date').value = presetDate || localDate;
+          document.getElementById('job-start').value = localTime;
+          const end = new Date(now.getTime()+90*60000);
+          document.getElementById('job-end').value = `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`;
+          document.getElementById('job-status').value = 'Completada';
           document.getElementById('job-priority').value = 'Normal';
           document.getElementById('job-reminder').value = 'none';
           if (createCheckbox) createCheckbox.checked = true;
@@ -4199,7 +4097,6 @@
         ExpensesModule.syncJobExpenses(payload);
 
         Storage.save();
-        if (GoogleCalendar.settings.enabled && GoogleCalendar.accessToken) GoogleCalendar.syncJob(payload);
         this.closeModal();
         UI.refreshAll();
         NotificationsModule.checkDueReminders();
@@ -4341,7 +4238,7 @@
         const entity=(type==='inventory'?State.inventory:State.installations).find(x=>x.id===entityId); if(!entity)return;
         const p=(entity.photos||[]).find(x=>x.id===photoId); if(!p)return;
         if(p.driveFileId && DriveSync.configured() && navigator.onLine){try{await DriveSync.call({action:'deletePhoto',fileId:p.driveFileId});}catch(e){Helpers.toast('No se pudo borrar la copia de Drive: '+e.message,'warning');return;}}
-        entity.photos=entity.photos.filter(x=>x.id!==photoId); await this.remove(photoId); Storage.save(); this.render(type,entityId);
+        entity.photos=entity.photos.filter(x=>x.id!==photoId); try{const ix=JSON.parse(localStorage.getItem('mantenipro_visual_index_v1')||'{}');delete ix[photoId];localStorage.setItem('mantenipro_visual_index_v1',JSON.stringify(ix));}catch(e){} await this.remove(photoId); Storage.save(); this.render(type,entityId);
       },
       async syncAll(){
         if(!DriveSync.configured()||!navigator.onLine)return;
@@ -4676,6 +4573,7 @@
           document.getElementById('inv-modal-title').textContent = 'Editar Repuesto';
           document.getElementById('inv-id').value = item.id;
           document.getElementById('inv-sku').value = item.sku;
+          document.getElementById('inv-barcode').value = item.barcode || '';
           document.getElementById('inv-name').value = item.name;
           sel.value = item.category || 'General';
           document.getElementById('inv-stock').value = item.stock;
@@ -4686,6 +4584,7 @@
           document.getElementById('inv-modal-title').textContent = 'Nuevo Repuesto';
           document.getElementById('inv-id').value = '';
           document.getElementById('inv-sku').value = '';
+          document.getElementById('inv-barcode').value = '';
           document.getElementById('inv-name').value = '';
           sel.value = State.selectedCategory !== 'Todas' && State.categories.includes(State.selectedCategory)
             ? State.selectedCategory
@@ -4706,6 +4605,7 @@
         e.preventDefault();
         const id = document.getElementById('inv-id').value;
         const sku = document.getElementById('inv-sku').value.trim().toUpperCase();
+        const barcode = document.getElementById('inv-barcode').value.trim();
         const name = document.getElementById('inv-name').value.trim();
         const category = document.getElementById('inv-category').value.trim() || 'General';
         const stock = parseInt(document.getElementById('inv-stock').value, 10) || 0;
@@ -4718,12 +4618,13 @@
         if (id) {
           const idx = State.inventory.findIndex(i => i.id === id);
           if (idx !== -1) {
-            State.inventory[idx] = { ...State.inventory[idx], id, sku, name, category, stock, minStock, photos: State.inventory[idx].photos || [] };
+            State.inventory[idx] = { ...State.inventory[idx], id, sku, barcode, name, category, stock, minStock, photos: State.inventory[idx].photos || [] };
           }
         } else {
           State.inventory.push({
             id: id || Helpers.uid('inv'),
             sku,
+            barcode,
             name,
             category,
             stock,
@@ -4912,6 +4813,7 @@
           document.getElementById('inst-modal-title').textContent = 'Editar Instalación';
           document.getElementById('inst-id').value = inst.id;
           document.getElementById('inst-unit').value = inst.unit;
+          document.getElementById('inst-barcode').value = inst.barcode || '';
           document.getElementById('inst-address').value = inst.address;
           this.renderGlobalFieldInputsInModal(inst);
           delBtn.classList.remove('hidden');
@@ -4920,6 +4822,7 @@
         } else {
           document.getElementById('inst-modal-title').textContent = 'Nueva Instalación';
           document.getElementById('inst-id').value = '';
+          document.getElementById('inst-barcode').value = '';
           this.renderGlobalFieldInputsInModal(null);
           delBtn.classList.add('hidden');
           document.getElementById('inst-photo-panel').classList.add('hidden');
@@ -4957,6 +4860,7 @@
         const id = document.getElementById('inst-id').value;
         const unit = document.getElementById('inst-unit').value.trim();
         const address = document.getElementById('inst-address').value.trim();
+        const barcode = document.getElementById('inst-barcode').value.trim();
 
         const values = {};
         State.globalInstallationFields.forEach(f => { values[f] = ''; });
@@ -4967,13 +4871,14 @@
         if (id) {
           const idx = State.installations.findIndex(i => i.id === id);
           if (idx !== -1) {
-            State.installations[idx] = { ...State.installations[idx], unit, address, values, photos: State.installations[idx].photos || [] };
+            State.installations[idx] = { ...State.installations[idx], unit, address, barcode, values, photos: State.installations[idx].photos || [] };
           }
         } else {
           State.installations.push({
             id: Helpers.uid('inst'),
             unit,
             address,
+            barcode,
             values,
             photos: []
           });
@@ -5529,11 +5434,103 @@
       }
     };
 
+
+    const CodeScanner = {
+      stream: null, timer: null, detector: null, busy: false, targetFieldId: null,
+      open(targetFieldId = null) {
+        this.targetFieldId = targetFieldId;
+        const modal = document.getElementById('scanner-modal');
+        modal.classList.remove('hidden');
+        document.getElementById('barcode-manual').value = '';
+        document.getElementById('barcode-video').classList.add('hidden');
+        document.getElementById('scanner-camera-help').textContent = 'Solicitando acceso a la cámara…';
+        document.getElementById('scanner-status').textContent = targetFieldId ? 'Escanea el código para rellenar el campo del formulario. También puedes escribirlo manualmente.' : 'Apunta la cámara al código. Si no funciona, introduce el código manualmente.';
+        const actionButton = document.querySelector('#scanner-modal button[onclick*="CodeScanner.lookup"]');
+        if (actionButton) actionButton.textContent = targetFieldId ? 'Usar código' : 'Buscar código';
+        this.start();
+      },
+      close() {
+        clearInterval(this.timer); this.timer = null; this.busy = false;
+        if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+        this.stream = null;
+        const video = document.getElementById('barcode-video');
+        video.pause(); video.srcObject = null; video.classList.add('hidden');
+        document.getElementById('scanner-modal').classList.add('hidden');
+      },
+      async start() {
+        const video = document.getElementById('barcode-video');
+        const help = document.getElementById('scanner-camera-help');
+        if (!('BarcodeDetector' in window)) {
+          help.textContent = 'Este navegador no dispone de lectura automática de códigos. Puedes introducir el número manualmente.';
+          document.getElementById('scanner-status').textContent = 'La lectura automática no está disponible en este navegador.';
+          return;
+        }
+        try {
+          this.detector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf'] });
+        } catch (e) {
+          help.textContent = 'No se pudo inicializar el lector. Puedes introducir el código manualmente.';
+          return;
+        }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          help.textContent = 'El navegador ha bloqueado la cámara en directo para este archivo. Abre ManteniPro desde su dirección HTTPS de GitHub Pages o introduce el código manualmente.';
+          return;
+        }
+        try {
+          this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+          video.srcObject = this.stream;
+          video.classList.remove('hidden');
+          await video.play();
+          help.textContent = 'Cámara activa. Centra el código de barras dentro de la imagen.';
+          this.timer = setInterval(async () => {
+            if (this.busy || !this.detector || video.readyState < 2) return;
+            this.busy = true;
+            try {
+              const codes = await this.detector.detect(video);
+              if (codes && codes.length && codes[0].rawValue) {
+                document.getElementById('barcode-manual').value = codes[0].rawValue;
+                this.lookup(codes[0].rawValue);
+              }
+            } catch (e) { /* Sigue intentando mientras la cámara esté activa. */ }
+            finally { this.busy = false; }
+          }, 350);
+        } catch (e) {
+          help.textContent = (location.protocol === 'file:')
+            ? 'Chrome no permite abrir la cámara en directo desde este HTML local. Abre ManteniPro desde GitHub Pages (HTTPS) o introduce el código manualmente.'
+            : 'No se pudo iniciar la cámara. Revisa el permiso de cámara de Chrome y vuelve a intentarlo, o introduce el código manualmente.';
+          document.getElementById('scanner-status').textContent = 'Detalle: ' + (e && e.message ? e.message : 'permiso o cámara no disponible');
+        }
+      },
+      lookup(code) {
+        code = String(code || '').trim();
+        if (!code) { Helpers.toast('Introduce un código', 'warning'); return; }
+        if (this.targetFieldId) {
+          const field = document.getElementById(this.targetFieldId);
+          if (field) { field.value = code; field.dispatchEvent(new Event('input', { bubbles: true })); }
+          this.close();
+          this.targetFieldId = null;
+          Helpers.toast('Código añadido al formulario', 'success');
+          return;
+        }
+        const item = State.inventory.find(x => String(x.barcode || '') === code || String(x.sku || '') === code);
+        if (item) { this.close(); InventoryModule.openDetail(item.id); return; }
+        const inst = State.installations.find(x => String(x.barcode || '') === code || String(x.unit || '') === code);
+        if (inst) {
+          this.close();
+          if (window.confirm('Unidad encontrada: ' + inst.unit + '\nAceptar: abrir ficha. Cancelar: crear una tarea para esta unidad.')) InstallationsModule.openDetail(inst.id);
+          else JobsModule.openModal(null, null, inst.id);
+          return;
+        }
+        this.close();
+        JobsModule.openModal();
+        document.getElementById('job-inst-unit').value = code;
+        Helpers.toast('Código no asociado: puedes iniciar una tarea para esa unidad', 'info');
+      }
+    };
+
     const Backup = {
       openModal() {
         PWAModule.refreshUI();
         document.getElementById('backup-modal').classList.remove('hidden');
-        GoogleCalendar.renderStatus();
         this.onAdvancedDatasetChange();
       },
       closeModal() {
@@ -5709,6 +5706,13 @@
         ['adv-date-from','adv-date-to','adv-search'].forEach(id => { document.getElementById(id).value = ''; });
         document.getElementById('adv-field').value = '';
         this.onAdvancedFieldChange();
+      },
+
+      exportICS() {
+        const period=document.getElementById('ics-period')?.value||'all';const chosen=document.getElementById('ics-date')?.value;const from=document.getElementById('ics-from')?.value;const to=document.getElementById('ics-to')?.value;let a=null,b=null;
+        if(period==='day'){a=b=chosen;}else if(period==='week'&&chosen){const d=new Date(chosen+'T12:00:00');const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);a=d.toISOString().slice(0,10);d.setDate(d.getDate()+6);b=d.toISOString().slice(0,10);}else if(period==='month'&&chosen){a=chosen.slice(0,7)+'-01';b=chosen.slice(0,7)+'-'+String(new Date(Number(chosen.slice(0,4)),Number(chosen.slice(5,7)),0).getDate()).padStart(2,'0');}else if(period==='range'){a=from;b=to;}
+        const jobs=State.jobs.filter(j=>j.date&&(!a||j.date>=a)&&(!b||j.date<=b));if((period==='day'||period==='week'||period==='month')&&!chosen){Helpers.toast('Selecciona una fecha','warning');return;}if(period==='range'&&(!a||!b||a>b)){Helpers.toast('Indica un intervalo válido','warning');return;}
+        const esc=v=>String(v||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');const stamp=v=>v.replace(/[-:]/g,'')+'00';const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//ManteniPro//ES','CALSCALE:GREGORIAN'];for(const j of jobs){const dt=j.date.replace(/-/g,'')+'T'+(j.startTime||'09:00').replace(':','')+'00';const end=j.date.replace(/-/g,'')+'T'+(j.endTime||'10:00').replace(':','')+'00';const inst=State.installations.find(x=>x.id===j.instId);lines.push('BEGIN:VEVENT','UID:'+esc(j.id)+'@mantenipro','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),'DTSTART:'+dt,'DTEND:'+end,'SUMMARY:'+esc((j.type||'Tarea')+' · '+(inst?.unit||j.unitName||'')),'DESCRIPTION:'+esc(j.notes||'')+'\nEstado: '+esc(j.status),'END:VEVENT');}lines.push('END:VCALENDAR');this.download(new Blob([lines.join('\r\n')],{type:'text/calendar;charset=utf-8'}),`mantenipro_${period}_${Helpers.relDate(0)}.ics`);Helpers.toast(`${jobs.length} tareas exportadas a calendario`,'success');
       },
 
       exportCSV() {
@@ -6642,7 +6646,6 @@
       DriveSync.quiet = true;
       try { Storage.init(); } finally { DriveSync.quiet = false; }
       DriveSync.start();
-      GoogleCalendar.init();
       PWAModule.init();
       UI.refreshAll();
       NotificationsModule.init();
