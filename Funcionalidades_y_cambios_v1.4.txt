@@ -1,0 +1,65 @@
+MANTENIPRO — VERSIÓN 1.4
+Paquete completo para publicar en GitHub Pages
+
+ARCHIVOS INCLUIDOS
+- index.html: aplicación ManteniPro actualizada a la versión 1.4.
+- sw.js: service worker para avisos push y gestión de clics en notificaciones.
+- Funcionalidades_y_cambios_v1.4.txt: relación de funcionalidades y cambios de esta versión.
+
+FUNCIONALIDADES QUE YA TENÍA LA APLICACIÓN
+- Panel principal con resumen de actividad, tareas, almacén, instalaciones y gastos.
+- Calendario de tareas e intervenciones, con vistas mensual y de día/horas.
+- Gestión de tareas: creación, edición, estados, prioridades, materiales, gastos y consulta de actividad.
+- Gestión de instalaciones y fichas de unidades, con sus datos asociados.
+- Almacén de repuestos/productos, categorías, cantidades y avisos/listado de artículos bajo mínimo.
+- Registro y consulta de gastos, incluidos gastos vinculados a intervenciones.
+- Escáner de códigos de barras para localizar unidades o productos; permite introducir el código manualmente si no se puede escanear.
+- Asociación de códigos a unidades/productos y acceso al escáner desde los formularios correspondientes.
+- Avisos dentro de la aplicación y soporte del service worker para recibir notificaciones push del sistema cuando el navegador/dispositivo y los permisos lo permiten.
+- Funcionamiento con datos locales del dispositivo y funciones PWA para instalación/uso sin conexión, sujeto a la disponibilidad de los recursos ya cargados.
+- Exportación de tareas a CSV, gastos a CSV, horas y desplazamientos a CSV/Excel y copia completa en JSON; restauración desde JSON.
+- Exportación de tareas a calendario mediante archivo ICS, con selección de todas las tareas, día, semana, mes o intervalo personalizado.
+- Sincronización y copias de seguridad en Google Drive mediante la configuración de Apps Script ya existente.
+
+CAMBIOS Y CORRECCIONES DE LA VERSIÓN 1.4
+
+1. NUEVO ESTADO «PAUSADA»
+- Se incorpora el estado Pausada para trabajos empezados que deben continuar otro día.
+- Desde la lista de tareas se puede iniciar una tarea pendiente, pausar una tarea activa e indicar opcionalmente el motivo (por ejemplo, falta de repuesto o falta de tiempo).
+- Las tareas pausadas muestran el motivo y la fecha/hora desde la que están detenidas.
+- Se incorpora la acción «Reanudar», que devuelve la misma tarea al estado En curso, sin crear una tarea nueva.
+- Se mantiene la acción para completar la tarea.
+- Se añade un filtro «Pausadas» en el apartado de tareas, con contador.
+- Se conserva el historial de sesiones de trabajo (inicio y fin de cada tramo) en los datos de la tarea.
+- Se calcula y muestra el tiempo efectivo registrado a partir de las sesiones guardadas; no suma el tiempo que la tarea permanece pausada.
+
+2. AVISO EN EL PANEL PRINCIPAL
+- Cuando existe al menos una tarea pausada, aparece una tarjeta destacada «Tareas pausadas» en el panel principal.
+- La tarjeta muestra el número de tareas pendientes de reanudar.
+- Al pulsarla, abre directamente el listado filtrado de tareas pausadas.
+- El contador se actualiza al pausar, reanudar o completar tareas.
+
+3. CORRECCIÓN DE EXPORTACIÓN A GOOGLE CALENDAR / ICS
+- Se amplía la descripción de los eventos exportados para incluir más información disponible de cada tarea.
+- Se añade la dirección de la instalación tanto al campo de ubicación del evento como a su descripción.
+- Se incluyen tipo de trabajo, unidad, estado, prioridad, fecha y horario, descripción/observaciones, motivo de pausa, repuestos y gastos.
+- Se añaden los campos con datos registrados en la ficha de instalación y otros campos escalares adicionales de la tarea.
+- Se mantiene la selección del período de exportación.
+
+4. IDENTIFICACIÓN DE VERSIÓN
+- Se actualiza el número visible en Copias de Seguridad, Datos e Instalación a «Versión 1.4».
+
+NOTAS IMPORTANTES
+- Las sesiones de trabajo nuevas quedan registradas desde la acción de pausa/reanudación. Para tareas antiguas que ya estaban en curso antes de instalar esta versión, el primer tramo se empezará a contabilizar desde el momento en que se pulse Pausar, porque no existe un registro histórico fiable de su hora real de inicio.
+- Los datos de sesiones y motivos se guardan como parte de cada tarea y se incluyen en las copias de seguridad JSON.
+- La cámara requiere HTTPS y permiso de cámara en el navegador.
+- La recepción de notificaciones del sistema depende también de permisos, compatibilidad del navegador y configuración del servicio push.
+- Esta versión no incorpora el buscador visual por fotografías del almacén.
+- La comprobación realizada es sobre el código, la sintaxis JavaScript y el contenido del paquete; no equivale a una prueba física en el dispositivo Android ni a una validación de importación en todas las versiones de Google Calendar/Outlook.
+
+INSTRUCCIONES DE PUBLICACIÓN
+- Descomprimir el ZIP.
+- Subir index.html y sw.js a la raíz del repositorio de GitHub Pages, sustituyendo los anteriores.
+- Se incluye también este TXT como documentación; puede conservarse en el repositorio.
+- No cambiar los nombres de index.html ni sw.js.
+- Tras publicar, abrir ManteniPro y comprobar que en Copias de Seguridad, Datos e Instalación aparece «Versión 1.4».

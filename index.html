@@ -429,6 +429,17 @@
         </div>
       </div>
 
+      <div id="dash-paused-alert" onclick="UI.navigate('calendar', 'Pausada')" class="hidden card p-4 border border-amber-300 bg-amber-50 cursor-pointer hover:bg-amber-100 transition-colors">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl">Ⅱ</span>
+            <div class="min-w-0"><p class="font-bold text-amber-950">Tareas pausadas</p><p id="dash-paused-sub" class="text-xs text-amber-800">Pendientes de reanudar</p></div>
+          </div>
+          <span id="dash-paused-count" class="text-3xl font-bold text-amber-800">0</span>
+        </div>
+        <p class="text-[11px] text-amber-800 mt-2">Pulsa para verlas y continuar el trabajo</p>
+      </div>
+
       <!-- BLOQUE DE ANALÍTICA DE TIEMPOS, GRÁFICAS Y RESUMEN SEMANAL/MENSUAL -->
       <div class="card p-5 space-y-5 border-blue-200/90">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
@@ -659,6 +670,7 @@
           <button type="button" onclick="JobsModule.setFilter('Completada')" data-jfilter="Completada" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Completadas</button>
           <button type="button" onclick="JobsModule.setFilter('Pendiente')" data-jfilter="Pendiente" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pendientes</button>
           <button type="button" onclick="JobsModule.setFilter('En curso')" data-jfilter="En curso" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">En curso</button>
+          <button type="button" onclick="JobsModule.setFilter('Pausada')" data-jfilter="Pausada" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pausadas <span id="jobs-paused-badge"></span></button>
           <button type="button" onclick="JobsModule.setFilter('Alta')" data-jfilter="Alta" class="jfilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Prioridad Alta</button>
         </div>
       </div>
@@ -1018,6 +1030,7 @@
             <select id="job-status" onchange="JobsModule.onStatusChange()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:border-blue-600">
               <option value="Pendiente">Pendiente</option>
               <option value="En curso">En curso</option>
+              <option value="Pausada">Pausada</option>
               <option value="Completada" selected>Completada</option>
             </select>
           </div>
@@ -1408,7 +1421,7 @@
   <div id="backup-modal" class="modal-backdrop hidden">
     <div class="modal-card modal-sm p-5 space-y-4 animate-fade">
       <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-200 shrink-0">
-        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 1.3</p></div>
+        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 1.4</p></div>
         <button type="button" onclick="Backup.closeModal()" class="text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
@@ -3082,6 +3095,15 @@
 
         document.getElementById('kpi-completed').textContent = completedMonth.length;
         document.getElementById('kpi-pending').textContent = pendingAll.length;
+        const pausedJobs = State.jobs.filter(j => j.status === 'Pausada');
+        const pausedAlert = document.getElementById('dash-paused-alert');
+        if (pausedAlert) {
+          pausedAlert.classList.toggle('hidden', pausedJobs.length === 0);
+          document.getElementById('dash-paused-count').textContent = pausedJobs.length;
+          document.getElementById('dash-paused-sub').textContent = `${pausedJobs.length} ${pausedJobs.length === 1 ? 'tarea pendiente' : 'tareas pendientes'} de reanudar`;
+        }
+        const pausedBadge = document.getElementById('jobs-paused-badge');
+        if (pausedBadge) pausedBadge.textContent = pausedJobs.length ? `(${pausedJobs.length})` : '';
         document.getElementById('kpi-urgent-sub').textContent = highPriorityPending.length > 0 ? `(${highPriorityPending.length} alta)` : '';
         document.getElementById('kpi-installations').textContent = State.installations.length;
         document.getElementById('kpi-lowstock').textContent = lowStock.length;
@@ -3147,7 +3169,7 @@
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 text-slate-800 border border-slate-200">${jobType}</span>
-                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : isHigh ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : job.status === 'Pausada' ? 'bg-amber-100 text-amber-900 border border-amber-300' : isHigh ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
                       ${job.status}
                     </span>
                     <span class="text-xs text-slate-500 font-medium">${Helpers.formatDateShort(job.date)} · ${job.startTime}-${job.endTime}</span>
@@ -3582,6 +3604,16 @@
 
 
     const JobsModule = {
+      getWorkedMinutes(job) {
+        const sessions = Array.isArray(job.workSessions) ? job.workSessions : [];
+        let total = sessions.reduce((sum, session) => {
+          const start = Date.parse(session.start || ''); const end = Date.parse(session.end || '');
+          return sum + (Number.isFinite(start) && Number.isFinite(end) && end >= start ? Math.round((end - start) / 60000) : 0);
+        }, 0);
+        if (job.activeWorkStartedAt) { const start = Date.parse(job.activeWorkStartedAt); if (Number.isFinite(start)) total += Math.max(0, Math.round((Date.now() - start) / 60000)); }
+        return total;
+      },
+
       setFilter(filter) {
         State.jobFilter = filter;
         document.querySelectorAll('.jfilter-btn').forEach(btn => {
@@ -3599,6 +3631,7 @@
         if (State.jobFilter === 'Completada') list = list.filter(j => Helpers.isJobCompleted(j));
         else if (State.jobFilter === 'Pendiente') list = list.filter(j => j.status === 'Pendiente');
         else if (State.jobFilter === 'En curso') list = list.filter(j => j.status === 'En curso');
+        else if (State.jobFilter === 'Pausada') list = list.filter(j => j.status === 'Pausada');
         else if (State.jobFilter === 'Alta') list = list.filter(j => j.priority === 'Alta' || j.priority === 'Urgente');
 
         if (query) {
@@ -3651,7 +3684,7 @@
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 text-slate-800 border border-slate-200">${jobType}</span>
-                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : isHigh ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : job.status === 'Pausada' ? 'bg-amber-100 text-amber-900 border border-amber-300' : isHigh ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
                       ${job.status}
                     </span>
                     <span class="text-xs font-semibold text-slate-600">${Helpers.formatDateShort(job.date)}</span>
@@ -3673,6 +3706,8 @@
                 </p>
 
                 ${job.notes ? `<p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-2 whitespace-pre-line">${job.notes}</p>` : ''}
+                ${job.status === 'Pausada' ? `<div class="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900"><strong>Tarea pausada</strong>${job.pauseReason ? ` · ${job.pauseReason}` : ''}${job.pausedAt ? `<div class="text-[11px] mt-0.5">Desde ${new Date(job.pausedAt).toLocaleString('es-ES')}</div>` : ''}</div>` : ''}
+                ${(job.workSessions?.length || job.activeWorkStartedAt) ? `<p class="text-[11px] text-slate-500 mt-2">Tiempo efectivo registrado: <strong>${Helpers.formatMinutes(this.getWorkedMinutes(job))}</strong> · ${job.workSessions?.length || 0} ${((job.workSessions?.length || 0) === 1 ? 'sesión' : 'sesiones')}</p>` : ''}
                 ${matsHTML ? `<div class="flex flex-wrap gap-1.5 mt-2.5">${matsHTML}</div>` : ''}
                 ${expHTML ? `<div class="flex flex-wrap gap-1.5 mt-2">${expHTML}</div>` : ''}
               </div>
@@ -3680,9 +3715,8 @@
               <div class="flex items-center justify-between pt-2.5 border-t border-slate-100">
                 <div>
                   ${!isDone ? `
-                    <button type="button" onclick="JobsModule.quickComplete('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">
-                      Marcar Completada
-                    </button>
+                    ${job.status === 'Pausada' ? `<button type="button" onclick="JobsModule.resume('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white">Reanudar</button>` : job.status === 'En curso' ? `<button type="button" onclick="JobsModule.pause('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white">Pausar</button>` : `<button type="button" onclick="JobsModule.start('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">Iniciar</button>`}
+                    <button type="button" onclick="JobsModule.quickComplete('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">Completar</button>
                   ` : `<span class="text-[11px] font-medium text-emerald-700">${job.stockDeducted ? 'Stock descontado' : 'Completada'}</span>`}
                 </div>
                 <button type="button" onclick="JobsModule.openModal('${job.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200">
@@ -4070,6 +4104,25 @@
           stockDeducted = true;
         }
 
+        const nowIso = new Date().toISOString();
+        const workSessions = existing && Array.isArray(existing.workSessions) ? [...existing.workSessions] : [];
+        let activeWorkStartedAt = existing?.activeWorkStartedAt || null;
+        let pauseReason = existing?.pauseReason || '';
+        if (status === 'Pausada' && existing?.status !== 'Pausada') {
+          if (!activeWorkStartedAt) activeWorkStartedAt = nowIso;
+          workSessions.push({ start: activeWorkStartedAt, end: nowIso });
+          activeWorkStartedAt = null;
+          pauseReason = window.prompt('Motivo de la pausa (opcional):', '') || '';
+        } else if (status === 'En curso' && existing?.status === 'Pausada') {
+          activeWorkStartedAt = nowIso;
+          pauseReason = '';
+        } else if (status === 'Completada' && existing && existing.status !== 'Completada' && activeWorkStartedAt) {
+          workSessions.push({ start: activeWorkStartedAt, end: nowIso });
+          activeWorkStartedAt = null;
+        } else if (status === 'En curso' && !activeWorkStartedAt) {
+          activeWorkStartedAt = nowIso;
+        }
+
         const scheduleChanged = !existing ||
           existing.date !== dateVal ||
           existing.startTime !== startVal ||
@@ -4087,6 +4140,11 @@
           startTime: startVal,
           endTime: document.getElementById('job-end').value,
           status,
+          workSessions,
+          activeWorkStartedAt,
+          pauseReason: status === 'Pausada' ? pauseReason : '',
+          pausedAt: status === 'Pausada' ? (existing?.pausedAt || nowIso) : null,
+          completedAt: status === 'Completada' ? (existing?.completedAt || nowIso) : null,
           priority: document.getElementById('job-priority').value,
           reminder,
           notified: scheduleChanged ? false : (existing ? existing.notified : false),
@@ -4121,10 +4179,54 @@
         }
       },
 
+      start(jobId) {
+        const job = State.jobs.find(j => j.id === jobId);
+        if (!job || Helpers.isJobCompleted(job)) return;
+        job.status = 'En curso';
+        job.activeWorkStartedAt = new Date().toISOString();
+        job.pauseReason = ''; job.pausedAt = null;
+        Storage.save(); UI.refreshAll();
+        Helpers.toast('Tarea iniciada', 'success');
+      },
+
+      pause(jobId) {
+        const job = State.jobs.find(j => j.id === jobId);
+        if (!job || Helpers.isJobCompleted(job) || job.status === 'Pausada') return;
+        const reason = window.prompt('Motivo de la pausa (opcional):', job.pauseReason || '') || '';
+        const now = new Date().toISOString();
+        if (!job.activeWorkStartedAt) job.activeWorkStartedAt = now;
+        job.workSessions = Array.isArray(job.workSessions) ? job.workSessions : [];
+        job.workSessions.push({ start: job.activeWorkStartedAt, end: now });
+        job.activeWorkStartedAt = null;
+        job.status = 'Pausada';
+        job.pausedAt = now;
+        job.pauseReason = reason;
+        job.reminder = 'none';
+        Storage.save(); UI.refreshAll();
+        Helpers.toast('Tarea pausada. Puedes reanudarla otro día.', 'success');
+      },
+
+      resume(jobId) {
+        const job = State.jobs.find(j => j.id === jobId);
+        if (!job || job.status !== 'Pausada') return;
+        job.status = 'En curso';
+        job.activeWorkStartedAt = new Date().toISOString();
+        job.pausedAt = null;
+        job.pauseReason = '';
+        Storage.save(); UI.refreshAll();
+        Helpers.toast('Tarea reanudada', 'success');
+      },
+
       quickComplete(jobId) {
         const job = State.jobs.find(j => j.id === jobId);
         if (!job) return;
+        if (job.activeWorkStartedAt) {
+          job.workSessions = Array.isArray(job.workSessions) ? job.workSessions : [];
+          job.workSessions.push({ start: job.activeWorkStartedAt, end: new Date().toISOString() });
+          job.activeWorkStartedAt = null;
+        }
         job.status = 'Completada';
+        job.completedAt = new Date().toISOString();
         job.reminder = 'none';
         if (!job.stockDeducted && job.materials && job.materials.length > 0) {
           this.deductStock(job.materials);
@@ -5738,10 +5840,55 @@
       },
 
       exportICS() {
-        const period=document.getElementById('ics-period')?.value||'all';const chosen=document.getElementById('ics-date')?.value;const from=document.getElementById('ics-from')?.value;const to=document.getElementById('ics-to')?.value;let a=null,b=null;
-        if(period==='day'){a=b=chosen;}else if(period==='week'&&chosen){const d=new Date(chosen+'T12:00:00');const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);a=d.toISOString().slice(0,10);d.setDate(d.getDate()+6);b=d.toISOString().slice(0,10);}else if(period==='month'&&chosen){a=chosen.slice(0,7)+'-01';b=chosen.slice(0,7)+'-'+String(new Date(Number(chosen.slice(0,4)),Number(chosen.slice(5,7)),0).getDate()).padStart(2,'0');}else if(period==='range'){a=from;b=to;}
-        const jobs=State.jobs.filter(j=>j.date&&(!a||j.date>=a)&&(!b||j.date<=b));if((period==='day'||period==='week'||period==='month')&&!chosen){Helpers.toast('Selecciona una fecha','warning');return;}if(period==='range'&&(!a||!b||a>b)){Helpers.toast('Indica un intervalo válido','warning');return;}
-        const esc=v=>String(v||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');const stamp=v=>v.replace(/[-:]/g,'')+'00';const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//ManteniPro//ES','CALSCALE:GREGORIAN'];for(const j of jobs){const dt=j.date.replace(/-/g,'')+'T'+(j.startTime||'09:00').replace(':','')+'00';const end=j.date.replace(/-/g,'')+'T'+(j.endTime||'10:00').replace(':','')+'00';const inst=State.installations.find(x=>x.id===j.instId);lines.push('BEGIN:VEVENT','UID:'+esc(j.id)+'@mantenipro','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),'DTSTART:'+dt,'DTEND:'+end,'SUMMARY:'+esc((j.type||'Tarea')+' · '+(inst?.unit||j.unitName||'')),'DESCRIPTION:'+esc(j.notes||'')+'\nEstado: '+esc(j.status),'END:VEVENT');}lines.push('END:VCALENDAR');this.download(new Blob([lines.join('\r\n')],{type:'text/calendar;charset=utf-8'}),`mantenipro_${period}_${Helpers.relDate(0)}.ics`);Helpers.toast(`${jobs.length} tareas exportadas a calendario`,'success');
+        const period = document.getElementById('ics-period')?.value || 'all';
+        const chosen = document.getElementById('ics-date')?.value;
+        const from = document.getElementById('ics-from')?.value;
+        const to = document.getElementById('ics-to')?.value;
+        let a = null, b = null;
+        if (period === 'day') { a = b = chosen; }
+        else if (period === 'week' && chosen) {
+          const d = new Date(chosen + 'T12:00:00'); const day = (d.getDay() + 6) % 7;
+          d.setDate(d.getDate() - day); a = Helpers.toDateStr(d); d.setDate(d.getDate() + 6); b = Helpers.toDateStr(d);
+        } else if (period === 'month' && chosen) {
+          a = chosen.slice(0, 7) + '-01';
+          b = chosen.slice(0, 7) + '-' + String(new Date(Number(chosen.slice(0, 4)), Number(chosen.slice(5, 7)), 0).getDate()).padStart(2, '0');
+        } else if (period === 'range') { a = from; b = to; }
+        const jobs = State.jobs.filter(j => j.date && (!a || j.date >= a) && (!b || j.date <= b));
+        if (['day', 'week', 'month'].includes(period) && !chosen) { Helpers.toast('Selecciona una fecha', 'warning'); return; }
+        if (period === 'range' && (!a || !b || a > b)) { Helpers.toast('Indica un intervalo válido', 'warning'); return; }
+        const esc = value => String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+        const fold = line => line.length <= 70 ? line : line.match(/.{1,68}/g).join('\r\n ');
+        const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+        const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ManteniPro//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+        for (const j of jobs) {
+          const inst = State.installations.find(x => x.id === j.instId);
+          const unit = inst?.unit || j.unitName || 'Unidad no asignada';
+          const address = inst?.address || j.address || '';
+          const endDate = j.endDate || j.date;
+          const dt = j.date.replace(/-/g, '') + 'T' + (j.startTime || '09:00').replace(':', '') + '00';
+          const end = endDate.replace(/-/g, '') + 'T' + (j.endTime || '10:00').replace(':', '') + '00';
+          const materials = (j.materials || []).map(m => `${m.qty || 1} x ${m.name || m.sku || 'Repuesto'}`).join('; ');
+          const expenses = (j.expenses || []).map(ex => `${Helpers.resolveExpenseType(ex.type)}: ${Helpers.formatCurrency(ex.amount)}${ex.concept ? ' (' + ex.concept + ')' : ''}`).join('; ');
+          const installationData = inst?.values ? Object.entries(inst.values).filter(([k,v]) => String(v ?? '').trim()).map(([k,v]) => `${k}: ${v}`).join('\n') : '';
+          const excludedJobKeys = new Set(['id','instId','type','title','unitName','createInstallationFiche','date','startTime','endTime','endDate','status','priority','reminder','notified','notifiedKeys','snoozeUntil','notes','materials','expenses','stockDeducted','workSessions','activeWorkStartedAt','pauseReason','pausedAt','completedAt']);
+          const extraJobData = Object.entries(j).filter(([k,v]) => !excludedJobKeys.has(k) && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') && String(v).trim() !== '').map(([k,v]) => `${k}: ${v}`).join('\n');
+          const desc = [
+            `Tipo: ${Helpers.resolveJobType(j)}`, `Unidad: ${unit}`, address ? `Dirección: ${address}` : '',
+            `Estado: ${j.status || ''}`, `Prioridad: ${j.priority || 'Normal'}`,
+            `Fecha: ${j.date || ''}`, `Horario: ${j.startTime || ''} - ${j.endTime || ''}`,
+            j.notes ? `Descripción / observaciones:\n${j.notes}` : '',
+            j.pauseReason ? `Motivo de pausa: ${j.pauseReason}` : '',
+            materials ? `Repuestos: ${materials}` : '', expenses ? `Gastos: ${expenses}` : '',
+            installationData ? `Datos de la instalación:\n${installationData}` : '',
+            extraJobData ? `Otros datos de la tarea:\n${extraJobData}` : ''
+          ].filter(Boolean).join('\n\n');
+          const summary = `${Helpers.resolveJobType(j)} · ${unit}`;
+          lines.push('BEGIN:VEVENT', `UID:${esc(j.id)}@mantenipro`, `DTSTAMP:${stamp}`, `DTSTART:${dt}`, `DTEND:${end}`,
+            `SUMMARY:${esc(summary)}`, `LOCATION:${esc(address)}`, `DESCRIPTION:${esc(desc)}`, `STATUS:${Helpers.isJobCompleted(j) ? 'CONFIRMED' : 'TENTATIVE'}`, 'END:VEVENT');
+        }
+        lines.push('END:VCALENDAR');
+        this.download(new Blob([lines.map(fold).join('\r\n')], { type: 'text/calendar;charset=utf-8' }), `mantenipro_${period}_${Helpers.relDate(0)}.ics`);
+        Helpers.toast(`${jobs.length} tareas exportadas con sus datos y direcciones`, 'success');
       },
 
       exportCSV() {
