@@ -1421,7 +1421,7 @@
   <div id="backup-modal" class="modal-backdrop hidden">
     <div class="modal-card modal-sm p-5 space-y-4 animate-fade">
       <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-200 shrink-0">
-        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 1.4</p></div>
+        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 1.5</p></div>
         <button type="button" onclick="Backup.closeModal()" class="text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
@@ -3329,6 +3329,17 @@
         this.renderDayTimeline();
       },
 
+      getCalendarEntries(dateStr) {
+        const entries = [];
+        State.jobs.forEach(job => {
+          if (job.date === dateStr) entries.push({ ...job, _calendarEntry: false, _parentJobId: job.id });
+          (Array.isArray(job.calendarEntries) ? job.calendarEntries : []).forEach((entry, index) => {
+            if (entry.date === dateStr) entries.push({ ...job, ...entry, id: job.id, _calendarEntry: true, _parentJobId: job.id, _entryIndex: index });
+          });
+        });
+        return entries;
+      },
+
       renderMonth() {
         const { year, month } = State.monthCursor;
         const firstDay = new Date(year, month, 1);
@@ -3351,7 +3362,7 @@
 
         for (let d = 1; d <= daysInMonth; d++) {
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-          const dayJobs = State.jobs.filter(j => j.date === dateStr);
+          const dayJobs = this.getCalendarEntries(dateStr);
           const isSelected = dateStr === State.selectedDate;
           const isToday = dateStr === today;
 
@@ -3380,9 +3391,8 @@
         const esc = (v) => String(v ?? '')
           .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-        const dayJobs = State.jobs
-          .filter(j => j.date === State.selectedDate)
-          .sort((a, b) => a.startTime.localeCompare(b.startTime));
+        const dayJobs = this.getCalendarEntries(State.selectedDate)
+          .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
 
         const travelSegments = AnalyticsModule.computeTravelSegments(State.selectedDate, State.selectedDate, 'all');
 
@@ -4209,12 +4219,43 @@
       resume(jobId) {
         const job = State.jobs.find(j => j.id === jobId);
         if (!job || job.status !== 'Pausada') return;
+
+        // La reanudación crea una nueva cita de calendario, vinculada a la intervención original.
+        const now = new Date();
+        const defaultDate = Helpers.toDateStr(now);
+        const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const resumeDate = window.prompt('Fecha de reanudación (AAAA-MM-DD):', defaultDate);
+        if (resumeDate === null) return;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(resumeDate) || Number.isNaN(Date.parse(resumeDate + 'T12:00:00'))) {
+          Helpers.toast('La fecha no es válida. Usa AAAA-MM-DD.', 'warning'); return;
+        }
+        const resumeTime = window.prompt('Hora de inicio (HH:MM):', defaultTime);
+        if (resumeTime === null) return;
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(resumeTime)) {
+          Helpers.toast('La hora no es válida. Usa HH:MM.', 'warning'); return;
+        }
+        const defaultEnd = job.endTime || '10:00';
+        const resumeEnd = window.prompt('Hora prevista de fin (HH:MM):', defaultEnd);
+        if (resumeEnd === null) return;
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(resumeEnd)) {
+          Helpers.toast('La hora de fin no es válida. Usa HH:MM.', 'warning'); return;
+        }
+
+        job.calendarEntries = Array.isArray(job.calendarEntries) ? job.calendarEntries : [];
+        job.calendarEntries.push({
+          date: resumeDate,
+          startTime: resumeTime,
+          endTime: resumeEnd,
+          calendarEntryType: 'Reanudación',
+          createdAt: now.toISOString()
+        });
         job.status = 'En curso';
-        job.activeWorkStartedAt = new Date().toISOString();
+        job.activeWorkStartedAt = now.toISOString();
         job.pausedAt = null;
         job.pauseReason = '';
+        // La cita original no se mueve: la nueva sesión aparece como otra línea en el calendario.
         Storage.save(); UI.refreshAll();
-        Helpers.toast('Tarea reanudada', 'success');
+        Helpers.toast('Tarea reanudada y nueva entrada añadida al calendario', 'success');
       },
 
       quickComplete(jobId) {
@@ -5853,7 +5894,11 @@
           a = chosen.slice(0, 7) + '-01';
           b = chosen.slice(0, 7) + '-' + String(new Date(Number(chosen.slice(0, 4)), Number(chosen.slice(5, 7)), 0).getDate()).padStart(2, '0');
         } else if (period === 'range') { a = from; b = to; }
-        const jobs = State.jobs.filter(j => j.date && (!a || j.date >= a) && (!b || j.date <= b));
+        const jobs = State.jobs.flatMap(j => {
+          const entries = [{ ...j, _calendarEntry: false }];
+          (Array.isArray(j.calendarEntries) ? j.calendarEntries : []).forEach(entry => entries.push({ ...j, ...entry, id: `${j.id}-resume-${entry.createdAt || entry.date + '-' + entry.startTime}`, _calendarEntry: true }));
+          return entries;
+        }).filter(j => j.date && (!a || j.date >= a) && (!b || j.date <= b));
         if (['day', 'week', 'month'].includes(period) && !chosen) { Helpers.toast('Selecciona una fecha', 'warning'); return; }
         if (period === 'range' && (!a || !b || a > b)) { Helpers.toast('Indica un intervalo válido', 'warning'); return; }
         const esc = value => String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
@@ -5870,7 +5915,7 @@
           const materials = (j.materials || []).map(m => `${m.qty || 1} x ${m.name || m.sku || 'Repuesto'}`).join('; ');
           const expenses = (j.expenses || []).map(ex => `${Helpers.resolveExpenseType(ex.type)}: ${Helpers.formatCurrency(ex.amount)}${ex.concept ? ' (' + ex.concept + ')' : ''}`).join('; ');
           const installationData = inst?.values ? Object.entries(inst.values).filter(([k,v]) => String(v ?? '').trim()).map(([k,v]) => `${k}: ${v}`).join('\n') : '';
-          const excludedJobKeys = new Set(['id','instId','type','title','unitName','createInstallationFiche','date','startTime','endTime','endDate','status','priority','reminder','notified','notifiedKeys','snoozeUntil','notes','materials','expenses','stockDeducted','workSessions','activeWorkStartedAt','pauseReason','pausedAt','completedAt']);
+          const excludedJobKeys = new Set(['id','instId','type','title','unitName','createInstallationFiche','date','startTime','endTime','endDate','status','priority','reminder','notified','notifiedKeys','snoozeUntil','notes','materials','expenses','stockDeducted','workSessions','activeWorkStartedAt','pauseReason','pausedAt','completedAt','calendarEntries','calendarEntryType','createdAt','_calendarEntry']);
           const extraJobData = Object.entries(j).filter(([k,v]) => !excludedJobKeys.has(k) && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') && String(v).trim() !== '').map(([k,v]) => `${k}: ${v}`).join('\n');
           const desc = [
             `Tipo: ${Helpers.resolveJobType(j)}`, `Unidad: ${unit}`, address ? `Dirección: ${address}` : '',
@@ -5882,7 +5927,7 @@
             installationData ? `Datos de la instalación:\n${installationData}` : '',
             extraJobData ? `Otros datos de la tarea:\n${extraJobData}` : ''
           ].filter(Boolean).join('\n\n');
-          const summary = `${Helpers.resolveJobType(j)} · ${unit}`;
+          const summary = `${Helpers.resolveJobType(j)} · ${unit}${j._calendarEntry ? ' · Reanudación' : ''}`;
           lines.push('BEGIN:VEVENT', `UID:${esc(j.id)}@mantenipro`, `DTSTAMP:${stamp}`, `DTSTART:${dt}`, `DTEND:${end}`,
             `SUMMARY:${esc(summary)}`, `LOCATION:${esc(address)}`, `DESCRIPTION:${esc(desc)}`, `STATUS:${Helpers.isJobCompleted(j) ? 'CONFIRMED' : 'TENTATIVE'}`, 'END:VEVENT');
         }

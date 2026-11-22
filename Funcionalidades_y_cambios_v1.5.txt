@@ -1,0 +1,41 @@
+MANTENIPRO — VERSIÓN 1.5
+Paquete para publicar en GitHub Pages
+
+ARCHIVOS INCLUIDOS
+- index.html: aplicación ManteniPro versión 1.5.
+- sw.js: service worker de la versión anterior, conservado sin cambios.
+- Funcionalidades_y_cambios_v1.5.txt: documentación de esta versión.
+
+CAMBIOS DE LA VERSIÓN 1.5
+
+1. NUEVA ENTRADA DE CALENDARIO AL REANUDAR
+- Al reanudar una tarea pausada, se conserva la entrada original del calendario.
+- Se añade una segunda entrada en el día y horario de reanudación, vinculada a la misma intervención.
+- La fecha de reanudación se propone automáticamente con el día actual y se puede cambiar manualmente.
+- La hora de inicio se propone con la hora actual y se puede cambiar manualmente.
+- También se puede modificar la hora prevista de fin.
+- La intervención mantiene su identificador, notas, instalación, materiales, gastos e historial de sesiones.
+- El tiempo efectivo trabajado sigue calculándose mediante los tramos reales de trabajo, excluyendo las pausas.
+
+2. EXPORTACIÓN ICS
+- La exportación ICS incluye tanto la cita original como las nuevas entradas de reanudación dentro del período seleccionado.
+- Las entradas reanudadas se identifican como «Reanudación» en el título del evento.
+
+3. CONSERVACIÓN DE FUNCIONES
+- Se mantienen las funciones y correcciones de la versión 1.4.
+- No se incorpora el buscador visual de productos por cámara, que quedó descartado.
+
+COMPROBACIONES
+- Se ha comprobado la sintaxis JavaScript del HTML mediante Node.js.
+- Se ha comprobado la estructura del paquete ZIP.
+- No se ha realizado una prueba física en Android ni una prueba de sincronización/importación en Google Calendar.
+
+PUBLICACIÓN EN GITHUB PAGES
+1. Descomprime ManteniPro_GitHub_v1.5.zip.
+2. Sube index.html y sw.js a la raíz del repositorio, sustituyendo los anteriores.
+3. Conserva los nombres index.html y sw.js.
+4. Publica los cambios y vuelve a cargar ManteniPro.
+5. En «Copias de Seguridad, Datos e Instalación» debe aparecer «Versión 1.5».
+
+NOTA
+Al pulsar «Reanudar» aparecerán tres preguntas consecutivas para fecha, hora de inicio y hora prevista de fin. Los valores propuestos se pueden aceptar o modificar. Cancelar cualquiera de las preguntas cancela la reanudación sin alterar la tarea.
