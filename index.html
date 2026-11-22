@@ -145,6 +145,17 @@
       display: none;
     }
 
+    /* El lector debe quedar por encima de los formularios modales abiertos. */
+    #scanner-modal {
+      position: fixed !important;
+      z-index: 100000 !important;
+      isolation: isolate;
+    }
+    #scanner-modal > .modal-card {
+      position: relative;
+      z-index: 100001;
+    }
+
     .modal-card {
       width: 100%;
       max-width: calc(100vw - 24px);
