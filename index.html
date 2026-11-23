@@ -13,7 +13,7 @@
   <link id="dynamic-manifest-link" rel="manifest">
   <link id="appAppleIcon" rel="apple-touch-icon" sizes="192x192">
   <link id="dynamic-apple-icon" rel="apple-touch-icon" sizes="192x192">
-  <title>ManteniPro 2.0 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
+  <title>ManteniPro 2.1 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -236,7 +236,7 @@
   </style>
 </head>
 <body class="antialiased pb-20 md:pb-10">
-  <div id="scanner-modal" class="modal-backdrop hidden"><div class="modal-card modal-sm p-5 space-y-3"><div class="flex justify-between items-center"><h3 class="font-bold">Escanear código de barras</h3><button onclick="CodeScanner.close()" aria-label="Cerrar">✕</button></div><video id="barcode-video" autoplay muted playsinline class="hidden w-full max-h-64 object-contain rounded-xl bg-black"></video><div id="scanner-camera-help" class="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">Preparando cámara…</div><p id="scanner-status" class="text-xs text-slate-600">También puedes introducir el código manualmente.</p><input id="barcode-manual" class="w-full p-3 border rounded-xl" placeholder="Código de barras" inputmode="numeric"><div class="flex gap-2"><button onclick="CodeScanner.lookup(document.getElementById('barcode-manual').value)" class="flex-1 bg-blue-700 text-white rounded-xl p-2 text-sm">Buscar código</button><button onclick="CodeScanner.close()" class="p-2 border rounded-xl text-sm">Cerrar</button></div></div></div>
+  <div id="scanner-modal" class="modal-backdrop hidden"><div class="modal-card modal-sm p-5 space-y-3"><div class="flex justify-between items-center"><h3 class="font-bold">Escanear código de barras</h3><button onclick="CodeScanner.close()" aria-label="Cerrar">✕</button></div><video id="barcode-video" autoplay muted playsinline class="hidden w-full max-h-64 object-contain rounded-xl bg-black"></video><div id="scanner-controls" class="hidden grid grid-cols-2 gap-2"><div class="col-span-2"><label class="block text-[11px] font-semibold mb-1" for="scanner-camera-select">Cámara</label><select id="scanner-camera-select" onchange="CodeScanner.switchCamera(this.value)" class="w-full border rounded-lg p-2 text-xs bg-white"></select></div><div><label class="block text-[11px] font-semibold mb-1" for="scanner-zoom">Zoom</label><input id="scanner-zoom" type="range" min="1" max="1" step="0.1" value="1" oninput="CodeScanner.setZoom(this.value)" class="w-full"></div><div class="flex items-end"><button type="button" id="scanner-torch" onclick="CodeScanner.toggleTorch()" class="hidden w-full px-2 py-2 rounded-lg border text-xs font-semibold">☼ Linterna</button></div></div><div id="scanner-camera-help" class="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">Preparando cámara…</div><p id="scanner-status" class="text-xs text-slate-600">También puedes introducir el código manualmente.</p><input id="barcode-manual" class="w-full p-3 border rounded-xl" placeholder="Código de barras" inputmode="numeric"><div class="flex gap-2"><button onclick="CodeScanner.lookup(document.getElementById('barcode-manual').value)" class="flex-1 bg-blue-700 text-white rounded-xl p-2 text-sm">Buscar código</button><button onclick="CodeScanner.close()" class="p-2 border rounded-xl text-sm">Cerrar</button></div></div></div>
 
   <!-- Avisos ligeros en pantalla y acción Deshacer tras eliminaciones -->
   <div id="toast-box" class="fixed bottom-20 md:bottom-6 right-4 z-[80] flex flex-col gap-2 pointer-events-none max-w-xs sm:max-w-sm"></div>
@@ -3556,7 +3556,7 @@
           const jobType = Helpers.resolveJobType(job);
           const unitLabel = inst ? inst.unit : (job.unitName || 'Sin unidad');
           const addressLabel = inst && inst.address ? inst.address : '';
-          const isDone = Helpers.isJobCompleted(job);
+          const isDone = Helpers.isJobCompleted(job) || job.calendarStatus === 'Completada' || job.status === 'Completada';
           const isHigh = job.priority === 'Alta' || job.priority === 'Urgente';
 
           let palette = 'bg-amber-50 border-l-4 border-amber-500 text-amber-950 border border-amber-200';
@@ -3586,7 +3586,7 @@
           `;
 
           const pad = 'padding:4px 8px;display:flex;flex-direction:column;justify-content:center;';
-          return `<div onclick="JobsModule.openModal('${job.id}')" title="${tip}" style="${style}${pad}" class="time-block job-block ${palette}">${inner}</div>`;
+          return `<div onclick="JobsModule.openDetail('${job.id}')" title="${tip}" style="${style}${pad}" class="time-block job-block ${palette}">${inner}</div>`;
         }).join('');
 
         // ---- Desplazamientos: solo una línea fina, siempre en hueco libre ----
@@ -3667,7 +3667,7 @@
           const jobExpTotal = Helpers.getJobExpensesTotal(job);
 
           return `
-            <div onclick="JobsModule.openModal('${job.id}')" class="my-1 p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50/40 cursor-pointer transition-colors space-y-1 shadow-2xs">
+            <div onclick="JobsModule.openDetail('${job.id}')" class="my-1 p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50/40 cursor-pointer transition-colors space-y-1 shadow-2xs">
               <div class="flex items-center justify-between gap-2 flex-wrap">
                 <div class="flex items-center gap-1.6 flex-wrap">
                   <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 border border-slate-200 text-slate-800">${jobType}</span>
@@ -3810,6 +3810,56 @@
         }).join('');
       },
 
+      openDetail(jobId) {
+        const job = State.jobs.find(j => j.id === jobId);
+        if (!job) return;
+        const esc = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        const inst = State.installations.find(i => i.id === job.instId);
+        const completed = Helpers.isJobCompleted(job);
+        const sessions = [{ date: job.date, startTime: job.startTime, endTime: job.endTime, calendarStatus: job.originalCalendarStatus || job.status, label: 'Primera intervención', index: -1 }]
+          .concat((Array.isArray(job.calendarEntries) ? job.calendarEntries : []).map((entry, index) => ({ ...entry, label: entry.calendarEntryType || 'Reanudación', index })))
+          .sort((a,b) => `${b.date || ''} ${b.startTime || ''}`.localeCompare(`${a.date || ''} ${a.startTime || ''}`));
+        const statusClass = completed ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : job.status === 'Pausada' ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200';
+        const ov = document.createElement('div'); ov.id = 'job-detail-modal';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99980;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto';
+        ov.innerHTML = `<div role="dialog" aria-modal="true" aria-label="Detalle de tarea" style="background:#fff;border-radius:18px;width:100%;max-width:650px;max-height:95vh;overflow:auto;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+          <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="text-xs uppercase tracking-wide font-bold text-slate-500">${esc(Helpers.resolveJobType(job))}</div><h2 class="text-xl font-bold text-slate-900 mt-1">${esc(Helpers.resolveJobType(job))}</h2></div><span class="px-2.5 py-1 rounded-full border text-xs font-semibold ${statusClass}">${esc(job.status || 'Completada')}</span></div>
+          <div class="border-t border-slate-200 my-3"></div>
+          <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Datos de la instalación</h3>
+          <div class="rounded-xl bg-slate-50 p-3"><div class="font-bold text-sm">${esc(inst?.unit || job.unitName || 'Unidad no asignada')}</div><div class="text-xs text-slate-600 mt-1">${esc(inst?.address || job.address || 'Dirección no indicada')}</div></div>
+          <div class="grid grid-cols-2 gap-3 my-3"><div><div class="text-[10px] text-slate-500 font-semibold">FECHA</div><div class="text-sm font-semibold">${esc(Helpers.formatDateShort(job.date))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">HORARIO</div><div class="text-sm font-semibold">${esc(job.startTime || '')} – ${esc(job.endTime || '')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">TIPO</div><div class="text-sm font-semibold">${esc(Helpers.resolveJobType(job))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">PRIORIDAD</div><div class="text-sm font-semibold">${esc(job.priority || 'Normal')}</div></div></div>
+          <div class="border-t border-slate-200 my-3"></div><h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Descripción</h3><p class="text-sm text-slate-700 whitespace-pre-wrap">${esc(job.notes || 'Sin descripción adicional.')}</p>
+          <div class="border-t border-slate-200 my-3"></div><div class="flex items-center justify-between gap-2 mb-2"><h3 class="text-sm font-bold text-slate-900">Últimas intervenciones</h3><span class="text-[10px] text-slate-500">${sessions.length} sesión(es)</span></div>
+          <div class="space-y-2">${sessions.map(session => { const green = completed; const badge = green ? 'bg-emerald-50 text-emerald-700' : session.calendarStatus === 'Pausada' ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-600'; return `<button type="button" onclick="JobsModule.openInterventionDetail('${esc(job.id)}',${session.index})" class="w-full text-left rounded-xl border border-slate-200 p-3 hover:bg-blue-50/50 flex items-center justify-between gap-3"><span class="min-w-0"><span class="block text-xs font-bold text-slate-800">${esc(session.label)}</span><span class="block text-xs text-slate-600 mt-1">${esc(Helpers.formatDateShort(session.date))} · ${esc(session.startTime || '')} – ${esc(session.endTime || '')}</span></span><span class="shrink-0 text-[10px] font-semibold rounded-full px-2 py-1 ${badge}">${green ? 'Completada' : esc(session.calendarStatus || job.status || 'Pendiente')}</span></button>`; }).join('')}</div>
+          <div class="flex gap-2 mt-4"><button type="button" onclick="document.getElementById('job-detail-modal').remove()" class="flex-1 px-3 py-2.5 rounded-xl border text-sm">Cerrar</button><button type="button" onclick="document.getElementById('job-detail-modal').remove();JobsModule.openModal('${esc(job.id)}')" class="flex-1 px-3 py-2.5 rounded-xl bg-blue-700 text-white text-sm font-semibold">✎ EDITAR TAREA</button></div>
+        </div>`;
+        document.body.appendChild(ov);
+        ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+      },
+
+      openInterventionDetail(jobId, entryIndex) {
+        const job = State.jobs.find(j => j.id === jobId); if (!job) return;
+        const entry = entryIndex < 0 ? { date: job.date, startTime: job.startTime, endTime: job.endTime, calendarStatus: job.originalCalendarStatus || job.status, calendarEntryType: 'Primera intervención' } : (job.calendarEntries || [])[entryIndex];
+        if (!entry) return;
+        const esc = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        const completed = Helpers.isJobCompleted(job);
+        const ov = document.createElement('div'); ov.id = 'job-intervention-modal';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99990;background:rgba(15,23,42,.62);display:flex;align-items:center;justify-content:center;padding:14px';
+        ov.innerHTML = `<div role="dialog" aria-modal="true" style="width:100%;max-width:430px;background:#fff;border-radius:18px;padding:18px"><div class="flex items-center justify-between gap-2"><h3 class="font-bold text-base">Detalle de intervención</h3><button type="button" onclick="document.getElementById('job-intervention-modal').remove()" class="text-xl">×</button></div><div class="mt-4 space-y-3"><div><div class="text-[10px] text-slate-500 font-semibold">TIPO</div><div class="text-sm font-semibold">${esc(entry.calendarEntryType || 'Primera intervención')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">FECHA</div><div class="text-sm">${esc(Helpers.formatDateShort(entry.date))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">HORARIO</div><div class="text-sm">${esc(entry.startTime || '')} – ${esc(entry.endTime || '')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">ESTADO</div><div class="text-sm font-semibold">${completed ? 'Completada' : esc(entry.calendarStatus || job.status || 'Pendiente')}</div></div></div><div class="flex gap-2 mt-5"><button type="button" onclick="document.getElementById('job-intervention-modal').remove();JobsModule.openDetail('${esc(job.id)}')" class="flex-1 px-3 py-2 rounded-xl border text-sm">Volver</button><button type="button" onclick="document.getElementById('job-intervention-modal').remove();${entryIndex < 0 ? `JobsModule.openModal('${esc(job.id)}')` : `JobsModule.openCalendarEntryEditor('${esc(job.id)}',${entryIndex})`}" class="flex-1 px-3 py-2 rounded-xl bg-blue-700 text-white text-sm font-semibold">Editar intervención</button></div></div>`;
+        document.body.appendChild(ov); ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+      },
+
+      openCalendarEntryEditor(jobId, entryIndex) {
+        const job = State.jobs.find(j => j.id === jobId); const entry = job?.calendarEntries?.[entryIndex]; if (!job || !entry) return;
+        const esc = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        const ov = document.createElement('div'); ov.id = 'job-session-editor';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.62);display:flex;align-items:center;justify-content:center;padding:14px';
+        ov.innerHTML = `<form id="job-session-form" style="width:100%;max-width:430px;background:#fff;border-radius:18px;padding:18px"><h3 class="font-bold text-base mb-3">Editar intervención reanudada</h3><label class="block text-xs font-semibold mb-1">Fecha</label><input id="job-session-date" type="date" required value="${esc(entry.date)}" class="w-full border rounded-lg p-2 text-sm mb-3"><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-semibold mb-1">Hora de inicio</label><input id="job-session-start" type="time" required value="${esc(entry.startTime)}" class="w-full border rounded-lg p-2 text-sm"></div><div><label class="block text-xs font-semibold mb-1">Hora de fin</label><input id="job-session-end" type="time" required value="${esc(entry.endTime)}" class="w-full border rounded-lg p-2 text-sm"></div></div><div class="flex gap-2 mt-4"><button type="button" onclick="document.getElementById('job-session-editor').remove();JobsModule.openDetail('${esc(job.id)}')" class="flex-1 px-3 py-2 rounded-xl border text-sm">Cancelar</button><button class="flex-1 px-3 py-2 rounded-xl bg-blue-700 text-white text-sm font-semibold">Guardar</button></div></form>`;
+        document.body.appendChild(ov);
+        ov.querySelector('#job-session-form').onsubmit = e => { e.preventDefault(); const date = ov.querySelector('#job-session-date').value; const start = ov.querySelector('#job-session-start').value; const end = ov.querySelector('#job-session-end').value; if (!date || !start || !end || Helpers.timeToMinutes(end) <= Helpers.timeToMinutes(start)) { Helpers.toast('Comprueba la fecha y el horario de la intervención', 'warning'); return; } entry.date = date; entry.startTime = start; entry.endTime = end; entry.updatedAt = new Date().toISOString(); Storage.save(); ov.remove(); UI.refreshAll(); this.openDetail(job.id); Helpers.toast('Intervención actualizada sin modificar la cita original', 'success'); };
+        ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+      },
+
       openModal(jobId = null, presetDate = null, presetInstId = null) {
         const modal = document.getElementById('job-modal');
         const form = document.getElementById('job-form');
@@ -3860,7 +3910,7 @@
           document.getElementById('job-start').value = localTime;
           const end = new Date(now.getTime()+90*60000);
           document.getElementById('job-end').value = `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`;
-          document.getElementById('job-status').value = 'Pendiente';
+          document.getElementById('job-status').value = 'Completada';
           document.getElementById('job-priority').value = 'Normal';
           document.getElementById('job-reminder').value = 'none';
           if (createCheckbox) createCheckbox.checked = true;
@@ -4224,7 +4274,7 @@
           endTime: document.getElementById('job-end').value,
           status,
           calendarEntries: existing && Array.isArray(existing.calendarEntries) ? existing.calendarEntries : [],
-          originalCalendarStatus: existing?.originalCalendarStatus || (status === 'Pausada' ? 'Pausada' : null),
+          originalCalendarStatus: status === 'Completada' ? 'Completada' : (existing?.originalCalendarStatus || (status === 'Pausada' ? 'Pausada' : null)),
           workSessions,
           activeWorkStartedAt,
           pauseReason: status === 'Pausada' ? pauseReason : '',
@@ -4241,12 +4291,15 @@
           stockDeducted
         };
 
-        if (status === 'Completada' && payload.calendarEntries.length) {
-          const lastEntry = payload.calendarEntries[payload.calendarEntries.length - 1];
-          lastEntry.calendarStatus = 'Completada';
-          const completedAt = new Date(payload.completedAt || nowIso);
-          if (Helpers.toDateStr(completedAt) === lastEntry.date) {
-            lastEntry.endTime = `${String(completedAt.getHours()).padStart(2, '0')}:${String(completedAt.getMinutes()).padStart(2, '0')}`;
+        if (status === 'Completada') {
+          payload.originalCalendarStatus = 'Completada';
+          payload.calendarEntries.forEach(entry => { entry.calendarStatus = 'Completada'; });
+          if (payload.calendarEntries.length) {
+            const lastEntry = payload.calendarEntries[payload.calendarEntries.length - 1];
+            const completedAt = new Date(payload.completedAt || nowIso);
+            if (Helpers.toDateStr(completedAt) === lastEntry.date) {
+              lastEntry.endTime = `${String(completedAt.getHours()).padStart(2, '0')}:${String(completedAt.getMinutes()).padStart(2, '0')}`;
+            }
           }
         }
         if (existing) {
@@ -4292,7 +4345,16 @@
         job.workSessions.push({ start: job.activeWorkStartedAt, end: now });
         job.activeWorkStartedAt = null;
         job.status = 'Pausada';
-        if (!job.calendarEntries || !job.calendarEntries.length) job.originalCalendarStatus = 'Pausada';
+        if (Array.isArray(job.calendarEntries) && job.calendarEntries.length) {
+          const lastEntry = job.calendarEntries[job.calendarEntries.length - 1];
+          lastEntry.calendarStatus = 'Pausada';
+          const pausedDate = new Date(now);
+          if (Helpers.toDateStr(pausedDate) === lastEntry.date) {
+            lastEntry.endTime = `${String(pausedDate.getHours()).padStart(2, '0')}:${String(pausedDate.getMinutes()).padStart(2, '0')}`;
+          }
+        } else {
+          job.originalCalendarStatus = 'Pausada';
+        }
         job.pausedAt = now;
         job.pauseReason = reason;
         job.reminder = 'none';
@@ -4308,10 +4370,7 @@
         const resumeDate = Helpers.toDateStr(now);
         const resumeTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         const currentMinutes = Helpers.timeToMinutes(resumeTime);
-        const originalEnd = Helpers.timeToMinutes(job.endTime || '');
-        const resumeEnd = originalEnd !== null && originalEnd > currentMinutes
-          ? job.endTime
-          : Helpers.minutesToTime(Math.min(currentMinutes + 60, 23 * 60 + 59));
+        const resumeEnd = Helpers.minutesToTime(Math.min(currentMinutes + 60, 23 * 60 + 59));
 
         // La cita original conserva el estado de pausa; la nueva cita queda ligada al mismo trabajo.
         job.originalCalendarStatus = job.originalCalendarStatus || 'Pausada';
@@ -4341,10 +4400,11 @@
           job.activeWorkStartedAt = null;
         }
         job.status = 'Completada';
+        job.originalCalendarStatus = 'Completada';
         job.completedAt = new Date().toISOString();
         if (Array.isArray(job.calendarEntries) && job.calendarEntries.length) {
+          job.calendarEntries.forEach(entry => { entry.calendarStatus = 'Completada'; });
           const lastEntry = job.calendarEntries[job.calendarEntries.length - 1];
-          lastEntry.calendarStatus = 'Completada';
           const completedTime = new Date(job.completedAt);
           if (Helpers.toDateStr(completedTime) === lastEntry.date) {
             lastEntry.endTime = `${String(completedTime.getHours()).padStart(2, '0')}:${String(completedTime.getMinutes()).padStart(2, '0')}`;
@@ -5416,7 +5476,7 @@
       renderDashboard() {
         const box=document.getElementById('dash-independent-reminders'); if(!box)return;
         const items=(State.independentTasks||[]).filter(t=>!t.done&&(t.dueDate || t.locationEnabled)).sort((a,b)=>((a.dueDate||'9999')+(a.dueTime||'')).localeCompare((b.dueDate||'9999')+(b.dueTime||''))).slice(0,5);
-        box.innerHTML=items.length?items.map(t=>`<button onclick="UI.navigate('notes');NotesTasksModule.edit('${this.esc(t.id)}','task')" class="w-full text-left py-2 hover:bg-amber-50/50"><span class="block text-xs font-semibold text-slate-800">${this.esc(t.title)}</span><span class="text-[10px] text-slate-500">${this.esc(t.dueDate||'Aviso por ubicación')} ${this.esc(t.dueTime||'')} · ${this.esc(t.priority||'Media')}</span></button>`).join(''):'<p class="text-xs text-slate-400 py-2">No hay tareas independientes pendientes.</p>';
+        box.innerHTML=items.length?items.map(t=>`<button onclick="UI.navigate('notes');NotesTasksModule.openDetail('${this.esc(t.id)}','task')" class="w-full text-left py-2 hover:bg-amber-50/50"><span class="block text-xs font-semibold text-slate-800">${this.esc(t.title)}</span><span class="text-[10px] text-slate-500">${this.esc(t.dueDate||'Aviso por ubicación')} ${this.esc(t.dueTime||'')} · ${this.esc(t.priority||'Media')}</span></button>`).join(''):'<p class="text-xs text-slate-400 py-2">No hay tareas independientes pendientes.</p>';
       },
       getLinkItems() {
         return State.installations.map(i=>({
@@ -5481,12 +5541,24 @@
         });
         all.sort((a,b) => sort === 'newest' ? (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||'') : sort === 'priority' ? ({Urgente:0,Alta:1,Media:2,Baja:3}[a.priority]??4)-({Urgente:0,Alta:1,Media:2,Baja:3}[b.priority]??4) : (a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
         const list = document.getElementById('nt-list');
-        if (list) list.innerHTML = all.length ? all.map(x => `<article class="card p-3.5 space-y-2"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><div class="flex flex-wrap gap-1 mb-1"><span class="text-[10px] px-2 py-0.5 rounded-full ${x.kind==='note'?'bg-violet-50 text-violet-700':'bg-blue-50 text-blue-700'}">${x.kind==='note'?'Nota':'Tarea'}</span>${x.pinned?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Fijada</span>':''}${x.done?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Completada</span>':''}${x.ownerTech?`<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Privada · ${this.esc(x.ownerTech)}</span>`:''}${x.locationEnabled?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Aviso por ubicación</span>':''}</div><h3 class="font-bold text-sm break-words">${this.esc(x.title)}</h3></div><button onclick="NotesTasksModule.edit('${this.esc(x.id)}','${x.kind}')" class="text-xs text-blue-700 font-semibold">Editar</button></div><p class="text-xs text-slate-600 whitespace-pre-wrap break-words">${this.esc(x.body||'')}</p>${x.attachments?.length?`<div class="space-y-1">${x.attachments.map(a=>`<a class="block text-xs text-blue-700 underline truncate" href="${a.data}" download="${this.esc(a.name)}">📎 ${this.esc(a.name)}</a>`).join('')}</div>`:''}<div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400"><span>${x.locationEnabled?`📍 ${this.esc(x.locationName||'Ubicación guardada')} · ${this.esc(x.locationTrigger==='leave'?'Al salir':'Al llegar')} · 10 m · permanencia 2:30 min` : x.dueDate ? `📅 ${this.esc(x.dueDate)} ${this.esc(x.dueTime||'')}` : 'Sin fecha'}${x.repeat && x.repeat!=='none' ? ` · Repite: ${this.esc(x.repeat)}` : ''}</span><span>${this.esc(x.priority||'')}</span></div><div class="flex flex-wrap justify-end gap-2">${x.kind==='task'?`${x.done?`<button onclick="NotesTasksModule.toggleDone('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Reabrir</button>`:`<button onclick="NotesTasksModule.toggleDone('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Completar</button><button onclick="NotesTasksModule.snooze('${this.esc(x.id)}',10)" class="px-2 py-1 rounded-lg border text-[11px]">Posponer 10 min</button><button onclick="NotesTasksModule.snooze('${this.esc(x.id)}',60)" class="px-2 py-1 rounded-lg border text-[11px]">1 hora</button>`}`:`<button onclick="NotesTasksModule.pin('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">${x.pinned?'Desfijar':'Fijar'}</button><button onclick="NotesTasksModule.convertNote('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Crear tarea</button>`}<button onclick="NotesTasksModule.remove('${this.esc(x.id)}','${x.kind}')" class="px-2 py-1 rounded-lg border border-rose-200 text-rose-700 text-[11px]">Eliminar</button></div></article>`).join('') : '<div class="card p-6 text-center text-sm text-slate-400 md:col-span-2">No hay notas ni tareas con estos filtros.</div>';
+        if (list) list.innerHTML = all.length ? all.map(x => `<article onclick="NotesTasksModule.openDetail('${this.esc(x.id)}','${x.kind}')" class="card p-3.5 space-y-2 cursor-pointer hover:border-blue-300 transition-colors"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><div class="flex flex-wrap gap-1 mb-1"><span class="text-[10px] px-2 py-0.5 rounded-full ${x.kind==='note'?'bg-violet-50 text-violet-700':'bg-blue-50 text-blue-700'}">${x.kind==='note'?'Nota':'Tarea'}</span>${x.pinned?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Fijada</span>':''}${x.done?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Completada</span>':''}${x.ownerTech?`<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Privada · ${this.esc(x.ownerTech)}</span>`:''}${x.locationEnabled?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Aviso por ubicación</span>':''}</div><h3 class="font-bold text-sm break-words">${this.esc(x.title)}</h3></div><button onclick="event.stopPropagation();NotesTasksModule.edit('${this.esc(x.id)}','${x.kind}')" class="text-xs text-blue-700 font-semibold">Editar</button></div><p class="text-xs text-slate-600 whitespace-pre-wrap break-words">${this.esc(x.body||'')}</p>${x.attachments?.length?`<div class="space-y-1">${x.attachments.map(a=>`<a onclick="event.stopPropagation()" class="block text-xs text-blue-700 underline truncate" href="${a.data}" download="${this.esc(a.name)}">📎 ${this.esc(a.name)}</a>`).join('')}</div>`:''}<div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400"><span>${x.locationEnabled?`📍 ${this.esc(x.locationName||'Ubicación guardada')} · ${this.esc(x.locationTrigger==='leave'?'Al salir':'Al llegar')} · 10 m · permanencia 2:30 min` : x.dueDate ? `📅 ${this.esc(x.dueDate)} ${this.esc(x.dueTime||'')}` : 'Sin fecha'}${x.repeat && x.repeat!=='none' ? ` · Repite: ${this.esc(x.repeat)}` : ''}</span><span>${this.esc(x.priority||'')}</span></div><div class="flex flex-wrap justify-end gap-2">${x.kind==='task'?`${x.done?`<button onclick="event.stopPropagation();NotesTasksModule.toggleDone('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Reabrir</button>`:`<button onclick="event.stopPropagation();NotesTasksModule.toggleDone('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Completar</button><button onclick="event.stopPropagation();NotesTasksModule.snooze('${this.esc(x.id)}',10)" class="px-2 py-1 rounded-lg border text-[11px]">Posponer 10 min</button><button onclick="event.stopPropagation();NotesTasksModule.snooze('${this.esc(x.id)}',60)" class="px-2 py-1 rounded-lg border text-[11px]">1 hora</button>`}`:`<button onclick="event.stopPropagation();NotesTasksModule.pin('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">${x.pinned?'Desfijar':'Fijar'}</button><button onclick="event.stopPropagation();NotesTasksModule.convertNote('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Crear tarea</button>`}<button onclick="event.stopPropagation();NotesTasksModule.remove('${this.esc(x.id)}','${x.kind}')" class="px-2 py-1 rounded-lg border border-rose-200 text-rose-700 text-[11px]">Eliminar</button></div></article>`).join('') : '<div class="card p-6 text-center text-sm text-slate-400 md:col-span-2">No hay notas ni tareas con estos filtros.</div>';
         const upcoming = (State.independentTasks||[]).filter(t=>!t.done&&(t.dueDate||t.locationEnabled)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')).slice(0,5);
-        const up = document.getElementById('nt-upcoming'); if(up) up.innerHTML = upcoming.length ? upcoming.map(t=>`<button onclick="NotesTasksModule.edit('${this.esc(t.id)}','task')" class="w-full text-left p-2 rounded-lg bg-slate-50 hover:bg-blue-50"><span class="block text-xs font-semibold">${this.esc(t.title)}</span><span class="text-[10px] text-slate-500">${this.esc(t.dueDate||'Aviso por ubicación')} ${this.esc(t.dueTime||'')}</span></button>`).join('') : '<p class="text-xs text-slate-400">No hay recordatorios pendientes.</p>';
-        const pinned = visibleNotes.filter(n=>n.pinned).slice(0,5); const pin = document.getElementById('nt-pinned'); if(pin) pin.innerHTML = pinned.length ? pinned.map(n=>`<button onclick="NotesTasksModule.edit('${this.esc(n.id)}','note')" class="block w-full text-left p-2 rounded-lg bg-amber-50/60 text-xs font-medium">${this.esc(n.title)}</button>`).join('') : '<p class="text-xs text-slate-400">No hay notas fijadas para este técnico.</p>';
+        const up = document.getElementById('nt-upcoming'); if(up) up.innerHTML = upcoming.length ? upcoming.map(t=>`<button onclick="NotesTasksModule.openDetail('${this.esc(t.id)}','task')" class="w-full text-left p-2 rounded-lg bg-slate-50 hover:bg-blue-50"><span class="block text-xs font-semibold">${this.esc(t.title)}</span><span class="text-[10px] text-slate-500">${this.esc(t.dueDate||'Aviso por ubicación')} ${this.esc(t.dueTime||'')}</span></button>`).join('') : '<p class="text-xs text-slate-400">No hay recordatorios pendientes.</p>';
+        const pinned = visibleNotes.filter(n=>n.pinned).slice(0,5); const pin = document.getElementById('nt-pinned'); if(pin) pin.innerHTML = pinned.length ? pinned.map(n=>`<button onclick="NotesTasksModule.openDetail('${this.esc(n.id)}','note')" class="block w-full text-left p-2 rounded-lg bg-amber-50/60 text-xs font-medium">${this.esc(n.title)}</button>`).join('') : '<p class="text-xs text-slate-400">No hay notas fijadas para este técnico.</p>';
         const badge=document.getElementById('nav-notes-badge'); if(badge) badge.textContent=(State.independentTasks||[]).filter(t=>!t.done).length; this.renderDashboard();
       },
+      openDetail(id, kind) {
+        const arr = kind === 'task' ? State.independentTasks : State.notes;
+        const item = arr.find(x => x.id === id); if (!item) return;
+        const esc = value => this.esc(value);
+        const link = item.linkRef ? this.getLinkItems().find(x => x.ref === item.linkRef)?.label : '';
+        const ov = document.createElement('div'); ov.id = 'nt-detail';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99980;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto';
+        const kindLabel = kind === 'task' ? 'Recordatorio' : 'Nota';
+        ov.innerHTML = `<div role="dialog" aria-modal="true" aria-label="${kindLabel}" style="background:#fff;border-radius:18px;padding:18px;width:100%;max-width:560px;max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)"><div class="flex items-center justify-between gap-3"><div><span class="text-[10px] uppercase tracking-wide font-bold text-slate-500">${kindLabel}</span><h2 class="text-xl font-bold text-slate-900 mt-1">${esc(item.title)}</h2></div><span class="text-xs font-semibold rounded-full px-2.5 py-1 ${kind === 'task' ? (item.done ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800') : 'bg-violet-50 text-violet-700'}">${kind === 'task' ? (item.done ? 'Completado' : 'Pendiente') : 'Nota'}</span></div><div class="border-t my-3"></div><h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Contenido</h3><p class="text-sm text-slate-700 whitespace-pre-wrap break-words">${esc(item.body || 'Sin contenido adicional.')}</p>${item.category ? `<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold">CATEGORÍA</div><div class="text-sm">${esc(item.category)}</div></div>` : ''}<div class="border-t my-3"></div><h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">${kind === 'task' ? 'Fecha y aviso' : 'Información'}</h3>${kind === 'task' ? `<div class="grid grid-cols-2 gap-3"><div><div class="text-[10px] text-slate-500 font-semibold">FECHA</div><div class="text-sm font-semibold">${esc(item.dueDate || (item.locationEnabled ? 'Aviso por ubicación' : 'Sin fecha'))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">HORA</div><div class="text-sm font-semibold">${esc(item.dueTime || '—')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">PRIORIDAD</div><div class="text-sm">${esc(item.priority || 'Media')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">REPETICIÓN</div><div class="text-sm">${esc(item.repeat && item.repeat !== 'none' ? item.repeat : 'No')}</div></div></div>${item.locationEnabled ? `<div class="mt-3 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800">Aviso por ubicación: ${esc(item.locationName || 'Ubicación guardada')} · ${esc(item.locationTrigger === 'leave' ? 'Al salir' : 'Al llegar')} · Radio 10 m · Permanencia 2:30 min</div>` : ''}` : `<div class="grid grid-cols-2 gap-3"><div><div class="text-[10px] text-slate-500 font-semibold">FIJADA</div><div class="text-sm">${item.pinned ? 'Sí' : 'No'}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">TÉCNICO</div><div class="text-sm">${esc(item.ownerTech || 'Compartida')}</div></div></div>`}${link ? `<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold">VINCULADO CON</div><div class="rounded-xl bg-slate-50 p-3 text-sm font-semibold">${esc(link)}</div></div>` : ''}<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold">CREACIÓN</div><div class="text-xs text-slate-600">${esc(item.createdAt ? new Date(item.createdAt).toLocaleString('es-ES') : '—')}</div><div class="text-[10px] text-slate-500 font-semibold mt-2">ÚLTIMA MODIFICACIÓN</div><div class="text-xs text-slate-600">${esc(item.updatedAt ? new Date(item.updatedAt).toLocaleString('es-ES') : '—')}</div></div>${item.attachments?.length ? `<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold mb-1">ARCHIVOS ADJUNTOS</div><div class="space-y-1">${item.attachments.map(a => `<a class="block text-xs text-blue-700 underline break-all" href="${a.data}" download="${esc(a.name)}">📎 ${esc(a.name)}</a>`).join('')}</div></div>` : ''}<div class="flex gap-2 mt-5"><button type="button" onclick="document.getElementById('nt-detail').remove()" class="flex-1 px-3 py-2.5 rounded-xl border text-sm">Cerrar</button><button type="button" onclick="document.getElementById('nt-detail').remove();NotesTasksModule.edit('${esc(item.id)}','${kind}')" class="flex-1 px-3 py-2.5 rounded-xl bg-blue-700 text-white text-sm font-semibold">✎ EDITAR ${kind === 'task' ? 'RECORDATORIO' : 'NOTA'}</button></div></div>`;
+        document.body.appendChild(ov); ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+      },
+
       openEditor(kind, item=null) {
         const old = item || {}; const isTask = kind==='task';
         const linkLabel = old.linkRef ? (this.getLinkItems().find(x=>x.ref===old.linkRef)?.label || '') : '';
@@ -5853,7 +5925,7 @@
 
 
     const CodeScanner = {
-      stream: null, timer: null, detector: null, busy: false, targetFieldId: null,
+      stream: null, timer: null, detector: null, busy: false, targetFieldId: null, cameraDevices: [], selectedDeviceId: null, torchOn: false,
       open(targetFieldId = null) {
         this.targetFieldId = targetFieldId;
         const modal = document.getElementById('scanner-modal');
@@ -5867,12 +5939,30 @@
         this.start();
       },
       close() {
-        clearInterval(this.timer); this.timer = null; this.busy = false;
+        clearInterval(this.timer); this.timer = null; this.busy = false; this.torchOn = false;
         if (this.stream) this.stream.getTracks().forEach(t => t.stop());
         this.stream = null;
         const video = document.getElementById('barcode-video');
         video.pause(); video.srcObject = null; video.classList.add('hidden');
+        document.getElementById('scanner-controls')?.classList.add('hidden');
         document.getElementById('scanner-modal').classList.add('hidden');
+      },
+      async switchCamera(deviceId) {
+        this.selectedDeviceId = deviceId || null;
+        clearInterval(this.timer); this.timer = null;
+        if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+        this.stream = null; this.torchOn = false;
+        await this.start();
+      },
+      async setZoom(value) {
+        const track = this.stream?.getVideoTracks?.()[0]; if (!track?.applyConstraints) return;
+        try { await track.applyConstraints({ advanced: [{ zoom: Number(value) }] }); }
+        catch (_) { Helpers.toast('Este móvil no permite controlar el zoom desde la aplicación', 'info'); }
+      },
+      async toggleTorch() {
+        const track = this.stream?.getVideoTracks?.()[0]; if (!track?.applyConstraints) return;
+        try { this.torchOn = !this.torchOn; await track.applyConstraints({ advanced: [{ torch: this.torchOn }] }); const b=document.getElementById('scanner-torch'); if(b)b.textContent=this.torchOn?'☼ Apagar linterna':'☼ Encender linterna'; }
+        catch (_) { this.torchOn = false; Helpers.toast('La cámara de este dispositivo no admite linterna desde el navegador', 'info'); }
       },
       async start() {
         const video = document.getElementById('barcode-video');
@@ -5893,11 +5983,23 @@
           return;
         }
         try {
-          this.stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } },
-            audio: false
-          });
+          const videoConstraints = this.selectedDeviceId
+            ? { deviceId: { exact: this.selectedDeviceId }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } }
+            : { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } };
+          this.stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false });
           const videoTrack = this.stream.getVideoTracks()[0];
+          const controls = document.getElementById('scanner-controls');
+          const cameraSelect = document.getElementById('scanner-camera-select');
+          if (navigator.mediaDevices.enumerateDevices && cameraSelect) {
+            try {
+              this.cameraDevices = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+              cameraSelect.innerHTML = this.cameraDevices.map((d,i) => `<option value="${String(d.deviceId).replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${String(d.label || `Cámara ${i+1}`).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</option>`).join('');
+              if (videoTrack?.getSettings?.().deviceId) this.selectedDeviceId = videoTrack.getSettings().deviceId;
+              if (this.selectedDeviceId) cameraSelect.value = this.selectedDeviceId;
+              if (controls) controls.classList.toggle('hidden', this.cameraDevices.length < 2 && !(videoTrack?.getCapabilities?.().zoom));
+              cameraSelect.parentElement.classList.toggle('hidden', this.cameraDevices.length < 2);
+            } catch (_) { if (controls) controls.classList.add('hidden'); }
+          }
           if (videoTrack && videoTrack.getCapabilities && videoTrack.applyConstraints) {
             const caps = videoTrack.getCapabilities();
             const advanced = {};
@@ -5908,11 +6010,18 @@
             if (Object.keys(advanced).length) {
               try { await videoTrack.applyConstraints({ advanced: [advanced] }); } catch (_focusError) { /* El dispositivo puede ignorar controles manuales. */ }
             }
+            const zoom = document.getElementById('scanner-zoom');
+            const torch = document.getElementById('scanner-torch');
+            const controls = document.getElementById('scanner-controls');
+            if (caps.zoom && zoom) { zoom.min = String(caps.zoom.min || 1); zoom.max = String(caps.zoom.max || 1); zoom.step = String(caps.zoom.step || 0.1); zoom.value = String(Math.min(caps.zoom.max || 1, Math.max(caps.zoom.min || 1, 1.5))); zoom.parentElement.classList.remove('hidden'); }
+            else if (zoom) zoom.parentElement.classList.add('hidden');
+            if (caps.torch && torch) torch.classList.remove('hidden'); else if (torch) torch.classList.add('hidden');
+            if (controls) controls.classList.toggle('hidden', !(this.cameraDevices.length > 1 || caps.zoom || caps.torch));
           }
           video.srcObject = this.stream;
           video.classList.remove('hidden');
           await video.play();
-          help.textContent = 'Cámara activa. Se ha solicitado enfoque continuo y enfoque cercano si el dispositivo lo permite. Acerca el código poco a poco hasta que quede nítido.';
+          help.textContent = 'Cámara activa. El enfoque automático se ajusta según las capacidades del móvil. Si están disponibles, puedes cambiar de cámara, usar zoom y encender la linterna.';
           this.timer = setInterval(async () => {
             if (this.busy || !this.detector || video.readyState < 2) return;
             this.busy = true;
