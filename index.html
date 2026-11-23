@@ -3424,13 +3424,13 @@
             const isDone = Helpers.isJobCompleted(j);
             const isHigh = j.priority === 'Alta' || j.priority === 'Urgente';
             const color = isDone ? 'bg-emerald-500' : isHigh ? 'bg-rose-500' : 'bg-amber-500';
-            return `<span class="inline-block w-2 h-2 min-w-[8px] min-h-[8px] rounded-full ${color}" title="${isDone ? 'Completada' : isHigh ? 'Prioridad alta' : 'Pendiente'}"></span>`;
+           return `<span class="inline-block w-2 h-2 min-w-[8px] min-h-[8px] rounded-full ${color}" title="${isDone ? 'Completada' : isHigh ? 'Prioridad alta' : 'Pendiente'}"></span>`;
           }).join('');
 
           html += `
             <div onclick="CalendarModule.selectDay('${dateStr}')" title="${dayJobs.length} elemento(s)" class="min-h-[3.5rem] p-1.5 rounded-lg border ${isSelected ? 'border-blue-600 bg-blue-50/70 ring-1 ring-blue-600' : isToday ? 'border-blue-300 bg-blue-50/30' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer flex flex-col justify-between items-center">
               <span class="text-xs font-bold ${isSelected || isToday ? 'text-blue-700' : 'text-slate-700'}">${d}</span>
-              <div class="flex items-center justify-center gap-1 min-h-[9px]">${dots}${dayJobs.length > 4 ? `<span class="text-[9px] leading-none font-bold text-slate-500">+${dayJobs.length - 4}</span>` : ''}</div>
+              <div class="flex items-center justify-center gap-0.5 min-h-[9px]">${dots}${dayJobs.length > 4 ? `<span class="text-[9px] leading-none font-bold text-slate-500">+${dayJobs.length - 4}</span>` : ''}</div>
             </div>
           `;
         }
