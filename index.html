@@ -13,7 +13,7 @@
   <link id="dynamic-manifest-link" rel="manifest">
   <link id="appAppleIcon" rel="apple-touch-icon" sizes="192x192">
   <link id="dynamic-apple-icon" rel="apple-touch-icon" sizes="192x192">
-  <title>ManteniPro | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
+  <title>ManteniPro 1.7 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -214,18 +214,19 @@
       animation: fadeIn 0.2s ease-out forwards;
     }
 
+    @page { size: auto; margin: 12mm; }
     @media print {
-      header, nav, #toast-box, .no-print {
-        display: none !important;
-      }
-      body {
-        background: #ffffff !important;
-        padding: 0 !important;
-      }
-      .card {
-        box-shadow: none !important;
-        border: 1px solid #cbd5e1 !important;
-      }
+      html, body { width: 100% !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; background: #fff !important; overflow: visible !important; }
+      body * { visibility: hidden !important; }
+      #reorder-modal, #reorder-modal * { visibility: visible !important; }
+      #reorder-modal { display: block !important; position: static !important; inset: auto !important; width: 100% !important; height: auto !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; background: #fff !important; }
+      #reorder-modal .modal-card { display: block !important; position: static !important; width: 100% !important; max-width: none !important; max-height: none !important; height: auto !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; box-shadow: none !important; border: 0 !important; transform: none !important; animation: none !important; }
+      #reorder-modal .modal-scroll { display: block !important; max-height: none !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
+      #reorder-modal .no-print, #reorder-modal button, header, nav, #toast-box { display: none !important; }
+      #reorder-modal table { width: 100% !important; border-collapse: collapse !important; }
+      #reorder-modal tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+      #reorder-modal thead { display: table-header-group; }
+      #reorder-modal .card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
     }
   </style>
 </head>
@@ -1031,7 +1032,7 @@
               <option value="Pendiente">Pendiente</option>
               <option value="En curso">En curso</option>
               <option value="Pausada">Pausada</option>
-              <option value="Completada" selected>Completada</option>
+              <option value="Completada">Completada</option>
             </select>
           </div>
           <div class="min-w-0">
@@ -3805,7 +3806,7 @@
           document.getElementById('job-start').value = localTime;
           const end = new Date(now.getTime()+90*60000);
           document.getElementById('job-end').value = `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`;
-          document.getElementById('job-status').value = 'Completada';
+          document.getElementById('job-status').value = 'Pendiente';
           document.getElementById('job-priority').value = 'Normal';
           document.getElementById('job-reminder').value = 'none';
           if (createCheckbox) createCheckbox.checked = true;
@@ -3909,9 +3910,8 @@
       onStatusChange() {
         const status = document.getElementById('job-status').value;
         const reminderSel = document.getElementById('job-reminder');
-        if (status === 'Completada') {
-          reminderSel.value = 'none';
-        }
+        // El aviso configurado se conserva aunque la tarea se marque como completada.
+        // Las tareas completadas no disparan avisos, pero no se pierde la preferencia al reabrirlas.
       },
 
       closeModal() {
@@ -4123,7 +4123,7 @@
         });
 
         const status = document.getElementById('job-status').value;
-        const reminder = status === 'Completada' ? 'none' : document.getElementById('job-reminder').value;
+        const reminder = document.getElementById('job-reminder').value || 'none';
         let stockDeducted = existing ? Boolean(existing.stockDeducted) : false;
 
         if (status === 'Completada' && !stockDeducted && materials.length > 0) {
@@ -4158,6 +4158,8 @@
 
         const payload = {
           id: id || Helpers.uid('job'),
+          createdAt: existing?.createdAt || nowIso,
+          updatedAt: nowIso,
           type: jobType,
           title: jobType,
           instId: instObj ? instObj.id : null,
@@ -4294,7 +4296,6 @@
             lastEntry.endTime = `${String(completedTime.getHours()).padStart(2, '0')}:${String(completedTime.getMinutes()).padStart(2, '0')}`;
           }
         }
-        job.reminder = 'none';
         if (!job.stockDeducted && job.materials && job.materials.length > 0) {
           this.deductStock(job.materials);
           job.stockDeducted = true;
@@ -5322,9 +5323,20 @@
       timerId: null,
       audioCtx: null,
       swRegistration: null,
+      swMessageHandlerInstalled: false,
 
       init() {
         this.registerServiceWorker();
+        if ('serviceWorker' in navigator && !this.swMessageHandlerInstalled) {
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            const message = event.data || {};
+            if (message.type === 'MANTENIPRO_OPEN_JOB' && message.jobId) {
+              const job = State.jobs.find(item => item.id === message.jobId);
+              if (job) JobsModule.openModal(message.jobId);
+            }
+          });
+          this.swMessageHandlerInstalled = true;
+        }
         this.updatePermissionUI();
         this.renderPanel();
         this.checkDueReminders();
@@ -5656,11 +5668,26 @@
           return;
         }
         try {
-          this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+          this.stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } },
+            audio: false
+          });
+          const videoTrack = this.stream.getVideoTracks()[0];
+          if (videoTrack && videoTrack.getCapabilities && videoTrack.applyConstraints) {
+            const caps = videoTrack.getCapabilities();
+            const advanced = {};
+            if (Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) advanced.focusMode = 'continuous';
+            // focusDistance se expresa en dioptrías: el valor mayor acerca el plano de enfoque.
+            if (caps.focusDistance && Number.isFinite(caps.focusDistance.max)) advanced.focusDistance = caps.focusDistance.max;
+            if (caps.zoom && Number.isFinite(caps.zoom.max) && caps.zoom.max > 1) advanced.zoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min || 1, 1.5));
+            if (Object.keys(advanced).length) {
+              try { await videoTrack.applyConstraints({ advanced: [advanced] }); } catch (_focusError) { /* El dispositivo puede ignorar controles manuales. */ }
+            }
+          }
           video.srcObject = this.stream;
           video.classList.remove('hidden');
           await video.play();
-          help.textContent = 'Cámara activa. Centra el código de barras dentro de la imagen.';
+          help.textContent = 'Cámara activa. Se ha solicitado enfoque continuo y enfoque cercano si el dispositivo lo permite. Acerca el código poco a poco hasta que quede nítido.';
           this.timer = setInterval(async () => {
             if (this.busy || !this.detector || video.readyState < 2) return;
             this.busy = true;
@@ -5940,9 +5967,11 @@
           const end = endDate.replace(/-/g, '') + 'T' + (j.endTime || '10:00').replace(':', '') + '00';
           const materials = (j.materials || []).map(m => `${m.qty || 1} x ${m.name || m.sku || 'Repuesto'}`).join('; ');
           const expenses = (j.expenses || []).map(ex => `${Helpers.resolveExpenseType(ex.type)}: ${Helpers.formatCurrency(ex.amount)}${ex.concept ? ' (' + ex.concept + ')' : ''}`).join('; ');
-          const installationData = inst?.values ? Object.entries(inst.values).filter(([k,v]) => String(v ?? '').trim()).map(([k,v]) => `${k}: ${v}`).join('\n') : '';
+          const installationValues = inst?.values ? Object.entries(inst.values).filter(([k,v]) => String(v ?? '').trim()).map(([k,v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`) : [];
+          const installationExtra = inst ? Object.entries(inst).filter(([k,v]) => !['id','unit','address','values'].includes(k) && v != null && v !== '' && typeof v !== 'function').map(([k,v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`) : [];
+          const installationData = [...installationValues, ...installationExtra].join('\n');
           const excludedJobKeys = new Set(['id','instId','type','title','unitName','createInstallationFiche','date','startTime','endTime','endDate','status','priority','reminder','notified','notifiedKeys','snoozeUntil','notes','materials','expenses','stockDeducted','workSessions','activeWorkStartedAt','pauseReason','pausedAt','completedAt','calendarEntries','calendarEntryType','calendarStatus','originalCalendarStatus','createdAt','_calendarEntry']);
-          const extraJobData = Object.entries(j).filter(([k,v]) => !excludedJobKeys.has(k) && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') && String(v).trim() !== '').map(([k,v]) => `${k}: ${v}`).join('\n');
+          const extraJobData = Object.entries(j).filter(([k,v]) => !excludedJobKeys.has(k) && v != null && v !== '' && typeof v !== 'function').map(([k,v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join('\n');
           const desc = [
             `Tipo: ${Helpers.resolveJobType(j)}`, `Unidad: ${unit}`, address ? `Dirección: ${address}` : '',
             `Estado: ${j.status || ''}`, `Prioridad: ${j.priority || 'Normal'}`,
@@ -5954,7 +5983,9 @@
             extraJobData ? `Otros datos de la tarea:\n${extraJobData}` : ''
           ].filter(Boolean).join('\n\n');
           const summary = `${Helpers.resolveJobType(j)} · ${unit}${j._calendarEntry ? ' · Reanudación' : ''}`;
-          lines.push('BEGIN:VEVENT', `UID:${esc(j.id)}@mantenipro`, `DTSTAMP:${stamp}`, `DTSTART:${dt}`, `DTEND:${end}`,
+          const created = j.createdAt ? new Date(j.createdAt) : null;
+          const lastModified = j.updatedAt ? new Date(j.updatedAt) : null;
+          lines.push('BEGIN:VEVENT', `UID:${esc(j.id)}@mantenipro`, `DTSTAMP:${stamp}`, ...(created && !Number.isNaN(created.getTime()) ? [`CREATED:${created.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`] : []), ...(lastModified && !Number.isNaN(lastModified.getTime()) ? [`LAST-MODIFIED:${lastModified.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`] : []), `DTSTART:${dt}`, `DTEND:${end}`,
             `SUMMARY:${esc(summary)}`, `LOCATION:${esc(address)}`, `DESCRIPTION:${esc(desc)}`, `STATUS:${Helpers.isJobCompleted(j) ? 'CONFIRMED' : 'TENTATIVE'}`, 'END:VEVENT');
         }
         lines.push('END:VCALENDAR');
