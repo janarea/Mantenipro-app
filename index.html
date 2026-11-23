@@ -13,7 +13,7 @@
   <link id="dynamic-manifest-link" rel="manifest">
   <link id="appAppleIcon" rel="apple-touch-icon" sizes="192x192">
   <link id="dynamic-apple-icon" rel="apple-touch-icon" sizes="192x192">
-  <title>ManteniPro 1.7 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
+  <title>ManteniPro 1.8 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -329,6 +329,9 @@
           <span>Calendario y Tareas</span>
           <span id="nav-pending-badge" class="px-1.6 py-0.2 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800">0</span>
         </button>
+        <button type="button" onclick="UI.navigate('notes')" data-tab="notes" class="nav-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-slate-600 border border-transparent hover:bg-white transition-all">
+          <span>Notas y Recordatorios</span><span id="nav-notes-badge" class="px-1.6 py-0.2 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800">0</span>
+        </button>
         <button type="button" onclick="UI.navigate('inventory')" data-tab="inventory" class="nav-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-slate-600 border border-transparent hover:bg-white transition-all">
           <span>Almacén</span>
           <span id="nav-lowstock-badge" class="hidden px-1.6 py-0.2 text-[11px] font-bold rounded-full bg-rose-100 text-rose-700">0</span>
@@ -602,6 +605,11 @@
             <div id="dash-upcoming-reminders" class="divide-y divide-slate-100"></div>
           </div>
 
+          <div class="card p-5 space-y-3 border-amber-200/80">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100"><h2 class="font-bold text-slate-900 text-base">Tareas y recordatorios independientes</h2><button type="button" onclick="UI.navigate('notes')" class="text-xs font-semibold text-blue-700 hover:underline">Ver todos →</button></div>
+            <div id="dash-independent-reminders" class="divide-y divide-slate-100"></div>
+          </div>
+
           <div class="card p-5 space-y-3">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 class="font-bold text-slate-900 text-base">Tareas de Hoy y Actividad Reciente</h2>
@@ -743,7 +751,23 @@
       </div>
     </section>
 
-    <!-- 3. ALMACÉN Y LISTADO DE REPUESTOS BAJO MÍNIMO -->
+    <!-- 3. NOTAS, TAREAS INDEPENDIENTES Y RECORDATORIOS -->
+    <section id="view-notes" class="view-panel hidden animate-fade space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div><h1 class="text-xl sm:text-2xl font-bold text-slate-900">Notas y Recordatorios</h1><p class="text-xs sm:text-sm text-slate-500">Organiza notas privadas, tareas independientes y avisos puntuales o recurrentes</p></div>
+        <div class="flex gap-2"><button type="button" onclick="NotesTasksModule.openEditor('note')" class="px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-semibold">+ Nueva nota</button><button type="button" onclick="NotesTasksModule.openEditor('task')" class="px-3 py-2 rounded-xl bg-blue-700 text-white text-xs font-semibold">+ Nueva tarea / aviso</button></div>
+      </div>
+      <div class="card p-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <input id="nt-search" oninput="NotesTasksModule.render()" placeholder="Buscar notas y tareas..." class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+        <select id="nt-filter" onchange="NotesTasksModule.render()" class="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"><option value="all">Todo</option><option value="note">Solo notas</option><option value="task">Solo tareas</option><option value="pending">Pendientes</option><option value="done">Completadas</option></select>
+        <select id="nt-sort" onchange="NotesTasksModule.render()" class="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"><option value="date">Ordenar por fecha</option><option value="newest">Más recientes</option><option value="priority">Prioridad</option></select>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="card p-4"><h2 class="font-bold text-sm mb-2">Próximos recordatorios</h2><div id="nt-upcoming" class="space-y-2"></div></div><div class="card p-4"><h2 class="font-bold text-sm mb-2">Notas fijadas</h2><div id="nt-pinned" class="space-y-2"></div></div></div>
+      <div id="nt-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      <p class="text-[11px] text-slate-400">Los avisos automáticos se comprueban mientras ManteniPro está abierto. Las notificaciones del sistema requieren permiso del navegador; no se garantiza la ejecución periódica con la aplicación cerrada.</p>
+    </section>
+
+    <!-- 4. ALMACÉN Y LISTADO DE REPUESTOS BAJO MÍNIMO -->
     <section id="view-inventory" class="view-panel hidden animate-fade space-y-5">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -946,6 +970,10 @@
     <button type="button" onclick="UI.navigate('calendar')" data-tab="calendar" class="mobile-nav-btn flex flex-col items-center py-1 px-1.6 text-slate-500">
       <div class="icon-pill px-2.5 py-1 rounded-full text-sm font-bold">📅</div>
       <span class="text-[10px] font-semibold mt-0.5">Tareas</span>
+    </button>
+    <button type="button" onclick="UI.navigate('notes')" data-tab="notes" class="mobile-nav-btn flex flex-col items-center py-1 px-1 text-slate-500">
+      <div class="icon-pill px-2 py-1 rounded-full text-sm font-bold">📝</div>
+      <span class="text-[9px] font-semibold mt-0.5">Notas</span>
     </button>
     <button type="button" onclick="UI.navigate('inventory')" data-tab="inventory" class="mobile-nav-btn flex flex-col items-center py-1 px-1.6 text-slate-500">
       <div class="icon-pill px-2.5 py-1 rounded-full text-sm font-bold">📦</div>
@@ -1422,7 +1450,7 @@
   <div id="backup-modal" class="modal-backdrop hidden">
     <div class="modal-card modal-sm p-5 space-y-4 animate-fade">
       <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-200 shrink-0">
-        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 1.7</p></div>
+        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 1.8</p></div>
         <button type="button" onclick="Backup.closeModal()" class="text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
@@ -1691,6 +1719,8 @@
       globalInstallationFields: [],
       installations: [],
       jobs: [],
+      notes: [],
+      independentTasks: [],
       expenses: [],
       notifications: []
     };
@@ -2054,6 +2084,8 @@
               notifiedKeys: Array.isArray(j.notifiedKeys) ? j.notifiedKeys : [],
               expenses: Array.isArray(j.expenses) ? j.expenses : []
             }));
+            State.notes = Array.isArray(data.notes) ? data.notes : [];
+            State.independentTasks = Array.isArray(data.independentTasks) ? data.independentTasks : [];
             State.expenses = Array.isArray(data.expenses) ? data.expenses : [];
             State.notifications = Array.isArray(data.notifications) ? data.notifications : [];
             State.orderQuantities = data.orderQuantities || {};
@@ -2097,6 +2129,8 @@
           globalInstallationFields: State.globalInstallationFields,
           installations: State.installations,
           jobs: State.jobs,
+          notes: State.notes,
+          independentTasks: State.independentTasks,
           expenses: State.expenses,
           notifications: State.notifications,
           orderQuantities: State.orderQuantities,
@@ -2120,6 +2154,8 @@
         State.globalInstallationFields = [];
         State.installations = [];
         State.jobs = [];
+        State.notes = [];
+        State.independentTasks = [];
         State.expenses = [];
         State.notifications = [];
         State.orderQuantities = {};
@@ -3384,17 +3420,17 @@
           const isSelected = dateStr === State.selectedDate;
           const isToday = dateStr === today;
 
-          const dots = dayJobs.slice(0, 3).map(j => {
+          const dots = dayJobs.slice(0, 4).map(j => {
             const isDone = Helpers.isJobCompleted(j);
             const isHigh = j.priority === 'Alta' || j.priority === 'Urgente';
             const color = isDone ? 'bg-emerald-500' : isHigh ? 'bg-rose-500' : 'bg-amber-500';
-            return `<span class="w-1.6 h-1.6 rounded-full ${color}"></span>`;
+            return `<span class="inline-block w-2 h-2 min-w-[8px] min-h-[8px] rounded-full ${color}" title="${isDone ? 'Completada' : isHigh ? 'Prioridad alta' : 'Pendiente'}"></span>`;
           }).join('');
 
           html += `
-            <div onclick="CalendarModule.selectDay('${dateStr}')" class="h-12 p-1.6 rounded-lg border ${isSelected ? 'border-blue-600 bg-blue-50/70 ring-1 ring-blue-600' : isToday ? 'border-blue-300 bg-blue-50/30' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer flex flex-col justify-between items-center">
+            <div onclick="CalendarModule.selectDay('${dateStr}')" title="${dayJobs.length} elemento(s)" class="min-h-[3.5rem] p-1.5 rounded-lg border ${isSelected ? 'border-blue-600 bg-blue-50/70 ring-1 ring-blue-600' : isToday ? 'border-blue-300 bg-blue-50/30' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer flex flex-col justify-between items-center">
               <span class="text-xs font-bold ${isSelected || isToday ? 'text-blue-700' : 'text-slate-700'}">${d}</span>
-              <div class="flex items-center gap-0.5">${dots}</div>
+              <div class="flex items-center justify-center gap-1 min-h-[9px]">${dots}${dayJobs.length > 4 ? `<span class="text-[9px] leading-none font-bold text-slate-500">+${dayJobs.length - 4}</span>` : ''}</div>
             </div>
           `;
         }
@@ -5319,6 +5355,52 @@
       }
     };
 
+    const NotesTasksModule = {
+      esc(value) { return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); },
+      renderDashboard() {
+        const box=document.getElementById('dash-independent-reminders'); if(!box)return;
+        const items=(State.independentTasks||[]).filter(t=>!t.done&&t.dueDate).sort((a,b)=>(a.dueDate+(a.dueTime||'')).localeCompare(b.dueDate+(b.dueTime||''))).slice(0,5);
+        box.innerHTML=items.length?items.map(t=>`<button onclick=\"UI.navigate('notes');NotesTasksModule.edit('${t.id}','task')\" class=\"w-full text-left py-2 hover:bg-amber-50/50\"><span class=\"block text-xs font-semibold text-slate-800\">${this.esc(t.title)}</span><span class=\"text-[10px] text-slate-500\">${this.esc(t.dueDate)} ${this.esc(t.dueTime||'')} · ${this.esc(t.priority||'Media')}</span></button>`).join(''):'<p class=\"text-xs text-slate-400 py-2\">No hay tareas independientes pendientes con fecha.</p>';
+      },
+      render() {
+        const q = (document.getElementById('nt-search')?.value || '').toLocaleLowerCase('es');
+        const filter = document.getElementById('nt-filter')?.value || 'all';
+        const sort = document.getElementById('nt-sort')?.value || 'date';
+        const all = [
+          ...State.notes.map(x => ({...x, kind:'note'})),
+          ...State.independentTasks.map(x => ({...x, kind:'task'}))
+        ].filter(x => {
+          const hay = `${x.title||''} ${x.body||''} ${x.category||''}`.toLocaleLowerCase('es');
+          if (q && !hay.includes(q)) return false;
+          if (filter === 'note' || filter === 'task') return x.kind === filter;
+          if (filter === 'pending') return x.kind === 'task' && !x.done;
+          if (filter === 'done') return x.kind === 'task' && x.done;
+          return true;
+        });
+        all.sort((a,b) => sort === 'newest' ? (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||'') : sort === 'priority' ? ({Urgente:0,Alta:1,Media:2,Baja:3}[a.priority]??4)-({Urgente:0,Alta:1,Media:2,Baja:3}[b.priority]??4) : (a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
+        const list = document.getElementById('nt-list');
+        if (list) list.innerHTML = all.length ? all.map(x => `<article class="card p-3.5 space-y-2"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><div class="flex flex-wrap gap-1 mb-1"><span class="text-[10px] px-2 py-0.5 rounded-full ${x.kind==='note'?'bg-violet-50 text-violet-700':'bg-blue-50 text-blue-700'}">${x.kind==='note'?'Nota':'Tarea'}</span>${x.pinned?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Fijada</span>':''}${x.done?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Completada</span>':''}</div><h3 class="font-bold text-sm break-words">${this.esc(x.title)}</h3></div><button onclick="NotesTasksModule.edit('${x.id}','${x.kind}')" class="text-xs text-blue-700 font-semibold">Editar</button></div><p class="text-xs text-slate-600 whitespace-pre-wrap break-words">${this.esc(x.body||'')}</p><div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400"><span>${x.dueDate ? `📅 ${this.esc(x.dueDate)} ${this.esc(x.dueTime||'')}` : 'Sin fecha'}${x.repeat && x.repeat!=='none' ? ` · Repite: ${this.esc(x.repeat)}` : ''}</span><span>${this.esc(x.priority||'')}</span></div><div class="flex justify-end gap-2">${x.kind==='task'?`<button onclick="NotesTasksModule.toggleDone('${x.id}')" class="px-2 py-1 rounded-lg border text-[11px]">${x.done?'Reabrir':'Completar'}</button>`:`<button onclick="NotesTasksModule.pin('${x.id}')" class="px-2 py-1 rounded-lg border text-[11px]">${x.pinned?'Desfijar':'Fijar'}</button><button onclick="NotesTasksModule.convertNote('${x.id}')" class="px-2 py-1 rounded-lg border text-[11px]">Crear tarea</button>`}<button onclick="NotesTasksModule.remove('${x.id}','${x.kind}')" class="px-2 py-1 rounded-lg border border-rose-200 text-rose-700 text-[11px]">Eliminar</button></div></article>`).join('') : '<div class="card p-6 text-center text-sm text-slate-400 md:col-span-2">No hay notas ni tareas con estos filtros.</div>';
+        const upcoming = (State.independentTasks||[]).filter(t=>!t.done&&t.dueDate).sort((a,b)=>(a.dueDate+a.dueTime).localeCompare(b.dueDate+b.dueTime)).slice(0,5);
+        const up = document.getElementById('nt-upcoming'); if(up) up.innerHTML = upcoming.length ? upcoming.map(t=>`<button onclick="NotesTasksModule.edit('${t.id}','task')" class="w-full text-left p-2 rounded-lg bg-slate-50 hover:bg-blue-50"><span class="block text-xs font-semibold">${this.esc(t.title)}</span><span class="text-[10px] text-slate-500">${this.esc(t.dueDate)} ${this.esc(t.dueTime||'')}</span></button>`).join('') : '<p class="text-xs text-slate-400">No hay recordatorios pendientes.</p>';
+        const pinned = (State.notes||[]).filter(n=>n.pinned).slice(0,5); const pin = document.getElementById('nt-pinned'); if(pin) pin.innerHTML = pinned.length ? pinned.map(n=>`<button onclick="NotesTasksModule.edit('${n.id}','note')" class="block w-full text-left p-2 rounded-lg bg-amber-50/60 text-xs font-medium">${this.esc(n.title)}</button>`).join('') : '<p class="text-xs text-slate-400">No hay notas fijadas.</p>';
+        const badge=document.getElementById('nav-notes-badge'); if(badge) badge.textContent=(State.independentTasks||[]).filter(t=>!t.done).length; this.renderDashboard();
+      },
+      openEditor(kind, item=null) {
+        const old = item || {}; const isTask = kind==='task';
+        const linkOptions = [`<option value="">Sin vincular</option>`, ...State.jobs.map(j=>`<option value="job:${this.esc(j.id)}" ${old.linkRef===`job:${j.id}`?'selected':''}>Intervención: ${this.esc(j.title||j.unitName||j.id)}</option>`), ...State.installations.map(i=>`<option value="installation:${this.esc(i.id)}" ${old.linkRef===`installation:${i.id}`?'selected':''}>Instalación: ${this.esc(i.name||i.title||i.id)}</option>`) ].join('');
+        const ov=document.createElement('div'); ov.id='nt-editor'; ov.style.cssText='position:fixed;inset:0;z-index:99990;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto';
+        ov.innerHTML=`<form id="nt-form" style="background:#fff;border-radius:16px;padding:18px;width:100%;max-width:520px;max-height:94vh;overflow:auto"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-base">${old.id?'Editar':'Nueva'} ${isTask?'tarea / recordatorio':'nota'}</h3><button type="button" id="nt-close" class="text-xl">×</button></div><label class="block text-xs font-semibold mb-1">Título</label><input id="nt-title" required maxlength="120" class="w-full border rounded-lg p-2 text-sm mb-3" value="${this.esc(old.title||'')}"><label class="block text-xs font-semibold mb-1">Contenido</label><textarea id="nt-body" rows="4" class="w-full border rounded-lg p-2 text-sm mb-3">${this.esc(old.body||'')}</textarea><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3"><div><label class="block text-xs font-semibold mb-1">Categoría</label><input id="nt-category" maxlength="40" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.category||'')}" placeholder="General, trabajo..."></div><div><label class="block text-xs font-semibold mb-1">Vincular con</label><select id="nt-link" class="w-full border rounded-lg p-2 text-sm bg-white">${linkOptions}</select></div></div>${isTask?`<div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-semibold mb-1">Fecha</label><input id="nt-date" type="date" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.dueDate||'')}"></div><div><label class="block text-xs font-semibold mb-1">Hora</label><input id="nt-time" type="time" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.dueTime||'09:00')}"></div><div><label class="block text-xs font-semibold mb-1">Prioridad</label><select id="nt-priority" class="w-full border rounded-lg p-2 text-sm"><option ${old.priority==='Baja'?'selected':''}>Baja</option><option ${(!old.priority||old.priority==='Media')?'selected':''}>Media</option><option ${old.priority==='Alta'?'selected':''}>Alta</option><option ${old.priority==='Urgente'?'selected':''}>Urgente</option></select></div><div><label class="block text-xs font-semibold mb-1">Repetición</label><select id="nt-repeat" class="w-full border rounded-lg p-2 text-sm"><option value="none">No repetir</option><option value="daily" ${old.repeat==='daily'?'selected':''}>Diaria</option><option value="weekly" ${old.repeat==='weekly'?'selected':''}>Semanal</option><option value="monthly" ${old.repeat==='monthly'?'selected':''}>Mensual</option></select></div></div>`:`<label class="flex items-center gap-2 text-xs mt-1"><input id="nt-pinned" type="checkbox" ${old.pinned?'checked':''}> Fijar esta nota</label>`}<div class="flex justify-end gap-2 mt-4"><button type="button" id="nt-cancel" class="px-3 py-2 rounded-lg border text-xs">Cancelar</button><button class="px-4 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">Guardar</button></div></form>`;
+        document.body.appendChild(ov); const close=()=>ov.remove(); ov.querySelector('#nt-close').onclick=close; ov.querySelector('#nt-cancel').onclick=close;
+        ov.querySelector('#nt-form').onsubmit=e=>{e.preventDefault(); const now=new Date().toISOString(); const data={...old,id:old.id||Helpers.uid(isTask?'task':'note'),title:ov.querySelector('#nt-title').value.trim(),body:ov.querySelector('#nt-body').value,category:ov.querySelector('#nt-category').value.trim(),linkRef:ov.querySelector('#nt-link').value,updatedAt:now,createdAt:old.createdAt||now}; if(isTask){Object.assign(data,{dueDate:ov.querySelector('#nt-date').value,dueTime:ov.querySelector('#nt-time').value,priority:ov.querySelector('#nt-priority').value,repeat:ov.querySelector('#nt-repeat').value,done:!!old.done,lastNotifiedKey:old.lastNotifiedKey||''}); const idx=State.independentTasks.findIndex(x=>x.id===data.id); if(idx>=0) State.independentTasks[idx]=data; else State.independentTasks.push(data);}else{data.pinned=ov.querySelector('#nt-pinned').checked; const idx=State.notes.findIndex(x=>x.id===data.id); if(idx>=0) State.notes[idx]=data; else State.notes.push(data);} Storage.save(); close(); this.render(); Helpers.toast('Guardado correctamente','success');};
+      },
+      edit(id,kind){const arr=kind==='task'?State.independentTasks:State.notes;const item=arr.find(x=>x.id===id);if(item)this.openEditor(kind,item);},
+      remove(id,kind){const arr=kind==='task'?State.independentTasks:State.notes;const i=arr.findIndex(x=>x.id===id);if(i>=0){arr.splice(i,1);Storage.save();this.render();}},
+      toggleDone(id){const t=State.independentTasks.find(x=>x.id===id);if(t){t.done=!t.done;t.completedAt=t.done?new Date().toISOString():null;Storage.save();this.render();}},
+      pin(id){const n=State.notes.find(x=>x.id===id);if(n){n.pinned=!n.pinned;Storage.save();this.render();}},
+      convertNote(id){const n=State.notes.find(x=>x.id===id);if(n)this.openEditor('task',{title:n.title,body:n.body,category:n.category,linkRef:n.linkRef,priority:'Media',repeat:'none'});},
+      checkDueReminders(){const now=new Date();const today=Helpers.toDateStr(now);const hm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;let changed=false;(State.independentTasks||[]).forEach(t=>{if(t.done||!t.dueDate||!t.dueTime||t.dueDate>today||t.dueDate===today&&t.dueTime>hm)return;const key=`${t.dueDate}_${t.dueTime}_${t.repeat||'none'}`;if(t.lastNotifiedKey===key)return;t.lastNotifiedKey=key;changed=true;const body=t.body||`Recordatorio programado para ${t.dueDate} ${t.dueTime}`;if(typeof NotificationsModule!=='undefined'){NotificationsModule.showSystemNotification(`ManteniPro · ${t.title}`,{body,tag:`mantenipro-task-${t.id}`,data:{url:'./',taskId:t.id}});}if(document.visibilityState==='visible')Helpers.toast(`Recordatorio: ${t.title}`,'warning');if(t.repeat&&t.repeat!=='none'){const d=Helpers.parseDateLocal(t.dueDate);const advance=()=>{if(t.repeat==='daily')d.setDate(d.getDate()+1);else if(t.repeat==='weekly')d.setDate(d.getDate()+7);else if(t.repeat==='monthly')d.setMonth(d.getMonth()+1);};advance();while(Helpers.toDateStr(d)<today||(Helpers.toDateStr(d)===today&&(t.dueTime||'00:00')<=hm))advance();t.dueDate=Helpers.toDateStr(d);t.lastNotifiedKey='';}});if(changed){Storage.save();this.render();}},
+    };
+
     const NotificationsModule = {
       timerId: null,
       audioCtx: null,
@@ -5333,6 +5415,9 @@
             if (message.type === 'MANTENIPRO_OPEN_JOB' && message.jobId) {
               const job = State.jobs.find(item => item.id === message.jobId);
               if (job) JobsModule.openModal(message.jobId);
+            } else if (message.type === 'MANTENIPRO_OPEN_TASK' && message.taskId) {
+              UI.navigate('notes');
+              NotesTasksModule.edit(message.taskId, 'task');
             }
           });
           this.swMessageHandlerInstalled = true;
@@ -5340,8 +5425,9 @@
         this.updatePermissionUI();
         this.renderPanel();
         this.checkDueReminders();
+        NotesTasksModule.checkDueReminders();
         if (this.timerId) clearInterval(this.timerId);
-        this.timerId = setInterval(() => this.checkDueReminders(), 15000);
+        this.timerId = setInterval(() => { this.checkDueReminders(); NotesTasksModule.checkDueReminders(); }, 15000);
 
         document.addEventListener('click', (e) => {
           const panel = document.getElementById('notif-panel');
@@ -6638,6 +6724,7 @@
           CalendarModule.renderDayTimeline();
           JobsModule.render();
         }
+        if (tabName === 'notes') NotesTasksModule.render();
         if (tabName === 'inventory') InventoryModule.render();
         if (tabName === 'installations') InstallationsModule.render();
         if (tabName === 'expenses') ExpensesModule.render();
@@ -6649,6 +6736,7 @@
         CalendarModule.renderMonth();
         CalendarModule.renderDayTimeline();
         JobsModule.render();
+        NotesTasksModule.render();
         InventoryModule.render();
         InstallationsModule.render();
         ExpensesModule.render();
