@@ -238,7 +238,7 @@
   </style>
 </head>
 <body class="antialiased pb-20 md:pb-10">
-  <div id="scanner-modal" class="modal-backdrop hidden"><div class="modal-card modal-sm p-5 space-y-3"><div class="flex justify-between items-center"><h3 class="font-bold">Escanear código de barras</h3><button onclick="CodeScanner.close()" aria-label="Cerrar">✕</button></div><video id="barcode-video" autoplay muted playsinline class="hidden w-full max-h-64 object-contain rounded-xl bg-black"></video><div id="scanner-controls" class="hidden grid grid-cols-2 gap-2"><div class="col-span-2"><label class="block text-[11px] font-semibold mb-1" for="scanner-camera-select">Cámara</label><select id="scanner-camera-select" onchange="CodeScanner.switchCamera(this.value)" class="w-full border rounded-lg p-2 text-xs bg-white"></select></div><div><label class="block text-[11px] font-semibold mb-1" for="scanner-zoom">Zoom</label><input id="scanner-zoom" type="range" min="1" max="1" step="0.1" value="1" oninput="CodeScanner.setZoom(this.value)" class="w-full"></div><div class="flex items-end"><button type="button" id="scanner-torch" onclick="CodeScanner.toggleTorch()" class="hidden w-full px-2 py-2 rounded-lg border text-xs font-semibold">☼ Linterna</button></div></div><div class="flex gap-2"><button type="button" id="nfc-start-btn" onclick="NFCModule.start(true)" class="flex-1 px-3 py-2 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 text-xs font-semibold">Activar lector NFC</button><button type="button" id="nfc-stop-btn" onclick="NFCModule.stop()" class="hidden px-3 py-2 rounded-lg border text-xs font-semibold">Detener NFC</button></div><div id="nfc-status" class="text-[11px] text-slate-500">NFC funciona en paralelo con el lector de códigos cuando el navegador y el dispositivo lo admiten.</div><div id="scanner-camera-help" class="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">Preparando cámara…</div><p id="scanner-status" class="text-xs text-slate-600">También puedes introducir el código manualmente.</p><input id="barcode-manual" type="text" class="w-full p-3 border rounded-xl" placeholder="Código de barras (letras y números)" autocomplete="off" autocapitalize="characters" spellcheck="false"><div class="flex gap-2"><button onclick="CodeScanner.lookup(document.getElementById('barcode-manual').value)" class="flex-1 bg-blue-700 text-white rounded-xl p-2 text-sm">Buscar código</button><button onclick="CodeScanner.close()" class="p-2 border rounded-xl text-sm">Cerrar</button></div></div></div>
+  <div id="scanner-modal" class="modal-backdrop hidden"><div class="modal-card modal-sm p-5 space-y-3"><div class="flex justify-between items-center"><h3 class="font-bold">Escanear código de barras</h3><button onclick="CodeScanner.close()" aria-label="Cerrar">✕</button></div><div id="barcode-video-frame" class="hidden w-full aspect-square max-h-64 overflow-hidden rounded-xl bg-black"><video id="barcode-video" autoplay muted playsinline class="w-full h-full object-cover"></video></div><div id="scanner-controls" class="hidden grid grid-cols-2 gap-2"><div class="col-span-2"><label class="block text-[11px] font-semibold mb-1" for="scanner-camera-select">Cámara</label><select id="scanner-camera-select" onchange="CodeScanner.switchCamera(this.value)" class="w-full border rounded-lg p-2 text-xs bg-white"></select></div><div><label class="block text-[11px] font-semibold mb-1" for="scanner-zoom">Zoom</label><input id="scanner-zoom" type="range" min="1" max="1" step="0.1" value="1" oninput="CodeScanner.setZoom(this.value)" class="w-full"></div><div class="flex items-end"><button type="button" id="scanner-torch" onclick="CodeScanner.toggleTorch()" class="hidden w-full px-2 py-2 rounded-lg border text-xs font-semibold">☼ Linterna</button></div></div><div class="flex gap-2"><button type="button" id="nfc-start-btn" onclick="NFCModule.start(true)" class="flex-1 px-3 py-2 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 text-xs font-semibold">Activar lector NFC</button><button type="button" id="nfc-stop-btn" onclick="NFCModule.stop()" class="hidden px-3 py-2 rounded-lg border text-xs font-semibold">Detener NFC</button></div><div id="nfc-status" class="text-[11px] text-slate-500">NFC funciona en paralelo con el lector de códigos cuando el navegador y el dispositivo lo admiten.</div><div id="scanner-camera-help" class="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">Preparando cámara…</div><p id="scanner-status" class="text-xs text-slate-600">También puedes introducir el código manualmente.</p><input id="barcode-manual" type="text" class="w-full p-3 border rounded-xl" placeholder="Código de barras (letras y números)" autocomplete="off" autocapitalize="characters" spellcheck="false"><div class="flex gap-2"><button onclick="CodeScanner.lookup(document.getElementById('barcode-manual').value)" class="flex-1 bg-blue-700 text-white rounded-xl p-2 text-sm">Buscar código</button><button onclick="CodeScanner.close()" class="p-2 border rounded-xl text-sm">Cerrar</button></div></div></div>
 
   <!-- Avisos ligeros en pantalla y acción Deshacer tras eliminaciones -->
   <div id="toast-box" class="fixed bottom-20 md:bottom-6 right-4 z-[80] flex flex-col gap-2 pointer-events-none max-w-xs sm:max-w-sm"></div>
@@ -1184,6 +1184,17 @@
             <input type="number" id="inv-min" min="0" required value="0" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600">
           </div>
         </div>
+
+        <section id="inv-nfc-panel" class="hidden rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-2">
+          <div class="text-xs font-bold text-emerald-900">Etiqueta NFC</div>
+          <p class="text-[11px] text-slate-600">Gestiona la etiqueta NFC desde la edición de este producto. Requiere Android, Chrome y una conexión HTTPS.</p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="inv-nfc-write" onclick="NFCModule.writeProduct(document.getElementById('inv-id').value)" class="flex-1 px-3 py-2 rounded-lg bg-emerald-700 text-white text-xs font-semibold">Escribir etiqueta</button>
+            <button type="button" id="inv-nfc-reassign" onclick="NFCModule.writeProduct(document.getElementById('inv-id').value)" class="flex-1 px-3 py-2 rounded-lg border border-emerald-300 bg-white text-emerald-800 text-xs font-semibold">Reasignar etiqueta</button>
+            <button type="button" onclick="NFCModule.start(true)" class="flex-1 px-3 py-2 rounded-lg border border-emerald-300 bg-white text-emerald-800 text-xs font-semibold">Leer etiqueta</button>
+          </div>
+          <p id="inv-nfc-label-status" class="text-[10px] text-slate-600"></p>
+        </section>
 
         <section id="inv-photo-panel" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
           <div class="flex flex-wrap items-center justify-between gap-2"><div><h4 class="text-xs font-bold text-slate-800">Fotografías del producto</h4><p class="text-[11px] text-slate-500">Puedes elegir imágenes de la galería o hacer fotos nuevas. Se guardan sin conexión y se suben a Drive al conectarte.</p></div><div class="flex flex-wrap gap-2"><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">▧ Galería<input id="inv-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label><label class="cursor-pointer px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">📷 Cámara<input id="inv-camera-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label></div></div>
@@ -4928,7 +4939,6 @@
           </div>
           <section class="rounded-xl border border-blue-200 bg-blue-50/50 p-3 space-y-2"><div class="text-xs font-bold text-slate-800">Ajuste rápido de existencias</div><div class="flex items-center gap-3"><button type="button" onclick="InventoryModule.adjustStock('${item.id}',-1);InventoryModule.refreshDetail('${item.id}')" class="w-11 h-10 rounded-lg border border-slate-300 bg-white font-bold text-lg">−1</button><div class="flex-1 text-center"><span class="block text-[10px] text-slate-500">Stock actual</span><strong class="text-lg text-slate-900">${item.stock}</strong></div><button type="button" onclick="InventoryModule.adjustStock('${item.id}',1);InventoryModule.refreshDetail('${item.id}')" class="w-11 h-10 rounded-lg border border-slate-300 bg-white font-bold text-lg">+1</button></div></section>
           <section class="space-y-2"><h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Fotografías del producto</h4><div id="inv-detail-photos" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div></section>
-          <section class="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-2"><div class="text-xs font-bold text-emerald-900">Etiqueta NFC</div><p class="text-[11px] text-slate-600">Vincula o reasigna una etiqueta NFC a este producto. Requiere Android y Chrome con Web NFC.</p><div class="flex gap-2"><button type="button" onclick="NFCModule.writeProduct('${item.id}')" class="flex-1 px-3 py-2 rounded-lg bg-emerald-700 text-white text-xs font-semibold">Escribir / reasignar etiqueta</button><button type="button" onclick="CodeScanner.open();NFCModule.start(true)" class="px-3 py-2 rounded-lg border border-emerald-300 text-emerald-800 text-xs font-semibold">Leer etiqueta</button></div><p class="text-[10px] text-slate-500">${item.nfcTagId ? 'Etiqueta vinculada: ' + String(item.nfcTagId).replace(/</g,'&lt;') : 'Sin etiqueta vinculada'}</p></section>
           <div class="flex justify-end"><button type="button" onclick="InventoryModule.closeDetail()" class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-300">Cerrar</button><button type="button" onclick="InventoryModule.closeDetail(); InventoryModule.openModal('${item.id}')" class="ml-2 px-4 py-2 text-xs font-semibold rounded-xl bg-blue-700 text-white">Editar producto</button></div>`;
         modal.classList.remove('hidden');
         PhotoManager.render('inventory', item.id, 'inv-detail-photos', false);
@@ -4963,6 +4973,8 @@
           document.getElementById('inv-stock').value = item.stock;
           document.getElementById('inv-min').value = item.minStock;
           document.getElementById('inv-photo-panel').classList.remove('hidden');
+          document.getElementById('inv-nfc-panel').classList.remove('hidden');
+          this.refreshNFCPanel(item);
           PhotoManager.render('inventory', item.id);
         } else {
           document.getElementById('inv-modal-title').textContent = 'Nuevo Repuesto';
@@ -4976,6 +4988,7 @@
           document.getElementById('inv-stock').value = 0;
           document.getElementById('inv-min').value = 0;
           document.getElementById('inv-photo-panel').classList.add('hidden');
+          document.getElementById('inv-nfc-panel').classList.add('hidden');
           document.getElementById('inv-photo-gallery').innerHTML = '';
         }
         document.getElementById('inv-modal').classList.remove('hidden');
@@ -4983,6 +4996,15 @@
 
       closeModal() {
         document.getElementById('inv-modal').classList.add('hidden');
+      },
+
+      refreshNFCPanel(item) {
+        const label = document.getElementById('inv-nfc-label-status');
+        const writeBtn = document.getElementById('inv-nfc-write');
+        const reassignBtn = document.getElementById('inv-nfc-reassign');
+        if (label) label.textContent = item?.nfcTagId ? `Etiqueta vinculada: ${String(item.nfcTagId)}` : 'Este producto todavía no tiene una etiqueta vinculada.';
+        if (writeBtn) writeBtn.classList.toggle('hidden', !!item?.nfcTagId);
+        if (reassignBtn) reassignBtn.classList.toggle('hidden', !item?.nfcTagId);
       },
 
       async save(e) {
@@ -6022,13 +6044,14 @@
 
 
     const CodeScanner = {
-      stream: null, timer: null, detector: null, busy: false, targetFieldId: null, cameraDevices: [], selectedDeviceId: null, torchOn: false,
+      stream: null, timer: null, detector: null, busy: false, targetFieldId: null, cameraDevices: [], selectedDeviceId: null, torchOn: false, cameraPreferenceKey: 'mantenipro_scanner_camera_v1',
       open(targetFieldId = null) {
         this.targetFieldId = targetFieldId;
+        if (!this.selectedDeviceId) { try { this.selectedDeviceId = localStorage.getItem(this.cameraPreferenceKey) || null; } catch (_) {} }
         const modal = document.getElementById('scanner-modal');
         modal.classList.remove('hidden');
         document.getElementById('barcode-manual').value = '';
-        document.getElementById('barcode-video').classList.add('hidden');
+        document.getElementById('barcode-video-frame').classList.add('hidden');
         document.getElementById('scanner-camera-help').textContent = 'Solicitando acceso a la cámara…';
         document.getElementById('scanner-status').textContent = targetFieldId ? 'Escanea el código para rellenar el campo del formulario. También puedes escribirlo manualmente.' : 'Apunta la cámara al código. Si no funciona, introduce el código manualmente.';
         const actionButton = document.querySelector('#scanner-modal button[onclick*="CodeScanner.lookup"]');
@@ -6040,12 +6063,13 @@
         if (this.stream) this.stream.getTracks().forEach(t => t.stop());
         this.stream = null;
         const video = document.getElementById('barcode-video');
-        video.pause(); video.srcObject = null; video.classList.add('hidden');
+        video.pause(); video.srcObject = null; document.getElementById('barcode-video-frame')?.classList.add('hidden');
         document.getElementById('scanner-controls')?.classList.add('hidden');
         document.getElementById('scanner-modal').classList.add('hidden');
       },
       async switchCamera(deviceId) {
         this.selectedDeviceId = deviceId || null;
+        try { if (this.selectedDeviceId) localStorage.setItem(this.cameraPreferenceKey, this.selectedDeviceId); else localStorage.removeItem(this.cameraPreferenceKey); } catch (_) {}
         clearInterval(this.timer); this.timer = null;
         if (this.stream) this.stream.getTracks().forEach(t => t.stop());
         this.stream = null; this.torchOn = false;
@@ -6091,7 +6115,7 @@
             try {
               this.cameraDevices = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
               cameraSelect.innerHTML = this.cameraDevices.map((d,i) => `<option value="${String(d.deviceId).replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${String(d.label || `Cámara ${i+1}`).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</option>`).join('');
-              if (videoTrack?.getSettings?.().deviceId) this.selectedDeviceId = videoTrack.getSettings().deviceId;
+              if (videoTrack?.getSettings?.().deviceId) { this.selectedDeviceId = videoTrack.getSettings().deviceId; try { localStorage.setItem(this.cameraPreferenceKey, this.selectedDeviceId); } catch (_) {} }
               if (this.selectedDeviceId) cameraSelect.value = this.selectedDeviceId;
               if (controls) controls.classList.toggle('hidden', this.cameraDevices.length < 2 && !(videoTrack?.getCapabilities?.().zoom));
               cameraSelect.parentElement.classList.toggle('hidden', this.cameraDevices.length < 2);
@@ -6116,7 +6140,7 @@
             if (controls) controls.classList.toggle('hidden', !(this.cameraDevices.length > 1 || caps.zoom || caps.torch));
           }
           video.srcObject = this.stream;
-          video.classList.remove('hidden');
+          document.getElementById('barcode-video-frame').classList.remove('hidden');
           await video.play();
           help.textContent = 'Cámara activa. El enfoque automático se ajusta según las capacidades del móvil. Si están disponibles, puedes cambiar de cámara, usar zoom y encender la linterna.';
           this.timer = setInterval(async () => {
@@ -6132,6 +6156,12 @@
             finally { this.busy = false; }
           }, 350);
         } catch (e) {
+          if (this.selectedDeviceId && (e?.name === 'NotFoundError' || e?.name === 'OverconstrainedError' || e?.name === 'NotReadableError')) {
+            this.selectedDeviceId = null;
+            try { localStorage.removeItem(this.cameraPreferenceKey); } catch (_) {}
+            help.textContent = 'La cámara guardada ya no está disponible. Probando la cámara predeterminada…';
+            return this.start();
+          }
           help.textContent = (location.protocol === 'file:')
             ? 'Chrome no permite abrir la cámara en directo desde este HTML local. Abre ManteniPro desde GitHub Pages (HTTPS) o introduce el código manualmente.'
             : 'No se pudo iniciar la cámara. Revisa el permiso de cámara de Chrome y vuelve a intentarlo, o introduce el código manualmente.';
@@ -6249,6 +6279,14 @@
         if (!item) { this.status(`Etiqueta leída (${serial||marker||'sin identificador'}), pero no está vinculada a un producto o instalación.`, true); return; }
         if(serial && item.nfcTagId!==serial) { item.nfcTagId=serial; Storage.save(); }
         this.status(`Producto NFC: ${item.name}`);
+        const inventoryModal=document.getElementById('inv-modal');
+        const editingProductId=document.getElementById('inv-id')?.value;
+        if (inventoryModal && !inventoryModal.classList.contains('hidden') && editingProductId===item.id) {
+          InventoryModule.refreshNFCPanel(item);
+          const localStatus=document.getElementById('inv-nfc-label-status');
+          if(localStatus)localStatus.textContent=`Etiqueta leída correctamente para ${item.name}. Identificador: ${serial||marker||'NFC'}`;
+          return;
+        }
         const jobModal=document.getElementById('job-modal');
         if(jobModal && !jobModal.classList.contains('hidden')) {
           const raw=window.prompt(`¿Cuántas unidades de «${item.name}» vas a utilizar?`, '1');
@@ -6277,7 +6315,7 @@
           item.nfcTagId=`NDEF:${item.id}`;
           Storage.save();
           this.status(`Etiqueta escrita y vinculada a ${item.name}. Acércala para comprobar la lectura.`); Helpers.toast('Etiqueta NFC vinculada correctamente', 'success');
-          InventoryModule.openDetail(item.id);
+          InventoryModule.refreshNFCPanel(item);
         } catch(err) { this.status(`No se pudo escribir la etiqueta NFC: ${err?.message||'error desconocido'}`, true); }
       },
       init() {
