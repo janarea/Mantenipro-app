@@ -13,7 +13,7 @@
   <link id="dynamic-manifest-link" rel="manifest">
   <link id="appAppleIcon" rel="apple-touch-icon" sizes="192x192">
   <link id="dynamic-apple-icon" rel="apple-touch-icon" sizes="192x192">
-  <title>ManteniPro 2.2 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
+  <title>ManteniPro 2.3 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -266,7 +266,7 @@
 
       <!-- Acciones de Cabecera -->
       <div class="flex items-center gap-1.6 sm:gap-2 relative">
-        <span id="app-version-label" class="text-[10px] font-bold text-slate-500 px-2 py-1 rounded-md bg-slate-100 border border-slate-200">v2.2</span>
+        
         <!-- Campana de Notificaciones -->
         <button type="button" onclick="NotificationsModule.togglePanel()" id="notif-bell-btn" title="Centro de avisos" class="relative p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
           <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1449,6 +1449,12 @@
           <input type="text" id="exp-concept" placeholder="Detalle del gasto..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600">
         </div>
 
+        <div class="min-w-0">
+          <label for="exp-receipt" class="block text-xs font-semibold text-slate-700 mb-1">Fotografía del ticket o recibo</label>
+          <input type="file" id="exp-receipt" accept="image/*" capture="environment" class="w-full text-xs border border-slate-300 rounded-xl p-2 bg-white">
+          <img id="exp-receipt-preview" alt="Vista previa del recibo" class="hidden mt-2 max-h-40 rounded-lg border border-slate-200 object-contain" onclick="this.classList.toggle('max-h-40');this.classList.toggle('max-h-none')">
+        </div>
+
         <div class="modal-footer pt-2">
           <button type="button" id="exp-delete-btn" onclick="ExpensesModule.deleteCurrent()" class="hidden px-3.5 py-2 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl mr-auto">
             Eliminar
@@ -1466,7 +1472,7 @@
   <div id="backup-modal" class="modal-backdrop hidden">
     <div class="modal-card modal-sm p-5 space-y-4 animate-fade">
       <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-200 shrink-0">
-        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 1.9</p></div>
+        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p id="backup-version-label" style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 2.3</p></div>
         <button type="button" onclick="Backup.closeModal()" class="text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
@@ -1542,9 +1548,7 @@
             </div>
             <div>
               <label class="block text-[11px] font-semibold text-slate-700 mb-1" for="adv-value">Valor del campo</label>
-              <select id="adv-value" onchange="Backup.renderAdvanced()" class="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-lg bg-white">
-                <option value="">Todos los valores</option>
-              </select>
+              <input id="adv-value" type="search" list="adv-value-options" oninput="Backup.renderAdvanced()" placeholder="Escribe para buscar un valor..." class="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-lg bg-white"><datalist id="adv-value-options"></datalist>
             </div>
           </div>
           <div class="flex items-center justify-between gap-2">
@@ -3034,6 +3038,7 @@
               <td class="py-3.5 px-4">
                 <p class="font-semibold text-slate-900">${ex.concept || meta.label}</p>
                 <div class="flex items-center gap-2 flex-wrap mt-0.5 text-xs text-slate-500">
+                  ${ex.receiptImage ? `<img src="${ex.receiptImage}" alt="Ticket" onclick="event.stopPropagation();ExpensesModule.previewReceipt('${ex.id}')" class="w-12 h-12 object-cover rounded-lg border cursor-zoom-in">` : ''}
                   ${ex.unitName ? `<span>📍 ${ex.unitName}</span>` : ''}
                   ${linkedJob ? `<span class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-1.6 py-0.2 rounded">Tarea: ${Helpers.resolveJobType(linkedJob)}</span>` : ''}
                 </div>
@@ -3067,6 +3072,9 @@
           document.getElementById('exp-date').value = ex.date;
           document.getElementById('exp-unit').value = ex.unitName || '';
           document.getElementById('exp-concept').value = ex.concept || '';
+          const preview = document.getElementById('exp-receipt-preview');
+          preview.src = ex.receiptImage || ''; preview.classList.toggle('hidden', !ex.receiptImage);
+          document.getElementById('exp-receipt').value = '';
           delBtn.classList.remove('hidden');
         } else {
           document.getElementById('exp-modal-title').textContent = 'Nuevo Gasto';
@@ -3083,7 +3091,7 @@
         document.getElementById('exp-modal').classList.add('hidden');
       },
 
-      save(e) {
+      async save(e) {
         e.preventDefault();
         const id = document.getElementById('exp-id').value;
         const existing = id ? State.expenses.find(ex => ex.id === id) : null;
@@ -3092,6 +3100,12 @@
         const date = document.getElementById('exp-date').value;
         const unitName = document.getElementById('exp-unit').value.trim();
         const concept = document.getElementById('exp-concept').value.trim();
+        let receiptImage = existing?.receiptImage || null;
+        const receiptFile = document.getElementById('exp-receipt')?.files?.[0];
+        if (receiptFile) {
+          if (!receiptFile.type.startsWith('image/')) { Helpers.toast('Selecciona una imagen válida', 'error'); return; }
+          receiptImage = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(receiptFile); });
+        }
 
         const payload = {
           id: id || Helpers.uid('exp'),
@@ -3100,7 +3114,8 @@
           amount,
           date,
           unitName,
-          concept
+          concept,
+          receiptImage
         };
 
         if (existing) {
@@ -3120,6 +3135,13 @@
         this.closeModal();
         UI.refreshAll();
         Helpers.toast('Gasto guardado y resumen mensual actualizado', 'success');
+      },
+
+      previewReceipt(id) {
+        const ex = State.expenses.find(e => e.id === id);
+        if (!ex?.receiptImage) return;
+        const w = window.open();
+        if (w) { w.document.write(`<title>Ticket del gasto</title><img src="${ex.receiptImage}" style="max-width:100%;height:auto">`); w.document.close(); }
       },
 
       deletePart(id) {
@@ -4177,7 +4199,7 @@
         });
       },
 
-      save(e) {
+      async save(e) {
         e.preventDefault();
         const id = document.getElementById('job-id').value;
         const existing = id ? State.jobs.find(j => j.id === id) : null;
@@ -4898,7 +4920,7 @@
         document.getElementById('inv-modal').classList.add('hidden');
       },
 
-      save(e) {
+      async save(e) {
         e.preventDefault();
         const id = document.getElementById('inv-id').value;
         const sku = document.getElementById('inv-sku').value.trim().toUpperCase();
@@ -5177,7 +5199,7 @@
         Helpers.toast(`Campo "${name}" añadido a todas las fichas`, 'success');
       },
 
-      save(e) {
+      async save(e) {
         e.preventDefault();
         const id = document.getElementById('inst-id').value;
         const unit = document.getElementById('inst-unit').value.trim();
@@ -6196,8 +6218,11 @@
       onAdvancedFieldChange() {
         const key = document.getElementById('adv-field').value;
         const values = [...new Set(this.advancedRows.map(r => String(r[key] ?? '')).filter(v => v !== ''))].sort((a,b) => a.localeCompare(b, 'es'));
-        const select = document.getElementById('adv-value');
-        select.innerHTML = '<option value="">Todos los valores</option>' + values.map(v => `<option value="${this.escapeAdvancedHtml(v)}">${this.escapeAdvancedHtml(v.length > 65 ? v.slice(0,62)+'…' : v)}</option>`).join('');
+        const input = document.getElementById('adv-value');
+        const current = input.value;
+        const options = document.getElementById('adv-value-options');
+        options.innerHTML = values.map(v => `<option value="${this.escapeAdvancedHtml(v)}"></option>`).join('');
+        if (current && !values.includes(current)) input.value = '';
         this.renderAdvanced();
       },
 
@@ -6589,7 +6614,9 @@
                 ${tableRowsHtml}
               </tbody>
             </table>
-          </body>
+          
+
+</body>
           </html>
         `;
 
@@ -7283,9 +7310,9 @@
     };
 
     const VersionModule = {
-      current: '2.2',
+      current: '2.3',
       async check() {
-        const label=document.getElementById('app-version-label'); if(label) label.textContent='v'+this.current;
+        const label=document.getElementById('backup-version-label'); if(label) label.textContent='Versión '+this.current;
         if (!/^https?:$/.test(location.protocol)) return;
         try {
           const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'}); if(!response.ok) return;
@@ -7313,6 +7340,24 @@
       NotesTasksModule.startLocationWatch(false);
       VersionModule.check();
     });
+
+    // Navegación táctil del calendario: izquierda = día siguiente; derecha = día anterior.
+    (() => {
+      const calendar = document.getElementById('view-calendar');
+      if (!calendar) return;
+      let startX = 0, startY = 0;
+      calendar.addEventListener('touchstart', e => { const t=e.changedTouches[0]; startX=t.clientX; startY=t.clientY; }, {passive:true});
+      calendar.addEventListener('touchend', e => {
+        const t=e.changedTouches[0], dx=t.clientX-startX, dy=t.clientY-startY;
+        if (Math.abs(dx)<65 || Math.abs(dx)<Math.abs(dy)*1.3) return;
+        const d = new Date((State.selectedDate || Helpers.relDate(0)) + 'T12:00:00');
+        d.setDate(d.getDate() + (dx < 0 ? 1 : -1));
+        CalendarModule.selectDay(Helpers.toDateStr(d));
+      }, {passive:true});
+    })();
+
   </script>
+
+
 </body>
 </html>
