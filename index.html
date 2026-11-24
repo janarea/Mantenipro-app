@@ -13,7 +13,7 @@
   <link id="dynamic-manifest-link" rel="manifest">
   <link id="appAppleIcon" rel="apple-touch-icon" sizes="192x192">
   <link id="dynamic-apple-icon" rel="apple-touch-icon" sizes="192x192">
-  <title>ManteniPro 2.3 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
+  <title>ManteniPro 2.4 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -230,13 +230,15 @@
       #reorder-modal .no-print, #reorder-modal button, header, nav, #toast-box { display: none !important; }
       #reorder-modal table { width: 100% !important; border-collapse: collapse !important; }
       #reorder-modal tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+      #reorder-modal table, #reorder-modal tbody { break-inside: auto !important; page-break-inside: auto !important; }
+      #reorder-modal .modal-footer { display: none !important; }
       #reorder-modal thead { display: table-header-group; }
       #reorder-modal .card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
     }
   </style>
 </head>
 <body class="antialiased pb-20 md:pb-10">
-  <div id="scanner-modal" class="modal-backdrop hidden"><div class="modal-card modal-sm p-5 space-y-3"><div class="flex justify-between items-center"><h3 class="font-bold">Escanear código de barras</h3><button onclick="CodeScanner.close()" aria-label="Cerrar">✕</button></div><video id="barcode-video" autoplay muted playsinline class="hidden w-full max-h-64 object-contain rounded-xl bg-black"></video><div id="scanner-controls" class="hidden grid grid-cols-2 gap-2"><div class="col-span-2"><label class="block text-[11px] font-semibold mb-1" for="scanner-camera-select">Cámara</label><select id="scanner-camera-select" onchange="CodeScanner.switchCamera(this.value)" class="w-full border rounded-lg p-2 text-xs bg-white"></select></div><div><label class="block text-[11px] font-semibold mb-1" for="scanner-zoom">Zoom</label><input id="scanner-zoom" type="range" min="1" max="1" step="0.1" value="1" oninput="CodeScanner.setZoom(this.value)" class="w-full"></div><div class="flex items-end"><button type="button" id="scanner-torch" onclick="CodeScanner.toggleTorch()" class="hidden w-full px-2 py-2 rounded-lg border text-xs font-semibold">☼ Linterna</button></div></div><div id="scanner-camera-help" class="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">Preparando cámara…</div><p id="scanner-status" class="text-xs text-slate-600">También puedes introducir el código manualmente.</p><input id="barcode-manual" type="text" class="w-full p-3 border rounded-xl" placeholder="Código de barras (letras y números)" autocomplete="off" autocapitalize="characters" spellcheck="false"><div class="flex gap-2"><button onclick="CodeScanner.lookup(document.getElementById('barcode-manual').value)" class="flex-1 bg-blue-700 text-white rounded-xl p-2 text-sm">Buscar código</button><button onclick="CodeScanner.close()" class="p-2 border rounded-xl text-sm">Cerrar</button></div></div></div>
+  <div id="scanner-modal" class="modal-backdrop hidden"><div class="modal-card modal-sm p-5 space-y-3"><div class="flex justify-between items-center"><h3 class="font-bold">Escanear código de barras</h3><button onclick="CodeScanner.close()" aria-label="Cerrar">✕</button></div><video id="barcode-video" autoplay muted playsinline class="hidden w-full max-h-64 object-contain rounded-xl bg-black"></video><div id="scanner-controls" class="hidden grid grid-cols-2 gap-2"><div class="col-span-2"><label class="block text-[11px] font-semibold mb-1" for="scanner-camera-select">Cámara</label><select id="scanner-camera-select" onchange="CodeScanner.switchCamera(this.value)" class="w-full border rounded-lg p-2 text-xs bg-white"></select></div><div><label class="block text-[11px] font-semibold mb-1" for="scanner-zoom">Zoom</label><input id="scanner-zoom" type="range" min="1" max="1" step="0.1" value="1" oninput="CodeScanner.setZoom(this.value)" class="w-full"></div><div class="flex items-end"><button type="button" id="scanner-torch" onclick="CodeScanner.toggleTorch()" class="hidden w-full px-2 py-2 rounded-lg border text-xs font-semibold">☼ Linterna</button></div></div><div class="flex gap-2"><button type="button" id="nfc-start-btn" onclick="NFCModule.start(true)" class="flex-1 px-3 py-2 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 text-xs font-semibold">Activar lector NFC</button><button type="button" id="nfc-stop-btn" onclick="NFCModule.stop()" class="hidden px-3 py-2 rounded-lg border text-xs font-semibold">Detener NFC</button></div><div id="nfc-status" class="text-[11px] text-slate-500">NFC funciona en paralelo con el lector de códigos cuando el navegador y el dispositivo lo admiten.</div><div id="scanner-camera-help" class="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">Preparando cámara…</div><p id="scanner-status" class="text-xs text-slate-600">También puedes introducir el código manualmente.</p><input id="barcode-manual" type="text" class="w-full p-3 border rounded-xl" placeholder="Código de barras (letras y números)" autocomplete="off" autocapitalize="characters" spellcheck="false"><div class="flex gap-2"><button onclick="CodeScanner.lookup(document.getElementById('barcode-manual').value)" class="flex-1 bg-blue-700 text-white rounded-xl p-2 text-sm">Buscar código</button><button onclick="CodeScanner.close()" class="p-2 border rounded-xl text-sm">Cerrar</button></div></div></div>
 
   <!-- Avisos ligeros en pantalla y acción Deshacer tras eliminaciones -->
   <div id="toast-box" class="fixed bottom-20 md:bottom-6 right-4 z-[80] flex flex-col gap-2 pointer-events-none max-w-xs sm:max-w-sm"></div>
@@ -279,7 +281,7 @@
         <div id="notif-panel" class="hidden absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 overflow-hidden animate-fade">
           <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
             <div class="min-w-0">
-              <h3 class="font-bold text-slate-900 text-xs sm:text-sm">Centro de Avisos</h3>
+              <h3 class="font-bold text-slate-900 text-xs sm:text-sm">Avisos recientes</h3>
               <p id="notif-perm-status" class="text-[10px] text-slate-500 truncate">Comprobando permisos...</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
@@ -336,7 +338,7 @@
           <span id="nav-pending-badge" class="px-1.6 py-0.2 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800">0</span>
         </button>
         <button type="button" onclick="UI.navigate('notes')" data-tab="notes" class="nav-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-slate-600 border border-transparent hover:bg-white transition-all">
-          <span>Notas y Recordatorios</span><span id="nav-notes-badge" class="px-1.6 py-0.2 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800">0</span>
+          <span>Notas</span><span id="nav-notes-badge" class="px-1.6 py-0.2 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800">0</span>
         </button>
         <button type="button" onclick="UI.navigate('inventory')" data-tab="inventory" class="nav-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-slate-600 border border-transparent hover:bg-white transition-all">
           <span>Almacén</span>
@@ -612,7 +614,7 @@
           </div>
 
           <div class="card p-5 space-y-3 border-amber-200/80">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100"><h2 class="font-bold text-slate-900 text-base">Tareas y recordatorios independientes</h2><button type="button" onclick="UI.navigate('notes')" class="text-xs font-semibold text-blue-700 hover:underline">Ver todos →</button></div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100"><h2 class="font-bold text-slate-900 text-base">Notas y recordatorios</h2><button type="button" onclick="UI.navigate('notes')" class="text-xs font-semibold text-blue-700 hover:underline">Ver todos →</button></div>
             <div id="dash-independent-reminders" class="divide-y divide-slate-100"></div>
           </div>
 
@@ -673,23 +675,6 @@
         </button>
       </div>
 
-      <!-- Buscador sin tildes y Filtros -->
-      <div class="card p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        <div class="relative flex-1">
-          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-          <input type="text" id="jobs-search-input" oninput="JobsModule.render()" placeholder="Buscar por tipo, unidad, dirección, fecha, notas, repuesto o gasto (sin tildes)..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-600 focus:bg-white">
-        </div>
-
-        <div class="flex items-center gap-1.6 overflow-x-auto no-scrollbar">
-          <button type="button" onclick="JobsModule.setFilter('all')" data-jfilter="all" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 whitespace-nowrap">Todas</button>
-          <button type="button" onclick="JobsModule.setFilter('Completada')" data-jfilter="Completada" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Completadas</button>
-          <button type="button" onclick="JobsModule.setFilter('Pendiente')" data-jfilter="Pendiente" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pendientes</button>
-          <button type="button" onclick="JobsModule.setFilter('En curso')" data-jfilter="En curso" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">En curso</button>
-          <button type="button" onclick="JobsModule.setFilter('Pausada')" data-jfilter="Pausada" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Pausadas <span id="jobs-paused-badge"></span></button>
-          <button type="button" onclick="JobsModule.setFilter('Alta')" data-jfilter="Alta" class="jfilter-btn px-3 py-1.6 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 whitespace-nowrap">Prioridad Alta</button>
-        </div>
-      </div>
-
       <!-- Calendario Mensual + Vista Día por Horas -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="lg:col-span-5 card p-4 sm:p-5 self-start">
@@ -705,7 +690,7 @@
           <div class="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 uppercase mb-1.6">
             <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
           </div>
-          <div id="cal-month-grid" class="grid grid-cols-7 gap-1"></div>
+          <div id="cal-month-grid" class="grid grid-cols-7 gap-1" aria-label="Calendario mensual. Desliza a izquierda o derecha para cambiar de mes"></div>
 
           <div class="flex items-center justify-center gap-3 flex-wrap text-[11px] text-slate-500 mt-4 pt-3 border-t border-slate-100">
             <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Completada</span>
@@ -748,31 +733,25 @@
         </div>
       </div>
 
-      <!-- Listado Completo Filtrado -->
-      <div class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h2 class="font-bold text-slate-900 text-base">Listado de Intervenciones (<span id="jobs-count-label">0</span>)</h2>
-        </div>
-        <div id="jobs-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      </div>
+      <div class="sr-only" aria-hidden="true"><span id="jobs-count-label">0</span><div id="jobs-cards-grid"></div></div>
     </section>
 
-    <!-- 3. NOTAS, TAREAS INDEPENDIENTES Y RECORDATORIOS -->
+    <!-- 3. NOTAS Y RECORDATORIOS -->
     <section id="view-notes" class="view-panel hidden animate-fade space-y-5">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div><h1 class="text-xl sm:text-2xl font-bold text-slate-900">Notas y Recordatorios</h1><p class="text-xs sm:text-sm text-slate-500">Organiza notas privadas, tareas independientes y avisos puntuales o recurrentes</p></div>
-        <div class="flex gap-2 flex-wrap"><button type="button" onclick="NotesTasksModule.requestLocationTracking()" class="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">Activar avisos por ubicación</button><button type="button" onclick="NotesTasksModule.openEditor('note')" class="px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-semibold">+ Nueva nota</button><button type="button" onclick="NotesTasksModule.openEditor('task')" class="px-3 py-2 rounded-xl bg-blue-700 text-white text-xs font-semibold">+ Nueva tarea / aviso</button></div>
+        <div><h1 class="text-xl sm:text-2xl font-bold text-slate-900">Notas</h1><p class="text-xs sm:text-sm text-slate-500">Crea notas, consulta su contenido completo y vincúlalas con una instalación. También puedes crear recordatorios.</p></div>
+        <div class="flex gap-2 flex-wrap"><button type="button" onclick="NotesTasksModule.requestLocationTracking()" class="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">Activar avisos por ubicación</button><button type="button" onclick="NotesTasksModule.openEditor('note')" class="px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-semibold">+ Nueva nota</button><button type="button" onclick="NotesTasksModule.openEditor('task')" class="px-3 py-2 rounded-xl bg-blue-700 text-white text-xs font-semibold">+ Recordatorio</button></div>
       </div>
       <div class="card p-3 space-y-2">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2"><div><label for="nt-current-tech" class="block text-[11px] font-semibold text-slate-600 mb-1">Técnico activo (notas privadas)</label><input id="nt-current-tech" oninput="NotesTasksModule.setCurrentTechnician(this.value)" placeholder="Nombre del técnico" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"></div>
-        <input id="nt-search" oninput="NotesTasksModule.render()" placeholder="Buscar notas y tareas..." class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
-        <select id="nt-filter" onchange="NotesTasksModule.render()" class="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"><option value="all">Todo</option><option value="note">Solo notas</option><option value="task">Solo tareas</option><option value="pending">Pendientes</option><option value="done">Completadas</option></select>
-        <select id="nt-sort" onchange="NotesTasksModule.render()" class="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"><option value="date">Ordenar por fecha</option><option value="newest">Más recientes</option><option value="priority">Prioridad</option></select></div>
-        <p class="text-[10px] text-slate-500">Las notas asignadas a un técnico solo aparecen al seleccionar ese técnico. Es una separación dentro de este dispositivo, no un sistema de inicio de sesión ni cifrado.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input id="nt-search" oninput="NotesTasksModule.render()" placeholder="Buscar en títulos y contenido..." class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+          <select id="nt-filter" onchange="NotesTasksModule.render()" class="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"><option value="all">Todas</option><option value="note">Solo notas</option><option value="task">Solo recordatorios</option><option value="pending">Recordatorios pendientes</option><option value="done">Recordatorios completados</option></select>
+          <select id="nt-sort" onchange="NotesTasksModule.render()" class="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"><option value="date">Ordenar por fecha</option><option value="newest">Más recientes</option><option value="priority">Prioridad</option></select>
+        </div>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="card p-4"><h2 class="font-bold text-sm mb-2">Próximos recordatorios</h2><div id="nt-upcoming" class="space-y-2"></div></div><div class="card p-4"><h2 class="font-bold text-sm mb-2">Notas fijadas</h2><div id="nt-pinned" class="space-y-2"></div></div></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="card p-4"><h2 class="font-bold text-sm mb-2">Próximos recordatorios</h2><div id="nt-upcoming" class="space-y-2"></div></div><div class="card p-4"><h2 class="font-bold text-sm mb-2">Notas fijadas</h2><div id="nt-pinned-list" class="space-y-2"></div></div></div>
       <div id="nt-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-      <p class="text-[11px] text-slate-400">Los avisos horarios y de ubicación se comprueban mientras ManteniPro está abierto y el navegador permite la ejecución. La geolocalización requiere permiso y HTTPS; no se garantiza el seguimiento ni las notificaciones con la aplicación cerrada o suspendida.</p>
+      <p class="text-[11px] text-slate-400">Los avisos horarios y de ubicación se comprueban mientras ManteniPro está abierto y el navegador permite la ejecución. La geolocalización requiere permiso y HTTPS.</p>
     </section>
 
     <!-- 4. ALMACÉN Y LISTADO DE REPUESTOS BAJO MÍNIMO -->
@@ -1024,7 +1003,7 @@
 
           <div class="min-w-0">
             <label for="job-inst-unit" id="job-unit-label" class="block text-xs font-semibold text-slate-700 mb-1">Unidad (Instalación) *</label>
-            <input type="text" id="job-inst-unit" oninput="JobsModule.onUnitInput()" required autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Escribe el nombre de la unidad..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600">
+            <input type="text" id="job-inst-unit" list="job-inst-unit-options" oninput="JobsModule.onUnitInput()" required autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Escribe el nombre de la unidad..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600"><datalist id="job-inst-unit-options"></datalist>
           </div>
         </div>
 
@@ -1180,7 +1159,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 responsive-3col">
           <div class="min-w-0">
             <label class="block text-xs font-semibold text-slate-700 mb-1">SKU / Ref (opcional)</label>
-            <input type="text" id="inv-sku" placeholder="Opcional (ej. REF-001)" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl uppercase focus:outline-none focus:border-blue-600"><label class="block text-xs font-semibold text-slate-700 mt-2 mb-1">Código de barras (opcional)</label><div class="flex gap-2"><input type="text" id="inv-barcode" placeholder="Escanea o escribe el código" class="min-w-0 flex-1 px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600"><button type="button" onclick="CodeScanner.open('inv-barcode')" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold">▦ Escanear</button></div>
+            <input type="text" id="inv-sku" placeholder="Opcional (ej. REF-001)" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl uppercase focus:outline-none focus:border-blue-600"><label class="block text-xs font-semibold text-slate-700 mt-2 mb-1">Código de barras (opcional)</label><div class="flex gap-2"><input type="text" id="inv-barcode" placeholder="Escanea o escribe el código" class="min-w-0 flex-1 px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600"><button type="button" onclick="CodeScanner.open('inv-barcode')" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold">▦ Escanear</button></div><p class="text-[10px] text-slate-500 mt-1">La etiqueta NFC se puede vincular desde la ficha del producto usando el lector NFC.</p>
           </div>
           <div class="sm:col-span-2 min-w-0">
             <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre / Descripción *</label>
@@ -1205,7 +1184,7 @@
         </div>
 
         <section id="inv-photo-panel" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
-          <div class="flex flex-wrap items-center justify-between gap-2"><div><h4 class="text-xs font-bold text-slate-800">Fotografías del producto</h4><p class="text-[11px] text-slate-500">Puedes elegir imágenes de la galería o hacer fotos nuevas. Se guardan sin conexión y se suben a Drive al conectarte.</p></div><div class="flex flex-wrap gap-2"><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">▧ Galería<input id="inv-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label><label class="cursor-pointer px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">📷 Cámara<input id="inv-camera-input" type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label></div></div>
+          <div class="flex flex-wrap items-center justify-between gap-2"><div><h4 class="text-xs font-bold text-slate-800">Fotografías del producto</h4><p class="text-[11px] text-slate-500">Puedes elegir imágenes de la galería o hacer fotos nuevas. Se guardan sin conexión y se suben a Drive al conectarte.</p></div><div class="flex flex-wrap gap-2"><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">▧ Galería<input id="inv-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label><label class="cursor-pointer px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">📷 Cámara<input id="inv-camera-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label></div></div>
           <div id="inv-photo-gallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
         </section>
 
@@ -1345,7 +1324,7 @@
         </div>
 
         <section id="inst-photo-panel" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
-          <div class="flex flex-wrap items-center justify-between gap-2"><div><h4 class="text-xs font-bold text-slate-800">Fotografías de la instalación</h4><p class="text-[11px] text-slate-500">Elige imágenes de la galería o haz fotos nuevas. Se conservan sin conexión y se sincronizan con Drive al recuperar Internet.</p></div><div class="flex flex-wrap gap-2"><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">▧ Galería<input id="inst-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('installations', document.getElementById('inst-id').value, this.files); this.value=''"></label><label class="cursor-pointer px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">📷 Cámara<input id="inst-camera-input" type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="PhotoManager.addFiles('installations', document.getElementById('inst-id').value, this.files); this.value=''"></label></div></div>
+          <div class="flex flex-wrap items-center justify-between gap-2"><div><h4 class="text-xs font-bold text-slate-800">Fotografías de la instalación</h4><p class="text-[11px] text-slate-500">Elige imágenes de la galería o haz fotos nuevas. Se conservan sin conexión y se sincronizan con Drive al recuperar Internet.</p></div><div class="flex flex-wrap gap-2"><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">▧ Galería<input id="inst-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('installations', document.getElementById('inst-id').value, this.files); this.value=''"></label><label class="cursor-pointer px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">📷 Cámara<input id="inst-camera-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('installations', document.getElementById('inst-id').value, this.files); this.value=''"></label></div></div>
           <div id="inst-photo-gallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
         </section>
 
@@ -1451,7 +1430,7 @@
 
         <div class="min-w-0">
           <label for="exp-receipt" class="block text-xs font-semibold text-slate-700 mb-1">Fotografía del ticket o recibo</label>
-          <input type="file" id="exp-receipt" accept="image/*" capture="environment" class="w-full text-xs border border-slate-300 rounded-xl p-2 bg-white">
+          <input type="file" id="exp-receipt" accept="image/*" class="w-full text-xs border border-slate-300 rounded-xl p-2 bg-white">
           <img id="exp-receipt-preview" alt="Vista previa del recibo" class="hidden mt-2 max-h-40 rounded-lg border border-slate-200 object-contain" onclick="this.classList.toggle('max-h-40');this.classList.toggle('max-h-none')">
         </div>
 
@@ -2854,12 +2833,12 @@
 
         const remCountEl = document.getElementById('analytics-reminder-items-count');
         const remListEl = document.getElementById('analytics-reminders-list');
-        if (remCountEl) remCountEl.textContent = `${periodReminders.length} ${periodReminders.length === 1 ? 'aviso' : 'avisos'}`;
+        if (remCountEl) remCountEl.textContent = `${periodReminders.length} ${periodReminders.length === 1 ? 'aviso' : 'avisos'} · máx. 5 visibles`;
 
         if (periodReminders.length === 0) {
           remListEl.innerHTML = `<p class="py-6 text-center text-xs text-slate-400">Sin avisos configurados en este período y filtro.</p>`;
         } else {
-          const sortedRems = [...periodReminders].sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+          const sortedRems = [...periodReminders].sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)).slice(0,5);
           remListEl.innerHTML = sortedRems.map(job => {
             const inst = State.installations.find(i => i.id === job.instId);
             const uName = inst ? inst.unit : (job.unitName || 'Unidad');
@@ -2871,7 +2850,7 @@
                 : `<span class="text-[10px] font-bold px-1.6 py-0.5 rounded bg-amber-50 text-amber-800">Pendiente aviso</span>`);
 
             return `
-              <div onclick="JobsModule.openModal('${job.id}')" class="py-2.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-50">
+              <div onclick="JobsModule.openDetail('${job.id}')" class="py-2.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-50">
                 <div class="min-w-0">
                   <div class="flex items-center gap-1.6 flex-wrap">
                     <span class="text-[11px] font-bold text-blue-700">${Helpers.formatDateShort(job.date)} · ${job.startTime}</span>
@@ -2921,21 +2900,27 @@
       },
 
       syncJobExpenses(job) {
-        State.expenses = State.expenses.filter(ex => ex.jobId !== job.id);
+        const existingById = new Map(State.expenses.filter(ex => ex.jobId === job.id).map(ex => [ex.id, ex]));
         const jobExpenses = Array.isArray(job.expenses) ? job.expenses : [];
+        const next = [];
         jobExpenses.forEach(item => {
           const amt = Number(item.amount) || 0;
           if (amt <= 0) return;
-          State.expenses.push({
-            id: item.id || Helpers.uid('exp'),
+          const previous = existingById.get(item.id) || {};
+          const linked = {
+            ...previous, ...item,
+            id: item.id || previous.id || Helpers.uid('exp'),
             jobId: job.id,
             type: Helpers.resolveExpenseType(item.type),
             amount: amt,
-            date: job.date,
-            unitName: job.unitName || '',
-            concept: (item.concept || '').trim() || `Gasto en ${Helpers.resolveJobType(job)}`
-          });
+            date: item.date || job.date,
+            unitName: item.unitName || job.unitName || State.installations.find(i => i.id === job.instId)?.unit || '',
+            concept: (item.concept || '').trim() || `Gasto en ${Helpers.resolveJobType(job)}`,
+            receiptImage: item.receiptImage || previous.receiptImage || null
+          };
+          next.push(linked);
         });
+        State.expenses = State.expenses.filter(ex => ex.jobId !== job.id).concat(next);
       },
 
       removeJobExpenses(jobId) {
@@ -3047,11 +3032,9 @@
                 ${Helpers.formatCurrency(ex.amount)}
               </td>
               <td class="py-3.5 px-4 text-right whitespace-nowrap">
-                ${linkedJob
-                  ? `<button type="button" onclick="JobsModule.openModal('${linkedJob.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-50 border border-blue-200">Ver tarea</button>`
-                  : `<button type="button" onclick="ExpensesModule.openModal('${ex.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-200 mr-1">Editar</button>
-                     <button type="button" onclick="ExpensesModule.deletePart('${ex.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50">Borrar</button>`
-                }
+                <button type="button" onclick="ExpensesModule.openModal('${ex.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-200 mr-1">Editar</button>
+                ${linkedJob ? `<button type="button" onclick="JobsModule.openDetail('${linkedJob.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-50 border border-blue-200 mr-1">Ver tarea</button>` : ''}
+                <button type="button" onclick="ExpensesModule.deletePart('${ex.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50">Borrar</button>
               </td>
             </tr>
           `;
@@ -3121,6 +3104,13 @@
         if (existing) {
           const idx = State.expenses.findIndex(ex => ex.id === id);
           if (idx !== -1) State.expenses[idx] = payload;
+          if (payload.jobId) {
+            const linkedJob = State.jobs.find(j => j.id === payload.jobId);
+            if (linkedJob) {
+              linkedJob.expenses = (linkedJob.expenses || []).map(item => item.id === id ? { ...item, ...payload } : item);
+              payload.unitName = linkedJob.unitName || State.installations.find(i => i.id === linkedJob.instId)?.unit || payload.unitName;
+            }
+          }
         } else {
           State.expenses.push(payload);
         }
@@ -3148,6 +3138,10 @@
         const target = State.expenses.find(ex => ex.id === id);
         if (!target) return;
         State.expenses = State.expenses.filter(ex => ex.id !== id);
+        if (target.jobId) {
+          const linkedJob = State.jobs.find(j => j.id === target.jobId);
+          if (linkedJob) linkedJob.expenses = (linkedJob.expenses || []).filter(item => item.id !== id);
+        }
         Storage.save();
         UI.refreshAll();
         UndoModule.recordDeletion({
@@ -3266,7 +3260,7 @@
                 </div>
                 <div class="flex items-center gap-1.6 shrink-0">
                   ${!isDone ? `<button type="button" onclick="JobsModule.quickComplete('${job.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700">Completar</button>` : ''}
-                  <button type="button" onclick="JobsModule.openModal('${job.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50">Editar</button>
+                  <button type="button" onclick="JobsModule.openDetail('${job.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50">Editar</button>
                 </div>
               </div>
             `;
@@ -3355,7 +3349,7 @@
                 ${job.notes ? `<p class="text-[11px] text-slate-500 truncate">${job.notes}</p>` : ''}
                 <p class="text-[11px] text-slate-400 mt-0.5">Aviso: ${reminderLabels[job.reminder] || 'Programado'}</p>
               </div>
-              <button type="button" onclick="JobsModule.openModal('${job.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shrink-0">
+              <button type="button" onclick="JobsModule.openDetail('${job.id}')" class="px-2.5 py-1.6 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shrink-0">
                 Ver
               </button>
             </div>
@@ -3709,6 +3703,14 @@
 
 
     const JobsModule = {
+      nfcPendingAdjustments: [],
+      rollbackNfcAdjustments() {
+        if (!this.nfcPendingAdjustments.length) return;
+        this.nfcPendingAdjustments.forEach(({sku, qty}) => { const item=State.inventory.find(i => (i.sku || i.id) === sku); if(item)item.stock=(Number(item.stock)||0)+qty; });
+        this.nfcPendingAdjustments=[];
+        try { Storage.save(); } catch(_) {}
+        if (typeof UI !== 'undefined') { try { UI.refreshAll(); } catch(_) {} }
+      },
       getWorkedMinutes(job) {
         const sessions = Array.isArray(job.workSessions) ? job.workSessions : [];
         let total = sessions.reduce((sum, session) => {
@@ -3852,6 +3854,8 @@
           <div class="rounded-xl bg-slate-50 p-3"><div class="font-bold text-sm">${esc(inst?.unit || job.unitName || 'Unidad no asignada')}</div><div class="text-xs text-slate-600 mt-1">${esc(inst?.address || job.address || 'Dirección no indicada')}</div></div>
           <div class="grid grid-cols-2 gap-3 my-3"><div><div class="text-[10px] text-slate-500 font-semibold">FECHA</div><div class="text-sm font-semibold">${esc(Helpers.formatDateShort(job.date))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">HORARIO</div><div class="text-sm font-semibold">${esc(job.startTime || '')} – ${esc(job.endTime || '')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">TIPO</div><div class="text-sm font-semibold">${esc(Helpers.resolveJobType(job))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">PRIORIDAD</div><div class="text-sm font-semibold">${esc(job.priority || 'Normal')}</div></div></div>
           <div class="border-t border-slate-200 my-3"></div><h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Descripción</h3><p class="text-sm text-slate-700 whitespace-pre-wrap">${esc(job.notes || 'Sin descripción adicional.')}</p>
+          ${(job.materials||[]).length ? `<div class="border-t border-slate-200 my-3 pt-3"><h3 class="text-sm font-bold text-slate-900 mb-2">Materiales utilizados</h3><div class="space-y-1">${job.materials.map(m=>`<div class="flex items-center justify-between gap-2 rounded-lg bg-slate-50 p-2 text-xs"><span>${esc(m.name||m.sku||'Repuesto')}</span><strong>${Number(m.qty)||1} ud.</strong></div>`).join('')}</div></div>` : ''}
+          ${(job.expenses||[]).length ? `<div class="border-t border-slate-200 my-3 pt-3"><h3 class="text-sm font-bold text-slate-900 mb-2">Gastos de la intervención</h3><div class="space-y-2">${job.expenses.map(ex=>`<div class="rounded-lg border border-indigo-100 p-2"><div class="flex items-center justify-between gap-2 text-xs"><span class="font-semibold">${esc(EXPENSE_META[Helpers.resolveExpenseType(ex.type)]?.label||ex.type)}</span><strong>${Helpers.formatCurrency(ex.amount)}</strong></div>${ex.concept?`<p class="text-[11px] text-slate-600 mt-1">${esc(ex.concept)}</p>`:''}${ex.receiptImage?`<button type="button" onclick="ExpensesModule.previewReceipt('${esc(ex.id)}')" class="mt-2 text-[11px] text-blue-700 underline">Ver fotografía del recibo</button>`:''}</div>`).join('')}</div></div>` : ''}
           ${(() => { const alerts = (State.notifications || []).filter(n => n.jobId === job.id).slice(0,5); return `<div class="border-t border-slate-200 my-3 pt-3"><h3 class="text-sm font-bold text-slate-900 mb-2">Últimos avisos</h3>${alerts.length ? `<div class="space-y-2">${alerts.map(n => `<button type="button" onclick="document.getElementById('job-detail-modal')?.remove();JobsModule.openDetail('${esc(job.id)}')" class="w-full text-left rounded-lg border border-amber-200 bg-amber-50 p-2"><span class="block text-xs font-semibold text-amber-900">${esc(n.title || 'Aviso')}</span><span class="block text-[11px] text-amber-800">${esc(n.timeLabel || (n.createdAt ? new Date(n.createdAt).toLocaleString('es-ES') : ''))}</span><span class="block text-xs text-slate-700 mt-1">${esc(n.body || '')}</span></button>`).join('')}</div>` : `<p class="text-xs text-slate-400">No hay avisos registrados para esta tarea.</p>`}</div>`; })()}
           <div class="border-t border-slate-200 my-3"></div><div class="flex items-center justify-between gap-2 mb-2"><h3 class="text-sm font-bold text-slate-900">Últimas intervenciones</h3><span class="text-[10px] text-slate-500">${sessions.length} sesión(es)</span></div>
           <div class="space-y-2">${sessions.map(session => { const green = completed; const badge = green ? 'bg-emerald-50 text-emerald-700' : session.calendarStatus === 'Pausada' ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-600'; return `<button type="button" onclick="JobsModule.openInterventionDetail('${esc(job.id)}',${session.index})" class="w-full text-left rounded-xl border border-slate-200 p-3 hover:bg-blue-50/50 flex items-center justify-between gap-3"><span class="min-w-0"><span class="block text-xs font-bold text-slate-800">${esc(session.label)}</span><span class="block text-xs text-slate-600 mt-1">${esc(Helpers.formatDateShort(session.date))} · ${esc(session.startTime || '')} – ${esc(session.endTime || '')}</span></span><span class="shrink-0 text-[10px] font-semibold rounded-full px-2 py-1 ${badge}">${green ? 'Completada' : esc(session.calendarStatus || job.status || 'Pendiente')}</span></button>`; }).join('')}</div>
@@ -3885,6 +3889,7 @@
       },
 
       openModal(jobId = null, presetDate = null, presetInstId = null) {
+        this.rollbackNfcAdjustments();
         const modal = document.getElementById('job-modal');
         const form = document.getElementById('job-form');
         form.reset();
@@ -3921,8 +3926,8 @@
           }
           delBtn.classList.remove('hidden');
 
-          (job.materials || []).forEach(m => this.addMaterialRow(m.sku, m.qty));
-          (job.expenses || []).forEach(ex => this.addExpenseRow(ex.type, ex.amount, ex.concept || '', ex.id));
+          (job.materials || []).forEach(m => this.addMaterialRow(m.sku, m.qty, Number(m.deductedQty)||0, Number(m.pendingNfcQty)||0));
+          (job.expenses || []).forEach(ex => this.addExpenseRow(ex.type, ex.amount, ex.concept || '', ex.id, ex.receiptImage || null));
         } else {
           document.getElementById('job-modal-title').textContent = 'Nueva Tarea / Avería';
           document.getElementById('job-id').value = '';
@@ -3952,7 +3957,7 @@
         modal.classList.remove('hidden');
       },
 
-      addExpenseRow(selectedType = 'APARCAMIENTO', amount = '', concept = '', expId = '') {
+      addExpenseRow(selectedType = 'APARCAMIENTO', amount = '', concept = '', expId = '', receiptImage = null) {
         const container = document.getElementById('job-expenses-rows');
         const row = document.createElement('div');
         row.className = 'grid grid-cols-1 sm:grid-cols-12 gap-2 exp-row items-center bg-white/90 p-2 rounded-xl border border-indigo-100 min-w-0';
@@ -3963,14 +3968,17 @@
         ).join('');
 
         row.innerHTML = `
-          <select class="jexp-type sm:col-span-4 px-2 py-1.6 text-xs bg-white border border-slate-300 rounded-lg font-medium">
+          <select class="jexp-type sm:col-span-3 px-2 py-1.6 text-xs bg-white border border-slate-300 rounded-lg font-medium">
             ${typeOptions}
           </select>
-          <input type="number" step="0.01" min="0" value="${amount}" oninput="JobsModule.updateExpensesSubtotal()" placeholder="Importe €" class="jexp-amount sm:col-span-3 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
-          <input type="text" value="${concept.replace(/"/g, '&quot;')}" placeholder="Concepto / nota..." class="jexp-concept sm:col-span-4 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
+          <input type="number" step="0.01" min="0" value="${amount}" oninput="JobsModule.updateExpensesSubtotal()" placeholder="Importe €" class="jexp-amount sm:col-span-2 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
+          <input type="text" value="${concept.replace(/"/g, '&quot;')}" placeholder="Concepto / nota..." class="jexp-concept sm:col-span-3 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
+          <label class="sm:col-span-3 text-[10px] text-slate-600">Ticket <input type="file" accept="image/*" class="jexp-receipt block w-full text-[10px] border rounded-lg p-1"><img onclick="this.classList.toggle('max-h-16');this.classList.toggle('max-h-none')" class="jexp-preview ${receiptImage ? '' : 'hidden'} mt-1 max-h-16 rounded border object-contain cursor-zoom-in" src="${receiptImage || ''}" alt="Vista previa del recibo"></label>
           <button type="button" onclick="this.parentElement.remove(); JobsModule.updateExpensesSubtotal();" class="sm:col-span-1 py-1 text-slate-400 hover:text-rose-600 text-xs font-bold text-center">✕</button>
         `;
         container.appendChild(row);
+        const fileInput = row.querySelector('.jexp-receipt');
+        fileInput?.addEventListener('change', () => { const file = fileInput.files?.[0]; if (!file || !file.type.startsWith('image/')) return; const reader = new FileReader(); reader.onload = () => { const preview = row.querySelector('.jexp-preview'); preview.src = reader.result; preview.classList.remove('hidden'); }; reader.readAsDataURL(file); });
         this.updateExpensesSubtotal();
       },
 
@@ -4011,6 +4019,11 @@
         }
 
         const matched = State.installations.find(i => Helpers.normalizeStr(i.unit) === norm);
+        const options = document.getElementById('job-inst-unit-options');
+        if (options) {
+          const matches = State.installations.filter(i => Helpers.normalizeStr(i.unit).includes(norm)).slice(0, 12);
+          options.innerHTML = matches.map(i => `<option value="${String(i.unit || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></option>`).join('');
+        }
         indicator.classList.remove('hidden');
 
         if (matched) {
@@ -4044,6 +4057,7 @@
 
       closeModal() {
         document.getElementById('job-modal').classList.add('hidden');
+        this.rollbackNfcAdjustments();
       },
 
       getFilteredInventory() {
@@ -4076,10 +4090,11 @@
         }
       },
 
-      addMaterialRow(selectedSku = '', qty = 1) {
+      addMaterialRow(selectedSku = '', qty = 1, deductedQty = 0, pendingNfcQty = 0) {
         const container = document.getElementById('job-materials-rows');
         const row = document.createElement('div');
         row.className = 'flex items-center gap-2 mat-row min-w-0';
+        row.dataset.deductedQty = String(deductedQty || 0); row.dataset.pendingNfcQty = String(pendingNfcQty || 0);
         row.innerHTML = `
           <select onchange="JobsModule.renderMaterialMatches()" class="mat-sku flex-1 min-w-0 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
           </select>
@@ -4190,6 +4205,14 @@
         this.renderMaterialMatches();
       },
 
+      addNfcMaterial(sku, qty) {
+        const rows = Array.from(document.querySelectorAll('#job-materials-rows .mat-row'));
+        let row = rows.find(r => r.querySelector('.mat-sku')?.value === sku);
+        if (!row) { this.addMaterialRow(sku, qty, qty, 0); row = document.querySelectorAll('#job-materials-rows .mat-row')[document.querySelectorAll('#job-materials-rows .mat-row').length-1]; }
+        else { const q = row.querySelector('.mat-qty'); q.value = (parseInt(q.value,10)||0) + qty; row.dataset.deductedQty = String((Number(row.dataset.deductedQty)||0)+qty); }
+        this.renderMaterialMatches();
+      },
+
       filterMaterialRows() {
         document.querySelectorAll('#job-materials-rows .mat-row').forEach(row => {
           const selectEl = row.querySelector('.mat-sku');
@@ -4233,22 +4256,24 @@
           const qty = parseInt(r.querySelector('.mat-qty').value, 10) || 1;
           if (sku) {
             const item = State.inventory.find(i => (i.sku || i.id) === sku);
-            materials.push({ sku, name: item ? item.name : sku, qty });
+            materials.push({ sku, name: item ? item.name : sku, qty, deductedQty: Math.min(qty, Number(r.dataset.deductedQty)||0), pendingNfcQty: Math.min(qty, Number(r.dataset.pendingNfcQty)||0) });
           }
         });
 
         const expenses = [];
-        document.querySelectorAll('#job-expenses-rows .exp-row').forEach(r => {
+        for (const r of document.querySelectorAll('#job-expenses-rows .exp-row')) {
           const amount = parseFloat(r.querySelector('.jexp-amount')?.value) || 0;
           if (amount > 0) {
-            expenses.push({
-              id: r.dataset.expId || Helpers.uid('jexp'),
-              type: Helpers.resolveExpenseType(r.querySelector('.jexp-type')?.value),
-              amount,
-              concept: (r.querySelector('.jexp-concept')?.value || '').trim()
-            });
+            const previous = existing?.expenses?.find(x => x.id === r.dataset.expId) || State.expenses.find(x => x.id === r.dataset.expId) || {};
+            let receiptImage = previous.receiptImage || null;
+            const file = r.querySelector('.jexp-receipt')?.files?.[0];
+            if (file) {
+              if (!file.type.startsWith('image/')) { Helpers.toast('El recibo debe ser una imagen', 'warning'); return; }
+              receiptImage = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+            }
+            expenses.push({ id: r.dataset.expId || Helpers.uid('jexp'), type: Helpers.resolveExpenseType(r.querySelector('.jexp-type')?.value), amount, concept: (r.querySelector('.jexp-concept')?.value || '').trim(), receiptImage });
           }
-        });
+        }
 
         const status = document.getElementById('job-status').value;
         const reminder = document.getElementById('job-reminder').value || 'none';
@@ -4333,8 +4358,10 @@
           State.jobs.push(payload);
         }
 
+        payload.materials.forEach(m => { m.pendingNfcQty = 0; });
         ExpensesModule.syncJobExpenses(payload);
 
+        this.nfcPendingAdjustments = []; // La tarea y el descuento NFC quedan confirmados.
         Storage.save();
         this.closeModal();
         UI.refreshAll();
@@ -4405,6 +4432,8 @@
           endTime: resumeEnd,
           calendarEntryType: 'Reanudación',
           calendarStatus: 'En curso',
+          sessionId: Helpers.uid('session'),
+          startedAt: now.toISOString(),
           createdAt: now.toISOString()
         });
         job.status = 'En curso';
@@ -4446,7 +4475,12 @@
       deductStock(materials) {
         materials.forEach(m => {
           const item = State.inventory.find(i => (i.sku || i.id) === m.sku);
-          if (item) item.stock = Math.max(0, item.stock - m.qty);
+          const qty = Number(m.qty) || 0;
+          const deducted = Number(m.deductedQty) || 0;
+          const pendingNfc = Number(m.pendingNfcQty) || 0;
+          const remaining = Math.max(0, qty - deducted - pendingNfc);
+          if (item && remaining > 0) item.stock = Math.max(0, (Number(item.stock) || 0) - remaining);
+          m.deductedQty = Math.min(qty, deducted + remaining);
         });
       },
 
@@ -4574,7 +4608,13 @@
       },
 
       getLowStockItems() {
-        return State.inventory.filter(i => this.isBelowMinimum(i));
+        const seen = new Set();
+        return State.inventory.filter(i => {
+          if (!this.isBelowMinimum(i)) return false;
+          const key = String(i.sku || i.id || i.name || '').trim().toLocaleLowerCase('es');
+          if (seen.has(key)) return false;
+          seen.add(key); return true;
+        });
       },
 
       getSuggestedOrderQty(item) {
@@ -4864,11 +4904,14 @@
             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock actual</span><strong class="text-sm text-slate-800">${item.stock}</strong></div>
             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock mínimo</span><strong class="text-sm text-slate-800">${item.minStock}</strong></div>
           </div>
+          <section class="rounded-xl border border-blue-200 bg-blue-50/50 p-3 space-y-2"><div class="text-xs font-bold text-slate-800">Ajuste rápido de existencias</div><div class="flex items-center gap-3"><button type="button" onclick="InventoryModule.adjustStock('${item.id}',-1);InventoryModule.refreshDetail('${item.id}')" class="w-11 h-10 rounded-lg border border-slate-300 bg-white font-bold text-lg">−1</button><div class="flex-1 text-center"><span class="block text-[10px] text-slate-500">Stock actual</span><strong class="text-lg text-slate-900">${item.stock}</strong></div><button type="button" onclick="InventoryModule.adjustStock('${item.id}',1);InventoryModule.refreshDetail('${item.id}')" class="w-11 h-10 rounded-lg border border-slate-300 bg-white font-bold text-lg">+1</button></div></section>
           <section class="space-y-2"><h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Fotografías del producto</h4><div id="inv-detail-photos" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div></section>
+          <section class="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-2"><div class="text-xs font-bold text-emerald-900">Etiqueta NFC</div><p class="text-[11px] text-slate-600">Vincula o reasigna una etiqueta NFC a este producto. Requiere Android y Chrome con Web NFC.</p><div class="flex gap-2"><button type="button" onclick="NFCModule.writeProduct('${item.id}')" class="flex-1 px-3 py-2 rounded-lg bg-emerald-700 text-white text-xs font-semibold">Escribir / reasignar etiqueta</button><button type="button" onclick="CodeScanner.open();NFCModule.start(true)" class="px-3 py-2 rounded-lg border border-emerald-300 text-emerald-800 text-xs font-semibold">Leer etiqueta</button></div><p class="text-[10px] text-slate-500">${item.nfcTagId ? 'Etiqueta vinculada: ' + String(item.nfcTagId).replace(/</g,'&lt;') : 'Sin etiqueta vinculada'}</p></section>
           <div class="flex justify-end"><button type="button" onclick="InventoryModule.closeDetail()" class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-300">Cerrar</button><button type="button" onclick="InventoryModule.closeDetail(); InventoryModule.openModal('${item.id}')" class="ml-2 px-4 py-2 text-xs font-semibold rounded-xl bg-blue-700 text-white">Editar producto</button></div>`;
         modal.classList.remove('hidden');
         PhotoManager.render('inventory', item.id, 'inv-detail-photos', false);
       },
+      refreshDetail(itemId) { this.openDetail(itemId); },
       closeDetail() { document.getElementById('inv-detail-modal').classList.add('hidden'); },
 
       adjustStock(id, delta) {
@@ -4937,13 +4980,14 @@
         if (id) {
           const idx = State.inventory.findIndex(i => i.id === id);
           if (idx !== -1) {
-            State.inventory[idx] = { ...State.inventory[idx], id, sku, barcode, name, category, stock, minStock, photos: State.inventory[idx].photos || [] };
+            State.inventory[idx] = { ...State.inventory[idx], id, sku, barcode, name, category, stock, minStock, nfcTagId: State.inventory[idx].nfcTagId || '', photos: State.inventory[idx].photos || [] };
           }
         } else {
           State.inventory.push({
             id: id || Helpers.uid('inv'),
             sku,
             barcode,
+            nfcTagId: '',
             name,
             category,
             stock,
@@ -5510,7 +5554,7 @@
       renderDashboard() {
         const box=document.getElementById('dash-independent-reminders'); if(!box)return;
         const items=(State.independentTasks||[]).filter(t=>!t.done&&(t.dueDate || t.locationEnabled)).sort((a,b)=>((a.dueDate||'9999')+(a.dueTime||'')).localeCompare((b.dueDate||'9999')+(b.dueTime||''))).slice(0,5);
-        box.innerHTML=items.length?items.map(t=>`<button onclick="UI.navigate('notes');NotesTasksModule.openDetail('${this.esc(t.id)}','task')" class="w-full text-left py-2 hover:bg-amber-50/50"><span class="block text-xs font-semibold text-slate-800">${this.esc(t.title)}</span><span class="text-[10px] text-slate-500">${this.esc(t.dueDate||'Aviso por ubicación')} ${this.esc(t.dueTime||'')} · ${this.esc(t.priority||'Media')}</span></button>`).join(''):'<p class="text-xs text-slate-400 py-2">No hay tareas independientes pendientes.</p>';
+        box.innerHTML=items.length?items.map(t=>`<button onclick="UI.navigate('notes');NotesTasksModule.openDetail('${this.esc(t.id)}','task')" class="w-full text-left py-2 hover:bg-amber-50/50"><span class="block text-xs font-semibold text-slate-800">${this.esc(t.title)}</span><span class="text-[10px] text-slate-500">${this.esc(t.dueDate||'Aviso por ubicación')} ${this.esc(t.dueTime||'')} · ${this.esc(t.priority||'Media')}</span></button>`).join(''):'<p class="text-xs text-slate-400 py-2">No hay recordatorios pendientes.</p>';
       },
       getLinkItems() {
         return State.installations.map(i=>({
@@ -5559,13 +5603,10 @@
         return (items||[]).map(a=>`<div class="flex items-center gap-2 text-[11px] border rounded-lg p-2"><a class="text-blue-700 underline truncate flex-1" href="${a.data}" download="${this.esc(a.name)}">${this.esc(a.name)}</a><span class="text-slate-400">${Math.max(1,Math.round((a.size||0)/1024))} KB</span><button type="button" data-remove-attachment="${this.esc(a.id)}" class="text-rose-600">Quitar</button></div>`).join('');
       },
       render() {
-        const techInput=document.getElementById('nt-current-tech'); if(techInput && techInput.value!==State.notesCurrentTechnician)techInput.value=State.notesCurrentTechnician||'';
         const q = (document.getElementById('nt-search')?.value || '').toLocaleLowerCase('es');
         const filter = document.getElementById('nt-filter')?.value || 'all';
         const sort = document.getElementById('nt-sort')?.value || 'date';
-        const activeTech=(State.notesCurrentTechnician||'').trim().toLocaleLowerCase('es');
-        const visibleNotes=(State.notes||[]).filter(n=>!n.ownerTech || (activeTech && n.ownerTech.toLocaleLowerCase('es')===activeTech));
-        const all = [...visibleNotes.map(x => ({...x, kind:'note'})), ...(State.independentTasks||[]).map(x => ({...x, kind:'task'}))].filter(x => {
+        const all = [...(State.notes||[]).map(x => ({...x, kind:'note'})), ...(State.independentTasks||[]).map(x => ({...x, kind:'task'}))].filter(x => {
           const hay = `${x.title||''} ${x.body||''} ${x.category||''}`.toLocaleLowerCase('es');
           if (q && !hay.includes(q)) return false;
           if (filter === 'note' || filter === 'task') return x.kind === filter;
@@ -5575,10 +5616,10 @@
         });
         all.sort((a,b) => sort === 'newest' ? (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||'') : sort === 'priority' ? ({Urgente:0,Alta:1,Media:2,Baja:3}[a.priority]??4)-({Urgente:0,Alta:1,Media:2,Baja:3}[b.priority]??4) : (a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
         const list = document.getElementById('nt-list');
-        if (list) list.innerHTML = all.length ? all.map(x => `<article onclick="NotesTasksModule.openDetail('${this.esc(x.id)}','${x.kind}')" class="card p-3.5 space-y-2 cursor-pointer hover:border-blue-300 transition-colors"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><div class="flex flex-wrap gap-1 mb-1"><span class="text-[10px] px-2 py-0.5 rounded-full ${x.kind==='note'?'bg-violet-50 text-violet-700':'bg-blue-50 text-blue-700'}">${x.kind==='note'?'Nota':'Tarea'}</span>${x.pinned?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Fijada</span>':''}${x.done?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Completada</span>':''}${x.ownerTech?`<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Privada · ${this.esc(x.ownerTech)}</span>`:''}${x.locationEnabled?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Aviso por ubicación</span>':''}</div><h3 class="font-bold text-sm break-words">${this.esc(x.title)}</h3></div><button onclick="event.stopPropagation();NotesTasksModule.edit('${this.esc(x.id)}','${x.kind}')" class="text-xs text-blue-700 font-semibold">Editar</button></div><p class="text-xs text-slate-600 whitespace-pre-wrap break-words">${this.esc(x.body||'')}</p>${x.attachments?.length?`<div class="flex flex-wrap gap-2 mt-2">${x.attachments.map(a=>/^data:image\//i.test(a.data||'')?`<button type="button" onclick="event.stopPropagation();NotesTasksModule.openAttachmentImage('${a.data}','${this.esc(a.name)}')" class="block"><img src="${a.data}" alt="Imagen adjunta" title="Abrir imagen" class="w-16 h-16 object-cover rounded-lg border border-slate-200"></button>`:`<a onclick="event.stopPropagation()" class="block text-xs text-blue-700 underline truncate" href="${a.data}" download="${this.esc(a.name)}">📎 ${this.esc(a.name)}</a>`).join('')}</div>`:''}<div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400"><span>${x.locationEnabled?`📍 ${this.esc(x.locationName||'Ubicación guardada')} · ${this.esc(x.locationTrigger==='leave'?'Al salir':'Al llegar')} · 10 m · permanencia 2:30 min` : x.dueDate ? `📅 ${this.esc(x.dueDate)} ${this.esc(x.dueTime||'')}` : 'Sin fecha'}${x.repeat && x.repeat!=='none' ? ` · Repite: ${this.esc(x.repeat)}` : ''}</span><span>${this.esc(x.priority||'')}</span></div><div class="flex flex-wrap justify-end gap-2">${x.kind==='task'?`${x.done?`<button onclick="event.stopPropagation();NotesTasksModule.toggleDone('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Reabrir</button>`:`<button onclick="event.stopPropagation();NotesTasksModule.toggleDone('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Completar</button><button onclick="event.stopPropagation();NotesTasksModule.snooze('${this.esc(x.id)}',10)" class="px-2 py-1 rounded-lg border text-[11px]">Posponer 10 min</button><button onclick="event.stopPropagation();NotesTasksModule.snooze('${this.esc(x.id)}',60)" class="px-2 py-1 rounded-lg border text-[11px]">1 hora</button>`}`:`<button onclick="event.stopPropagation();NotesTasksModule.pin('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">${x.pinned?'Desfijar':'Fijar'}</button><button onclick="event.stopPropagation();NotesTasksModule.convertNote('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Crear tarea</button>`}<button onclick="event.stopPropagation();NotesTasksModule.remove('${this.esc(x.id)}','${x.kind}')" class="px-2 py-1 rounded-lg border border-rose-200 text-rose-700 text-[11px]">Eliminar</button></div></article>`).join('') : '<div class="card p-6 text-center text-sm text-slate-400 md:col-span-2">No hay notas ni tareas con estos filtros.</div>';
+        if (list) list.innerHTML = all.length ? all.map(x => `<article onclick="NotesTasksModule.openDetail('${this.esc(x.id)}','${x.kind}')" style="${x.kind==='task'?'border-left:4px solid '+({'amber':'#d97706','blue':'#2563eb','violet':'#7c3aed','rose':'#e11d48','emerald':'#059669'}[x.color]||'#d97706'):''}" class="card p-3.5 space-y-2 cursor-pointer hover:border-blue-300 transition-colors"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><div class="flex flex-wrap gap-1 mb-1"><span class="text-[10px] px-2 py-0.5 rounded-full ${x.kind==='note'?'bg-violet-50 text-violet-700':({'blue':'bg-blue-50 text-blue-700','violet':'bg-violet-50 text-violet-700','rose':'bg-rose-50 text-rose-700','emerald':'bg-emerald-50 text-emerald-700'}[x.color]||'bg-amber-50 text-amber-800')}">${x.kind==='note'?'Nota':'Recordatorio'}</span>${x.pinned?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Fijada</span>':''}${x.done?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Completada</span>':''}${x.locationEnabled?'<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Aviso por ubicación</span>':''}</div><h3 class="font-bold text-sm break-words">${this.esc(x.title)}</h3></div><button onclick="event.stopPropagation();NotesTasksModule.edit('${this.esc(x.id)}','${x.kind}')" class="text-xs text-blue-700 font-semibold">Editar</button></div><p class="text-xs text-slate-600 whitespace-pre-wrap break-words">${this.esc(x.body||'')}</p>${x.attachments?.length?`<div class="flex flex-wrap gap-2 mt-2">${x.attachments.map(a=>/^data:image\//i.test(a.data||'')?`<button type="button" onclick="event.stopPropagation();NotesTasksModule.openAttachmentImage('${a.data}','${this.esc(a.name)}')" class="block"><img src="${a.data}" alt="Imagen adjunta" title="Abrir imagen" class="w-16 h-16 object-cover rounded-lg border border-slate-200"></button>`:`<a onclick="event.stopPropagation()" class="block text-xs text-blue-700 underline truncate" href="${a.data}" download="${this.esc(a.name)}">📎 ${this.esc(a.name)}</a>`).join('')}</div>`:''}<div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400"><span>${x.locationEnabled?`📍 ${this.esc(x.locationName||'Ubicación guardada')} · ${this.esc(x.locationTrigger==='leave'?'Al salir':'Al llegar')} · 10 m · permanencia 2:30 min` : x.dueDate ? `📅 ${this.esc(x.dueDate)} ${this.esc(x.dueTime||'')}` : 'Sin fecha'}${x.repeat && x.repeat!=='none' ? ` · Repite: ${this.esc(x.repeat)}` : ''}</span><span>${this.esc(x.priority||'')}</span></div><div class="flex flex-wrap justify-end gap-2">${x.kind==='task'?`${x.done?`<button onclick="event.stopPropagation();NotesTasksModule.toggleDone('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Reabrir</button>`:`<button onclick="event.stopPropagation();NotesTasksModule.toggleDone('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Completar</button><button onclick="event.stopPropagation();NotesTasksModule.snooze('${this.esc(x.id)}',10)" class="px-2 py-1 rounded-lg border text-[11px]">Posponer 10 min</button><button onclick="event.stopPropagation();NotesTasksModule.snooze('${this.esc(x.id)}',60)" class="px-2 py-1 rounded-lg border text-[11px]">1 hora</button>`}`:`<button onclick="event.stopPropagation();NotesTasksModule.pin('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">${x.pinned?'Desfijar':'Fijar'}</button><button onclick="event.stopPropagation();NotesTasksModule.convertNote('${this.esc(x.id)}')" class="px-2 py-1 rounded-lg border text-[11px]">Crear recordatorio</button>`}<button onclick="event.stopPropagation();NotesTasksModule.remove('${this.esc(x.id)}','${x.kind}')" class="px-2 py-1 rounded-lg border border-rose-200 text-rose-700 text-[11px]">Eliminar</button></div></article>`).join('') : '<div class="card p-6 text-center text-sm text-slate-400 md:col-span-2">No hay notas ni tareas con estos filtros.</div>';
         const upcoming = (State.independentTasks||[]).filter(t=>!t.done&&(t.dueDate||t.locationEnabled)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')).slice(0,5);
-        const up = document.getElementById('nt-upcoming'); if(up) up.innerHTML = upcoming.length ? upcoming.map(t=>`<button onclick="NotesTasksModule.openDetail('${this.esc(t.id)}','task')" class="w-full text-left p-2 rounded-lg bg-slate-50 hover:bg-blue-50"><span class="block text-xs font-semibold">${this.esc(t.title)}</span><span class="text-[10px] text-slate-500">${this.esc(t.dueDate||'Aviso por ubicación')} ${this.esc(t.dueTime||'')}</span></button>`).join('') : '<p class="text-xs text-slate-400">No hay recordatorios pendientes.</p>';
-        const pinned = visibleNotes.filter(n=>n.pinned).slice(0,5); const pin = document.getElementById('nt-pinned'); if(pin) pin.innerHTML = pinned.length ? pinned.map(n=>`<button onclick="NotesTasksModule.openDetail('${this.esc(n.id)}','note')" class="block w-full text-left p-2 rounded-lg bg-amber-50/60 text-xs font-medium">${this.esc(n.title)}</button>`).join('') : '<p class="text-xs text-slate-400">No hay notas fijadas para este técnico.</p>';
+        const up = document.getElementById('nt-upcoming'); if(up) up.innerHTML = upcoming.length ? upcoming.map(t=>`<button onclick="NotesTasksModule.openDetail('${this.esc(t.id)}','task')" class="w-full text-left p-2 rounded-lg bg-slate-50 hover:bg-blue-50"><span class="block text-xs font-semibold"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;background:${({'blue':'#2563eb','violet':'#7c3aed','rose':'#e11d48','emerald':'#059669'}[t.color]||'#d97706')}"></span>${this.esc(t.title)}</span><span class="text-[10px] text-slate-500">${this.esc(t.dueDate||'Aviso por ubicación')} ${this.esc(t.dueTime||'')}</span></button>`).join('') : '<p class="text-xs text-slate-400">No hay recordatorios pendientes.</p>';
+        const pinned = (State.notes||[]).filter(n=>n.pinned).slice(0,5); const pin = document.getElementById('nt-pinned-list'); if(pin) pin.innerHTML = pinned.length ? pinned.map(n=>`<button onclick="NotesTasksModule.openDetail('${this.esc(n.id)}','note')" class="block w-full text-left p-2 rounded-lg bg-amber-50/60 text-xs font-medium">${this.esc(n.title)}</button>`).join('') : '<p class="text-xs text-slate-400">No hay notas fijadas.</p>';
         const badge=document.getElementById('nav-notes-badge'); if(badge) badge.textContent=(State.independentTasks||[]).filter(t=>!t.done).length; this.renderDashboard();
       },
       openDetail(id, kind) {
@@ -5589,7 +5630,7 @@
         const ov = document.createElement('div'); ov.id = 'nt-detail';
         ov.style.cssText = 'position:fixed;inset:0;z-index:99980;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto';
         const kindLabel = kind === 'task' ? 'Recordatorio' : 'Nota';
-        ov.innerHTML = `<div role="dialog" aria-modal="true" aria-label="${kindLabel}" style="background:#fff;border-radius:18px;padding:18px;width:100%;max-width:560px;max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)"><div class="flex items-center justify-between gap-3"><div><span class="text-[10px] uppercase tracking-wide font-bold text-slate-500">${kindLabel}</span><h2 class="text-xl font-bold text-slate-900 mt-1">${esc(item.title)}</h2></div><span class="text-xs font-semibold rounded-full px-2.5 py-1 ${kind === 'task' ? (item.done ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800') : 'bg-violet-50 text-violet-700'}">${kind === 'task' ? (item.done ? 'Completado' : 'Pendiente') : 'Nota'}</span></div><div class="border-t my-3"></div><h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Contenido</h3><p class="text-sm text-slate-700 whitespace-pre-wrap break-words">${esc(item.body || 'Sin contenido adicional.')}</p>${item.category ? `<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold">CATEGORÍA</div><div class="text-sm">${esc(item.category)}</div></div>` : ''}<div class="border-t my-3"></div><h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">${kind === 'task' ? 'Fecha y aviso' : 'Información'}</h3>${kind === 'task' ? `<div class="grid grid-cols-2 gap-3"><div><div class="text-[10px] text-slate-500 font-semibold">FECHA</div><div class="text-sm font-semibold">${esc(item.dueDate || (item.locationEnabled ? 'Aviso por ubicación' : 'Sin fecha'))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">HORA</div><div class="text-sm font-semibold">${esc(item.dueTime || '—')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">PRIORIDAD</div><div class="text-sm">${esc(item.priority || 'Media')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">REPETICIÓN</div><div class="text-sm">${esc(item.repeat && item.repeat !== 'none' ? item.repeat : 'No')}</div></div></div>${item.locationEnabled ? `<div class="mt-3 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800">Aviso por ubicación: ${esc(item.locationName || 'Ubicación guardada')} · ${esc(item.locationTrigger === 'leave' ? 'Al salir' : 'Al llegar')} · Radio 10 m · Permanencia 2:30 min</div>` : ''}` : `<div class="grid grid-cols-2 gap-3"><div><div class="text-[10px] text-slate-500 font-semibold">FIJADA</div><div class="text-sm">${item.pinned ? 'Sí' : 'No'}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">TÉCNICO</div><div class="text-sm">${esc(item.ownerTech || 'Compartida')}</div></div></div>`}${link ? `<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold">VINCULADO CON</div><div class="rounded-xl bg-slate-50 p-3 text-sm font-semibold">${esc(link)}</div></div>` : ''}<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold">CREACIÓN</div><div class="text-xs text-slate-600">${esc(item.createdAt ? new Date(item.createdAt).toLocaleString('es-ES') : '—')}</div><div class="text-[10px] text-slate-500 font-semibold mt-2">ÚLTIMA MODIFICACIÓN</div><div class="text-xs text-slate-600">${esc(item.updatedAt ? new Date(item.updatedAt).toLocaleString('es-ES') : '—')}</div></div>${item.attachments?.length ? `<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold mb-1">ARCHIVOS ADJUNTOS</div><div class="space-y-1">${item.attachments.map(a => /^data:image\//i.test(a.data||'') ? `<button type="button" onclick="NotesTasksModule.openAttachmentImage('${a.data}','${esc(a.name)}')" class="inline-block mr-2 mb-2"><img src="${a.data}" alt="Imagen adjunta" title="Abrir imagen" style="width:104px;height:104px;object-fit:cover;border-radius:10px;border:1px solid #cbd5e1"></button>` : `<a class="block text-xs text-blue-700 underline break-all" href="${a.data}" download="${esc(a.name)}">📎 ${esc(a.name)}</a>`).join('')}</div></div>` : ''}<div class="flex gap-2 mt-5"><button type="button" onclick="document.getElementById('nt-detail').remove()" class="flex-1 px-3 py-2.5 rounded-xl border text-sm">Cerrar</button><button type="button" onclick="document.getElementById('nt-detail').remove();NotesTasksModule.edit('${esc(item.id)}','${kind}')" class="flex-1 px-3 py-2.5 rounded-xl bg-blue-700 text-white text-sm font-semibold">✎ EDITAR ${kind === 'task' ? 'RECORDATORIO' : 'NOTA'}</button></div></div>`;
+        ov.innerHTML = `<div role="dialog" aria-modal="true" aria-label="${kindLabel}" style="background:#fff;border-radius:18px;padding:18px;width:100%;max-width:560px;max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)"><div class="flex items-center justify-between gap-3"><div><span class="text-[10px] uppercase tracking-wide font-bold text-slate-500">${kindLabel}</span><h2 class="text-xl font-bold text-slate-900 mt-1">${esc(item.title)}</h2></div><span class="text-xs font-semibold rounded-full px-2.5 py-1 ${kind === 'task' ? (item.done ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800') : 'bg-violet-50 text-violet-700'}">${kind === 'task' ? (item.done ? 'Completado' : 'Pendiente') : 'Nota'}</span></div><div class="border-t my-3"></div><h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Contenido</h3><p class="text-sm text-slate-700 whitespace-pre-wrap break-words">${esc(item.body || 'Sin contenido adicional.')}</p>${item.category ? `<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold">CATEGORÍA</div><div class="text-sm">${esc(item.category)}</div></div>` : ''}<div class="border-t my-3"></div><h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">${kind === 'task' ? 'Fecha y aviso' : 'Información'}</h3>${kind === 'task' ? `<div class="grid grid-cols-2 gap-3"><div><div class="text-[10px] text-slate-500 font-semibold">FECHA</div><div class="text-sm font-semibold">${esc(item.dueDate || (item.locationEnabled ? 'Aviso por ubicación' : 'Sin fecha'))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">HORA</div><div class="text-sm font-semibold">${esc(item.dueTime || '—')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">PRIORIDAD</div><div class="text-sm">${esc(item.priority || 'Media')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">COLOR</div><div class="text-sm capitalize">${esc(item.color || 'Ámbar')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">REPETICIÓN</div><div class="text-sm">${esc(item.repeat && item.repeat !== 'none' ? item.repeat : 'No')}</div></div></div>${item.locationEnabled ? `<div class="mt-3 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800">Aviso por ubicación: ${esc(item.locationName || 'Ubicación guardada')} · ${esc(item.locationTrigger === 'leave' ? 'Al salir' : 'Al llegar')} · Radio 10 m · Permanencia 2:30 min</div>` : ''}` : `<div class="grid grid-cols-2 gap-3"><div><div class="text-[10px] text-slate-500 font-semibold">FIJADA</div><div class="text-sm">${item.pinned ? 'Sí' : 'No'}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">TIPO</div><div class="text-sm">Nota compartida</div></div></div>`}${link ? `<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold">VINCULADO CON</div><div class="rounded-xl bg-slate-50 p-3 text-sm font-semibold">${esc(link)}</div></div>` : ''}<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold">CREACIÓN</div><div class="text-xs text-slate-600">${esc(item.createdAt ? new Date(item.createdAt).toLocaleString('es-ES') : '—')}</div><div class="text-[10px] text-slate-500 font-semibold mt-2">ÚLTIMA MODIFICACIÓN</div><div class="text-xs text-slate-600">${esc(item.updatedAt ? new Date(item.updatedAt).toLocaleString('es-ES') : '—')}</div></div>${item.attachments?.length ? `<div class="mt-3"><div class="text-[10px] text-slate-500 font-semibold mb-1">ARCHIVOS ADJUNTOS</div><div class="space-y-1">${item.attachments.map(a => /^data:image\//i.test(a.data||'') ? `<button type="button" onclick="NotesTasksModule.openAttachmentImage('${a.data}','${esc(a.name)}')" class="inline-block mr-2 mb-2"><img src="${a.data}" alt="Imagen adjunta" title="Abrir imagen" style="width:104px;height:104px;object-fit:cover;border-radius:10px;border:1px solid #cbd5e1"></button>` : `<a class="block text-xs text-blue-700 underline break-all" href="${a.data}" download="${esc(a.name)}">📎 ${esc(a.name)}</a>`).join('')}</div></div>` : ''}<div class="flex gap-2 mt-5"><button type="button" onclick="document.getElementById('nt-detail').remove()" class="flex-1 px-3 py-2.5 rounded-xl border text-sm">Cerrar</button><button type="button" onclick="document.getElementById('nt-detail').remove();NotesTasksModule.edit('${esc(item.id)}','${kind}')" class="flex-1 px-3 py-2.5 rounded-xl bg-blue-700 text-white text-sm font-semibold">✎ EDITAR ${kind === 'task' ? 'RECORDATORIO' : 'NOTA'}</button></div></div>`;
         document.body.appendChild(ov); ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
       },
 
@@ -5597,7 +5638,7 @@
         const old = item || {}; const isTask = kind==='task';
         const linkLabel = old.linkRef ? (this.getLinkItems().find(x=>x.ref===old.linkRef)?.label || '') : '';
         const ov=document.createElement('div'); ov.id='nt-editor'; ov.style.cssText='position:fixed;inset:0;z-index:99990;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto';
-        ov.innerHTML=`<form id="nt-form" style="background:#fff;border-radius:16px;padding:18px;width:100%;max-width:560px;max-height:94vh;overflow:auto"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-base">${old.id?'Editar':'Nueva'} ${isTask?'tarea / recordatorio':'nota'}</h3><button type="button" id="nt-close" class="text-xl">×</button></div><label class="block text-xs font-semibold mb-1">Título</label><input id="nt-title" required maxlength="120" class="w-full border rounded-lg p-2 text-sm mb-3" value="${this.esc(old.title||'')}"><label class="block text-xs font-semibold mb-1">Contenido</label><textarea id="nt-body" rows="4" class="w-full border rounded-lg p-2 text-sm mb-3">${this.esc(old.body||'')}</textarea><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3"><div><label class="block text-xs font-semibold mb-1">Categoría</label><input id="nt-category" maxlength="40" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.category||'')}" placeholder="General, trabajo..."></div><div class="relative"><label class="block text-xs font-semibold mb-1">Vincular con</label><input id="nt-link-search" autocomplete="off" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(linkLabel)}" placeholder="Buscar por unidad o dirección"><input id="nt-link-ref" type="hidden" value="${this.esc(old.linkRef||'')}"><div id="nt-link-results" class="hidden absolute z-20 left-0 right-0 top-full bg-white border rounded-lg shadow-lg max-h-44 overflow-y-auto"></div><p class="text-[10px] text-slate-400 mt-1">Busca en las fichas de instalación por unidad o dirección. Las coincidencias aparecen al escribir.</p></div></div>${isTask?`<div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-semibold mb-1">Fecha</label><input id="nt-date" type="date" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.dueDate||'')}"></div><div><label class="block text-xs font-semibold mb-1">Hora</label><input id="nt-time" type="time" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.dueTime||'09:00')}"></div><div><label class="block text-xs font-semibold mb-1">Prioridad</label><select id="nt-priority" class="w-full border rounded-lg p-2 text-sm"><option ${old.priority==='Baja'?'selected':''}>Baja</option><option ${(!old.priority||old.priority==='Media')?'selected':''}>Media</option><option ${old.priority==='Alta'?'selected':''}>Alta</option><option ${old.priority==='Urgente'?'selected':''}>Urgente</option></select></div><div><label class="block text-xs font-semibold mb-1">Repetición</label><select id="nt-repeat" class="w-full border rounded-lg p-2 text-sm"><option value="none">No repetir</option><option value="daily" ${old.repeat==='daily'?'selected':''}>Diaria</option><option value="weekly" ${old.repeat==='weekly'?'selected':''}>Semanal</option><option value="monthly" ${old.repeat==='monthly'?'selected':''}>Mensual</option></select></div></div><section class="mt-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50/40 space-y-2"><label class="flex items-center gap-2 text-xs font-semibold"><input id="nt-location-enabled" type="checkbox" ${old.locationEnabled?'checked':''}> Activar recordatorio por ubicación</label><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[11px] mb-1">Nombre del lugar</label><input id="nt-location-name" class="w-full border rounded-lg p-2 text-xs" value="${this.esc(old.locationName||'')}" placeholder="Casa, cliente, almacén..."></div><div><label class="block text-[11px] mb-1">Radio de aviso</label><div class="w-full border rounded-lg p-2 text-xs bg-slate-50">10 metros</div><input id="nt-location-radius" type="hidden" value="10"></div><div><label class="block text-[11px] mb-1">Avisar al</label><select id="nt-location-trigger" class="w-full border rounded-lg p-2 text-xs"><option value="arrive" ${old.locationTrigger!=='leave'?'selected':''}>Llegar</option><option value="leave" ${old.locationTrigger==='leave'?'selected':''}>Salir</option></select></div><div class="flex items-end"><button type="button" id="nt-capture-location" class="w-full px-3 py-2 rounded-lg bg-emerald-700 text-white text-xs">Guardar mi ubicación actual</button></div></div><p id="nt-location-status" class="text-[10px] text-slate-500">${old.locationLat!=null?'Ubicación guardada. Se avisará tras permanecer 2 minutos y medio dentro del radio.':'Vincula una instalación para usar sus coordenadas o su dirección; también puedes guardar tu ubicación actual. El aviso exige 2 minutos y medio de permanencia.'}</p><input id="nt-location-lat" type="hidden" value="${old.locationLat??''}"><input id="nt-location-lon" type="hidden" value="${old.locationLon??''}"></section>`:`<label class="flex items-center gap-2 text-xs mt-1"><input id="nt-pinned" type="checkbox" ${old.pinned?'checked':''}> Fijar esta nota</label><label class="block text-xs font-semibold mt-3 mb-1">Nota privada para el técnico</label><input id="nt-owner-tech" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.ownerTech||State.notesCurrentTechnician||'')}" placeholder="Vacío = nota compartida">`}<div class="mt-3"><label class="block text-xs font-semibold mb-1">Fotografías y documentos adjuntos (máx. 512 KB por archivo; 1 MB en total)</label><input id="nt-attachments" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" class="w-full text-xs border rounded-lg p-2"><div id="nt-attachment-list" class="space-y-1 mt-2">${this.attachmentHTML(old.attachments,old.id||'new')}</div></div><div class="flex justify-end gap-2 mt-4"><button type="button" id="nt-cancel" class="px-3 py-2 rounded-lg border text-xs">Cancelar</button><button class="px-4 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">Guardar</button></div></form>`;
+        ov.innerHTML=`<form id="nt-form" style="background:#fff;border-radius:16px;padding:18px;width:100%;max-width:560px;max-height:94vh;overflow:auto"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-base">${old.id?'Editar':'Nuevo'} ${isTask?'recordatorio':'nota'}</h3><button type="button" id="nt-close" class="text-xl">×</button></div><label class="block text-xs font-semibold mb-1">Título</label><input id="nt-title" required maxlength="120" class="w-full border rounded-lg p-2 text-sm mb-3" value="${this.esc(old.title||'')}"><label class="block text-xs font-semibold mb-1">Contenido</label><textarea id="nt-body" rows="4" class="w-full border rounded-lg p-2 text-sm mb-3">${this.esc(old.body||'')}</textarea><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3"><div><label class="block text-xs font-semibold mb-1">Categoría</label><input id="nt-category" maxlength="40" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.category||'')}" placeholder="General, trabajo..."></div><div class="relative"><label class="block text-xs font-semibold mb-1">Vincular con</label><input id="nt-link-search" autocomplete="off" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(linkLabel)}" placeholder="Buscar por unidad o dirección"><input id="nt-link-ref" type="hidden" value="${this.esc(old.linkRef||'')}"><div id="nt-link-results" class="hidden absolute z-20 left-0 right-0 top-full bg-white border rounded-lg shadow-lg max-h-44 overflow-y-auto"></div><p class="text-[10px] text-slate-400 mt-1">Busca en las fichas de instalación por unidad o dirección. Las coincidencias aparecen al escribir.</p></div></div>${isTask?`<div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-semibold mb-1">Color del recordatorio</label><select id="nt-color" class="w-full border rounded-lg p-2 text-sm"><option value="amber" ${!old.color||old.color==='amber'?'selected':''}>Ámbar</option><option value="blue" ${old.color==='blue'?'selected':''}>Azul</option><option value="violet" ${old.color==='violet'?'selected':''}>Violeta</option><option value="rose" ${old.color==='rose'?'selected':''}>Rojo</option><option value="emerald" ${old.color==='emerald'?'selected':''}>Verde</option></select></div><div><label class="block text-xs font-semibold mb-1">Fecha</label><input id="nt-date" type="date" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.dueDate||'')}"></div><div><label class="block text-xs font-semibold mb-1">Hora</label><input id="nt-time" type="time" class="w-full border rounded-lg p-2 text-sm" value="${this.esc(old.dueTime||'09:00')}"></div><div><label class="block text-xs font-semibold mb-1">Prioridad</label><select id="nt-priority" class="w-full border rounded-lg p-2 text-sm"><option ${old.priority==='Baja'?'selected':''}>Baja</option><option ${(!old.priority||old.priority==='Media')?'selected':''}>Media</option><option ${old.priority==='Alta'?'selected':''}>Alta</option><option ${old.priority==='Urgente'?'selected':''}>Urgente</option></select></div><div><label class="block text-xs font-semibold mb-1">Repetición</label><select id="nt-repeat" class="w-full border rounded-lg p-2 text-sm"><option value="none">No repetir</option><option value="daily" ${old.repeat==='daily'?'selected':''}>Diaria</option><option value="weekly" ${old.repeat==='weekly'?'selected':''}>Semanal</option><option value="monthly" ${old.repeat==='monthly'?'selected':''}>Mensual</option></select></div></div><section class="mt-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50/40 space-y-2"><label class="flex items-center gap-2 text-xs font-semibold"><input id="nt-location-enabled" type="checkbox" ${old.locationEnabled?'checked':''}> Activar recordatorio por ubicación</label><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[11px] mb-1">Nombre del lugar</label><input id="nt-location-name" class="w-full border rounded-lg p-2 text-xs" value="${this.esc(old.locationName||'')}" placeholder="Casa, cliente, almacén..."></div><div><label class="block text-[11px] mb-1">Radio de aviso</label><div class="w-full border rounded-lg p-2 text-xs bg-slate-50">10 metros</div><input id="nt-location-radius" type="hidden" value="10"></div><div><label class="block text-[11px] mb-1">Avisar al</label><select id="nt-location-trigger" class="w-full border rounded-lg p-2 text-xs"><option value="arrive" ${old.locationTrigger!=='leave'?'selected':''}>Llegar</option><option value="leave" ${old.locationTrigger==='leave'?'selected':''}>Salir</option></select></div><div class="flex items-end"><button type="button" id="nt-capture-location" class="w-full px-3 py-2 rounded-lg bg-emerald-700 text-white text-xs">Guardar mi ubicación actual</button></div></div><p id="nt-location-status" class="text-[10px] text-slate-500">${old.locationLat!=null?'Ubicación guardada. Se avisará tras permanecer 2 minutos y medio dentro del radio.':'Vincula una instalación para usar sus coordenadas o su dirección; también puedes guardar tu ubicación actual. El aviso exige 2 minutos y medio de permanencia.'}</p><input id="nt-location-lat" type="hidden" value="${old.locationLat??''}"><input id="nt-location-lon" type="hidden" value="${old.locationLon??''}"></section>`:`<label class="flex items-center gap-2 text-xs mt-1"><input id="nt-pinned" type="checkbox" ${old.pinned?'checked':''}> Fijar esta nota</label>`}<div class="mt-3"><label class="block text-xs font-semibold mb-1">Fotografías y documentos adjuntos (máx. 512 KB por archivo; 1 MB en total)</label><input id="nt-attachments" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" class="w-full text-xs border rounded-lg p-2"><div id="nt-attachment-list" class="space-y-1 mt-2">${this.attachmentHTML(old.attachments,old.id||'new')}</div></div><div class="flex justify-end gap-2 mt-4"><button type="button" id="nt-cancel" class="px-3 py-2 rounded-lg border text-xs">Cancelar</button><button class="px-4 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">Guardar</button></div></form>`;
         document.body.appendChild(ov); const $=id=>ov.querySelector('#'+id); const close=()=>ov.remove(); $('nt-close').onclick=close; $('nt-cancel').onclick=close;
         const linkInput=$('nt-link-search'); linkInput.addEventListener('input',()=>{ $('nt-link-ref').value=''; this.renderLinkSuggestions(linkInput.value); });
         $('nt-link-results').addEventListener('click',e=>{const b=e.target.closest('[data-link-ref]');if(b)this.selectLink(b.dataset.linkRef,b.dataset.linkLabel);});
@@ -5607,7 +5648,7 @@
         $('nt-attachments').addEventListener('change',async e=>{attachments=await this.readAttachments(e.target.files,attachments);$('nt-attachment-list').innerHTML=this.attachmentHTML(attachments,old.id||'new');e.target.value='';});
         if(isTask){$('nt-capture-location').onclick=()=>{if(!navigator.geolocation){$('nt-location-status').textContent='Este navegador no admite geolocalización.';return;} $('nt-location-status').textContent='Obteniendo ubicación…';navigator.geolocation.getCurrentPosition(pos=>{$('nt-location-lat').value=pos.coords.latitude;$('nt-location-lon').value=pos.coords.longitude;$('nt-location-status').textContent='Coordenadas guardadas. Pulsa «Activar avisos por ubicación» en la pantalla de notas para iniciar el seguimiento.';},err=>{$('nt-location-status').textContent='No se pudo obtener la ubicación: '+err.message;},{enableHighAccuracy:true,timeout:15000,maximumAge:30000});};}
         $('nt-form').onsubmit=async e=>{e.preventDefault();const now=new Date().toISOString();const data={...old,id:old.id||Helpers.uid(isTask?'task':'note'),title:$('nt-title').value.trim(),body:$('nt-body').value,category:$('nt-category').value.trim(),linkRef:$('nt-link-ref').value,attachments,updatedAt:now,createdAt:old.createdAt||now};
-          if(isTask){Object.assign(data,{dueDate:$('nt-date').value,dueTime:$('nt-time').value,priority:$('nt-priority').value,repeat:$('nt-repeat').value,done:!!old.done,lastNotifiedKey:old.lastNotifiedKey||'',snoozedUntil:old.snoozedUntil||'',locationEnabled:$('nt-location-enabled').checked,locationName:$('nt-location-name').value.trim(),locationRadius:10,locationTrigger:$('nt-location-trigger').value,locationLat:$('nt-location-lat').value===''?null:Number($('nt-location-lat').value),locationLon:$('nt-location-lon').value===''?null:Number($('nt-location-lon').value),locationLastInside:null,locationInsideSince:null,locationLastAlertPeriod:old.locationLastAlertPeriod||'',locationTriggered:!!old.locationTriggered,locationPendingTrigger:!!old.locationPendingTrigger});
+          if(isTask){Object.assign(data,{dueDate:$('nt-date').value,dueTime:$('nt-time').value,color:$('nt-color').value,priority:$('nt-priority').value,repeat:$('nt-repeat').value,done:!!old.done,lastNotifiedKey:old.lastNotifiedKey||'',snoozedUntil:old.snoozedUntil||'',locationEnabled:$('nt-location-enabled').checked,locationName:$('nt-location-name').value.trim(),locationRadius:10,locationTrigger:$('nt-location-trigger').value,locationLat:$('nt-location-lat').value===''?null:Number($('nt-location-lat').value),locationLon:$('nt-location-lon').value===''?null:Number($('nt-location-lon').value),locationLastInside:null,locationInsideSince:null,locationLastAlertPeriod:old.locationLastAlertPeriod||'',locationTriggered:!!old.locationTriggered,locationPendingTrigger:!!old.locationPendingTrigger});
             if(data.locationEnabled && data.linkRef.startsWith('installation:')) {
               const installation=State.installations.find(i=>i.id===data.linkRef.slice('installation:'.length));
               if(installation) {
@@ -5624,7 +5665,7 @@
             }
             if(data.locationEnabled&&(data.locationLat==null||data.locationLon==null)){Helpers.toast('Vincula una instalación con coordenadas o guarda la ubicación actual para activar este aviso','warning');return;}
             const idx=State.independentTasks.findIndex(x=>x.id===data.id);if(idx>=0)State.independentTasks[idx]=data;else State.independentTasks.push(data);}
-          else{data.pinned=$('nt-pinned').checked;data.ownerTech=$('nt-owner-tech').value.trim();const idx=State.notes.findIndex(x=>x.id===data.id);if(idx>=0)State.notes[idx]=data;else State.notes.push(data);}Storage.save();close();this.render();this.startLocationWatch(false);Helpers.toast('Guardado correctamente','success');};
+          else{data.pinned=$('nt-pinned').checked;delete data.ownerTech;const idx=State.notes.findIndex(x=>x.id===data.id);if(idx>=0)State.notes[idx]=data;else State.notes.push(data);}Storage.save();close();this.render();this.startLocationWatch(false);Helpers.toast('Guardado correctamente','success');};
       },
       edit(id,kind){const arr=kind==='task'?State.independentTasks:State.notes;const item=arr.find(x=>x.id===id);if(item)this.openEditor(kind,item);},
       remove(id,kind){const arr=kind==='task'?State.independentTasks:State.notes;const i=arr.findIndex(x=>x.id===id);if(i>=0){arr.splice(i,1);Storage.save();this.render();this.startLocationWatch(false);}},
@@ -5659,7 +5700,7 @@
             const message = event.data || {};
             if (message.type === 'MANTENIPRO_OPEN_JOB' && message.jobId) {
               const job = State.jobs.find(item => item.id === message.jobId);
-              if (job) JobsModule.openModal(message.jobId);
+              if (job) JobsModule.openDetail(message.jobId);
             } else if (message.type === 'MANTENIPRO_OPEN_TASK' && message.taskId) {
               UI.navigate('notes');
               NotesTasksModule.edit(message.taskId, 'task');
@@ -5945,15 +5986,15 @@
           return;
         }
 
-        list.innerHTML = State.notifications.map(n => `
-          <div onclick="${n.jobId ? `JobsModule.openModal('${n.jobId}'); NotificationsModule.togglePanel();` : ''}" class="p-3.5 hover:bg-slate-50 ${n.jobId ? 'cursor-pointer' : ''} ${!n.read ? 'bg-blue-50/40' : ''}">
+        list.innerHTML = State.notifications.slice(0,5).map(n => `
+          <div onclick="${n.jobId ? `JobsModule.openDetail('${n.jobId}'); NotificationsModule.togglePanel();` : ''}" class="p-3.5 hover:bg-slate-50 ${n.jobId ? 'cursor-pointer' : ''} ${!n.read ? 'bg-blue-50/40' : ''}">
             <div class="flex items-center justify-between gap-2">
               <span class="text-xs font-bold text-slate-900">${n.title}</span>
               <span class="text-[10px] text-slate-400 shrink-0">${n.timeLabel}</span>
             </div>
             <p class="text-xs text-slate-600 mt-0.5">${n.body}</p>
           </div>
-        `).join('');
+        `).join('') + (State.notifications.length > 5 ? '<p class="px-3 py-2 text-[10px] text-slate-400">Se muestran los 5 avisos más recientes.</p>' : '');
       }
     };
 
@@ -6131,6 +6172,90 @@
         overlay.querySelector('#mp-complete-installation').addEventListener('click',()=>{overlay.remove();InstallationsModule.openModal();document.getElementById('inst-unit').value=code;document.getElementById('inst-barcode').value=code;});
         overlay.querySelector('#mp-continue-job').addEventListener('click',()=>{overlay.remove();JobsModule.openModal();document.getElementById('job-inst-unit').value=code;Helpers.toast('Código no asociado: se abrirá una cita y se creará la ficha si mantienes esa opción activada.','info');});
         overlay.querySelector('#mp-cancel-missing').addEventListener('click',()=>overlay.remove());
+      }
+    };
+
+    const NFCModule = {
+      reader: null, controller: null, active: false, currentProductId: null, restartOnVisible: false,
+      status(message, warning=false) { const el=document.getElementById('nfc-status'); if(el)el.textContent=message; if(warning)Helpers.toast(message,'warning'); },
+      supported() { return 'NDEFReader' in window && window.isSecureContext; },
+      async start(userInitiated=false) {
+        if (!this.supported()) { this.status('Este dispositivo o navegador no admite Web NFC. Usa el lector de códigos de barras.', true); return; }
+        if (document.visibilityState !== 'visible') { this.restartOnVisible=true; this.status('El lector NFC se activará cuando ManteniPro vuelva a primer plano.'); return; }
+        try {
+          if (this.controller) this.controller.abort();
+          this.controller = new AbortController();
+          this.reader = new NDEFReader();
+          await this.reader.scan({ signal: this.controller.signal });
+          this.active = true; this.restartOnVisible = true;
+          const startBtn=document.getElementById('nfc-start-btn'), stopBtn=document.getElementById('nfc-stop-btn');
+          if(startBtn)startBtn.classList.add('hidden'); if(stopBtn)stopBtn.classList.remove('hidden');
+          this.status('NFC activo en primer plano. Acerca una etiqueta al móvil.');
+          this.reader.onreading = event => this.handleReading(event);
+          this.reader.onreadingerror = () => this.status('No se pudo leer la etiqueta NFC. Vuelve a acercarla.', true);
+        } catch (err) {
+          this.active=false; this.status(err?.name==='NotAllowedError'?'Permiso NFC denegado. Comprueba los permisos del navegador.':`No se pudo activar NFC: ${err?.message||'error desconocido'}`, true);
+        }
+      },
+      stop(manual=true) {
+        this.active=false; this.restartOnVisible=false;
+        try { this.controller?.abort(); } catch(_) {}
+        this.controller=null; this.reader=null;
+        const startBtn=document.getElementById('nfc-start-btn'), stopBtn=document.getElementById('nfc-stop-btn');
+        if(startBtn)startBtn.classList.remove('hidden'); if(stopBtn)stopBtn.classList.add('hidden');
+        if(manual)this.status('Lector NFC detenido.');
+      },
+      async handleReading(event) {
+        let textValue='';
+        try {
+          for (const record of (event.message?.records||[])) {
+            if(record.recordType==='text') { const decoder=new TextDecoder(record.encoding||'utf-8'); textValue=decoder.decode(record.data); break; }
+            if(record.recordType==='url') { const decoder=new TextDecoder(); textValue=decoder.decode(record.data); break; }
+          }
+        } catch(_) {}
+        const serial=String(event.serialNumber||'').trim();
+        const marker=String(textValue||'').trim();
+        let item=State.inventory.find(x => (serial && String(x.nfcTagId||'')===serial) || (marker && (marker===`MANTENIPRO:${x.id}` || marker===String(x.sku||'') || marker===String(x.barcode||''))));
+        if (!item && marker.startsWith('MANTENIPRO:')) item=State.inventory.find(x=>x.id===marker.slice('MANTENIPRO:'.length));
+        if (!item) { this.status(`Etiqueta leída (${serial||marker||'sin identificador'}), pero no está vinculada a un producto. Abre la ficha del producto y usa «Escribir / reasignar etiqueta».`, true); return; }
+        if(serial && item.nfcTagId!==serial) { item.nfcTagId=serial; Storage.save(); }
+        this.status(`Producto NFC: ${item.name}`);
+        const jobModal=document.getElementById('job-modal');
+        if(jobModal && !jobModal.classList.contains('hidden')) {
+          const raw=window.prompt(`¿Cuántas unidades de «${item.name}» vas a utilizar?`, '1');
+          if(raw===null) { this.status('Lectura cancelada. No se ha añadido material ni descontado stock.'); return; }
+          const qty=Number.parseInt(String(raw).trim(),10);
+          if(!Number.isInteger(qty)||qty<1) { this.status('Cantidad no válida. No se ha añadido material ni descontado stock.', true); return; }
+          const available=Number(item.stock)||0;
+          if(qty>available) { this.status(`Stock disponible: ${available}. No se ha añadido el material.`, true); return; }
+          const sku=item.sku||item.id;
+          item.stock=Math.max(0,available-qty);
+          JobsModule.nfcPendingAdjustments.push({sku,qty});
+          JobsModule.addNfcMaterial(sku,qty);
+          this.status(`${qty} unidad(es) de ${item.name} asociadas a la tarea y descontadas del stock. Si cancelas la tarea, el descuento se revertirá.`);
+          return;
+        }
+        InventoryModule.openDetail(item.id);
+      },
+      async writeProduct(productId) {
+        const item=State.inventory.find(x=>x.id===productId); if(!item)return;
+        if(!this.supported()) { this.status('Web NFC no está disponible en este navegador o contexto HTTPS.', true); return; }
+        const confirmed=window.confirm(item.nfcTagId?'¿Quieres reasignar esta etiqueta NFC a este producto?':'¿Quieres vincular esta etiqueta NFC a este producto?');
+        if(!confirmed)return;
+        try {
+          const reader=new NDEFReader();
+          await reader.write({ records:[{recordType:'text',data:`MANTENIPRO:${item.id}`}] });
+          item.nfcTagId=`NDEF:${item.id}`;
+          Storage.save();
+          this.status(`Etiqueta escrita y vinculada a ${item.name}. Acércala para comprobar la lectura.`); Helpers.toast('Etiqueta NFC vinculada correctamente', 'success');
+          InventoryModule.openDetail(item.id);
+        } catch(err) { this.status(`No se pudo escribir la etiqueta NFC: ${err?.message||'error desconocido'}`, true); }
+      },
+      init() {
+        document.addEventListener('visibilitychange',()=>{
+          if(document.visibilityState!=='visible' && this.active) { this.stop(false); this.restartOnVisible=true; }
+          else if(document.visibilityState==='visible' && this.restartOnVisible) this.start(false);
+        });
       }
     };
 
@@ -7310,7 +7435,7 @@
     };
 
     const VersionModule = {
-      current: '2.3',
+      current: '2.4',
       async check() {
         const label=document.getElementById('backup-version-label'); if(label) label.textContent='Versión '+this.current;
         if (!/^https?:$/.test(location.protocol)) return;
@@ -7338,6 +7463,7 @@
       UI.refreshAll();
       NotificationsModule.init();
       NotesTasksModule.startLocationWatch(false);
+      NFCModule.init();
       VersionModule.check();
     });
 
@@ -7345,11 +7471,12 @@
     (() => {
       const calendar = document.getElementById('view-calendar');
       if (!calendar) return;
-      let startX = 0, startY = 0;
-      calendar.addEventListener('touchstart', e => { const t=e.changedTouches[0]; startX=t.clientX; startY=t.clientY; }, {passive:true});
+      let startX = 0, startY = 0, startTarget = null;
+      calendar.addEventListener('touchstart', e => { const t=e.changedTouches[0]; startX=t.clientX; startY=t.clientY; startTarget=e.target; }, {passive:true});
       calendar.addEventListener('touchend', e => {
         const t=e.changedTouches[0], dx=t.clientX-startX, dy=t.clientY-startY;
         if (Math.abs(dx)<65 || Math.abs(dx)<Math.abs(dy)*1.3) return;
+        if (startTarget?.closest?.('#cal-month-grid')) { CalendarModule.changeMonth(dx < 0 ? 1 : -1); return; }
         const d = new Date((State.selectedDate || Helpers.relDate(0)) + 'T12:00:00');
         d.setDate(d.getDate() + (dx < 0 ? 1 : -1));
         CalendarModule.selectDay(Helpers.toDateStr(d));
