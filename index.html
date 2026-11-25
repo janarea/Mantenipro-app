@@ -285,8 +285,8 @@
               <p id="notif-perm-status" class="text-[10px] text-slate-500 truncate">Comprobando permisos...</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-              <button type="button" onclick="NotificationsModule.sendTestAlert()" class="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-semibold">
-                Probar aviso
+              <button type="button" onclick="JobsModule.openReminder()" class="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-semibold">
+                Nuevo recordatorio
               </button>
               <button type="button" onclick="NotificationsModule.clearAll()" class="text-[11px] font-semibold text-slate-500 hover:text-rose-600">Limpiar</button>
             </div>
@@ -612,11 +612,6 @@
               </div>
             </div>
             <div id="dash-upcoming-reminders" class="divide-y divide-slate-100"></div>
-          </div>
-
-          <div class="card p-5 space-y-3 border-amber-200/80">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100"><h2 class="font-bold text-slate-900 text-base">Notas y recordatorios</h2><button type="button" onclick="UI.navigate('notes')" class="text-xs font-semibold text-blue-700 hover:underline">Ver todos →</button></div>
-            <div id="dash-independent-reminders" class="divide-y divide-slate-100"></div>
           </div>
 
           <div class="card p-5 space-y-3">
@@ -1173,6 +1168,11 @@
           <select id="inv-category" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:border-blue-600"></select>
         </div>
 
+        <div class="min-w-0">
+          <label for="inv-location" class="block text-xs font-semibold text-slate-700 mb-1">Ubicación</label>
+          <input type="text" id="inv-location" placeholder="Ej. Caja 3, estantería B, armario o furgoneta…" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600">
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 responsive-2col">
           <div class="min-w-0">
             <label class="block text-xs font-semibold text-slate-700 mb-1">Stock actual *</label>
@@ -1196,7 +1196,7 @@
         </section>
 
         <section id="inv-photo-panel" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
-          <div class="flex flex-wrap items-center justify-between gap-2"><div><h4 class="text-xs font-bold text-slate-800">Fotografías del producto</h4><p class="text-[11px] text-slate-500">Puedes elegir imágenes de la galería o hacer fotos nuevas. Se guardan sin conexión y se suben a Drive al conectarte.</p></div><div class="flex flex-wrap gap-2"><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">▧ Galería<input id="inv-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label><label class="cursor-pointer px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">📷 Cámara<input id="inv-camera-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label></div></div>
+          <div class="flex flex-wrap items-center justify-between gap-2"><div><h4 class="text-xs font-bold text-slate-800">Fotografías del producto</h4><p class="text-[11px] text-slate-500">Puedes elegir imágenes de la galería o hacer fotos nuevas. Se guardan sin conexión y se suben a Drive al conectarte.</p></div><div class="flex flex-wrap gap-2"><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">▧ Galería<input id="inv-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label><label class="cursor-pointer px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">📷 Cámara<input id="inv-camera-input" type="file" accept="image/*" capture="environment" class="hidden" onchange="PhotoManager.addFiles('inventory', document.getElementById('inv-id').value, this.files); this.value=''"></label></div></div>
           <div id="inv-photo-gallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
         </section>
 
@@ -4567,12 +4567,26 @@
       async compress(file) {
         if (!file.type.startsWith('image/')) throw new Error('El archivo no es una imagen');
         const img = await createImageBitmap(file);
-        const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
-        const canvas = document.createElement('canvas'); canvas.width=Math.max(1,Math.round(img.width*scale)); canvas.height=Math.max(1,Math.round(img.height*scale));
-        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height); img.close?.();
-        const blob = await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.76));
-        if (!blob) throw new Error('No se pudo procesar la imagen');
-        if (blob.size > 1800000) throw new Error('La foto sigue siendo demasiado grande. Prueba con otra imagen.');
+        const maxBytes = 1800000;
+        let scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+        let blob = null;
+        try {
+          // Reintenta con menor calidad y resolución hasta cumplir el límite real de la app.
+          for (let attempt = 0; attempt < 8; attempt++) {
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(img.width * scale));
+            canvas.height = Math.max(1, Math.round(img.height * scale));
+            const ctx = canvas.getContext('2d', { alpha: false });
+            if (!ctx) throw new Error('No se pudo procesar la imagen');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const quality = Math.max(0.42, 0.76 - attempt * 0.06);
+            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+            if (!blob) throw new Error('No se pudo procesar la imagen');
+            if (blob.size <= maxBytes) return blob;
+            scale *= 0.82;
+          }
+        } finally { img.close?.(); }
+        if (!blob || blob.size > maxBytes) throw new Error('No se pudo reducir la fotografía al tamaño máximo admitido (1,8 MB).');
         return blob;
       },
       async addFiles(type, entityId, files) {
@@ -4804,28 +4818,24 @@
         }
 
         listEl.innerHTML = `
-          <div class="overflow-x-auto bg-white rounded-xl border border-rose-200/90">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-rose-50/60 border-b border-rose-100 text-[11px] font-bold text-slate-600 uppercase">
-                  <th class="py-2.5 px-3.5">Código</th>
-                  <th class="py-2.5 px-3.5">Descripción</th>
-                  <th class="py-2.5 px-3.5 text-right">Cantidad</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 text-xs sm:text-sm">
-                ${lowItems.map(item => {
-                  const qty = this.getSuggestedOrderQty(item);
-                  return `
-                    <tr class="hover:bg-slate-50">
-                      <td class="py-2.5 px-3.5 font-mono text-xs font-bold text-slate-800 whitespace-nowrap">${item.sku || 'Sin ref.'}</td>
-                      <td class="py-2.5 px-3.5 font-semibold text-slate-900">${item.name}</td>
-                      <td class="py-2.5 px-3.5 text-right font-bold text-rose-700 whitespace-nowrap">${qty}</td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
+          <div class="bg-white rounded-xl border border-rose-200/90 overflow-hidden w-full min-w-0">
+            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 px-3 py-2 bg-rose-50/60 border-b border-rose-100 text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase">
+              <span>Descripción / Código</span><span class="text-right">Cantidad</span>
+            </div>
+            <div class="divide-y divide-slate-100">
+              ${lowItems.map(item => {
+                const qty = this.getSuggestedOrderQty(item);
+                return `
+                  <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 px-3 py-2.5 hover:bg-slate-50 min-w-0">
+                    <div class="min-w-0">
+                      <div class="font-semibold text-xs sm:text-sm text-slate-900 break-words">${item.name}</div>
+                      <div class="font-mono text-[10px] sm:text-xs text-slate-500 break-all mt-0.5">${item.sku || 'Sin ref.'}</div>
+                    </div>
+                    <div class="text-right font-bold text-rose-700 text-sm sm:text-base tabular-nums whitespace-nowrap">${qty}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
         `;
       },
@@ -4881,7 +4891,9 @@
           items = items.filter(i =>
             Helpers.normalizeStr(i.sku).includes(query) ||
             Helpers.normalizeStr(i.name).includes(query) ||
-            Helpers.normalizeStr(i.category || '').includes(query)
+            Helpers.normalizeStr(i.category || '').includes(query) ||
+            Helpers.normalizeStr(i.barcode || '').includes(query) ||
+            Helpers.normalizeStr(i.location || '').includes(query)
           );
         }
 
@@ -4938,6 +4950,21 @@
         items.forEach(item => PhotoManager.render('inventory', item.id, `inv-row-photos-${item.id}`, false, true));
       },
 
+      showProductMatches(items, identifierLabel = 'código', onSelect = null) {
+        const matches = (items || []).filter(Boolean);
+        if (!matches.length) return false;
+        if (matches.length === 1) { this.openDetail(matches[0].id); return true; }
+        document.getElementById('mantenipro-product-matches')?.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'mantenipro-product-matches';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:100300;background:rgba(15,23,42,.62);display:flex;align-items:center;justify-content:center;padding:14px;';
+        overlay.innerHTML = `<div role="dialog" aria-modal="true" style="width:100%;max-width:460px;max-height:85vh;overflow:auto;background:#fff;border-radius:20px;padding:18px;box-shadow:0 24px 70px rgba(0,0,0,.28);font-family:inherit"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px"><h3 style="font-size:17px;font-weight:800;color:#0f172a">Productos asociados</h3><button type="button" id="mp-products-close" aria-label="Cerrar" style="font-size:22px;color:#64748b;padding:2px 8px">×</button></div><p style="font-size:12px;color:#64748b;margin-bottom:12px">Se han encontrado ${matches.length} productos con el mismo ${identifierLabel}. Selecciona uno para abrir su ficha.</p><div id="mp-products-list" style="display:grid;gap:8px">${matches.map((item,index)=>`<button type="button" data-product-id="${String(item.id).replace(/"/g,'&quot;')}" style="text-align:left;border:1px solid #e2e8f0;border-radius:12px;padding:11px 12px;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="min-width:0"><strong style="display:block;font-size:13px;color:#0f172a;overflow-wrap:anywhere">${String(item.name||'Producto').replace(/</g,'&lt;')}</strong><small style="display:block;font-size:11px;color:#64748b;margin-top:3px">${String(item.sku||'Sin referencia').replace(/</g,'&lt;')}${item.location?' · '+String(item.location).replace(/</g,'&lt;'):''}</small></span><span style="font-size:11px;font-weight:700;color:#1d4ed8;white-space:nowrap">Abrir ›</span></button>`).join('')}</div></div>`;
+        document.body.appendChild(overlay);
+        overlay.querySelector('#mp-products-close').onclick=()=>overlay.remove();
+        overlay.querySelectorAll('[data-product-id]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.getAttribute('data-product-id');const selected=State.inventory.find(x=>x.id===id);overlay.remove();if(selected){if(typeof onSelect==='function')onSelect(selected);else this.openDetail(id);}}));
+        return true;
+      },
+
       openDetail(itemId) {
         const item = State.inventory.find(i => i.id === itemId);
         if (!item) return;
@@ -4947,7 +4974,8 @@
           <div class="grid grid-cols-2 gap-2">
             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Referencia / SKU</span><strong class="text-sm text-slate-800">${item.sku || '—'}</strong></div>
             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Categoría</span><strong class="text-sm text-slate-800">${item.category || 'General'}</strong></div>
-            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock actual</span><strong class="text-sm text-slate-800">${item.stock}</strong></div>
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2"><span class="text-[11px] text-slate-400 block">Ubicación</span><strong class="text-sm text-slate-800">${item.location || 'Sin ubicación indicada'}</strong></div>
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock actual</span><div class="flex items-center justify-between gap-2 mt-1"><strong class="text-sm text-slate-800">${item.stock}</strong><div class="flex gap-1"><button type="button" onclick="InventoryModule.adjustStock('${item.id}',-1);InventoryModule.openDetail('${item.id}')" class="w-7 h-7 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold" aria-label="Restar una unidad">−1</button><button type="button" onclick="InventoryModule.adjustStock('${item.id}',1);InventoryModule.openDetail('${item.id}')" class="w-7 h-7 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold" aria-label="Sumar una unidad">+1</button></div></div></div>
             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock mínimo</span><strong class="text-sm text-slate-800">${item.minStock}</strong></div>
           </div>
           <section class="rounded-xl border border-blue-200 bg-blue-50/50 p-3 space-y-2"><div class="text-xs font-bold text-slate-800">Ajuste rápido de existencias</div><div class="flex items-center gap-3"><button type="button" onclick="InventoryModule.adjustStock('${item.id}',-1);InventoryModule.refreshDetail('${item.id}')" class="w-11 h-10 rounded-lg border border-slate-300 bg-white font-bold text-lg">−1</button><div class="flex-1 text-center"><span class="block text-[10px] text-slate-500">Stock actual</span><strong class="text-lg text-slate-900">${item.stock}</strong></div><button type="button" onclick="InventoryModule.adjustStock('${item.id}',1);InventoryModule.refreshDetail('${item.id}')" class="w-11 h-10 rounded-lg border border-slate-300 bg-white font-bold text-lg">+1</button></div></section>
@@ -4982,6 +5010,7 @@
           document.getElementById('inv-sku').value = item.sku;
           document.getElementById('inv-barcode').value = item.barcode || '';
           document.getElementById('inv-name').value = item.name;
+          document.getElementById('inv-location').value = item.location || '';
           sel.value = item.category || 'General';
           document.getElementById('inv-stock').value = item.stock;
           document.getElementById('inv-min').value = item.minStock;
@@ -4995,6 +5024,7 @@
           document.getElementById('inv-sku').value = '';
           document.getElementById('inv-barcode').value = '';
           document.getElementById('inv-name').value = '';
+          document.getElementById('inv-location').value = '';
           sel.value = State.selectedCategory !== 'Todas' && State.categories.includes(State.selectedCategory)
             ? State.selectedCategory
             : (State.categories[0] || 'General');
@@ -5026,6 +5056,7 @@
         const sku = document.getElementById('inv-sku').value.trim().toUpperCase();
         const barcode = document.getElementById('inv-barcode').value.trim();
         const name = document.getElementById('inv-name').value.trim();
+        const location = document.getElementById('inv-location').value.trim();
         const category = document.getElementById('inv-category').value.trim() || 'General';
         const stock = parseInt(document.getElementById('inv-stock').value, 10) || 0;
         const minStock = parseInt(document.getElementById('inv-min').value, 10) || 0;
@@ -5037,7 +5068,7 @@
         if (id) {
           const idx = State.inventory.findIndex(i => i.id === id);
           if (idx !== -1) {
-            State.inventory[idx] = { ...State.inventory[idx], id, sku, barcode, name, category, stock, minStock, nfcTagId: State.inventory[idx].nfcTagId || '', photos: State.inventory[idx].photos || [] };
+            State.inventory[idx] = { ...State.inventory[idx], id, sku, barcode, name, location, category, stock, minStock, nfcTagId: State.inventory[idx].nfcTagId || '', photos: State.inventory[idx].photos || [] };
           }
         } else {
           State.inventory.push({
@@ -5046,6 +5077,7 @@
             barcode,
             nfcTagId: '',
             name,
+            location,
             category,
             stock,
             minStock,
@@ -6199,8 +6231,8 @@
           Helpers.toast('Código añadido al formulario', 'success');
           return;
         }
-        const item = State.inventory.find(x => String(x.barcode || '') === code || String(x.sku || '') === code);
-        if (item) { this.close(); InventoryModule.openDetail(item.id); return; }
+        const matchingItems = State.inventory.filter(x => String(x.barcode || '') === code || String(x.sku || '') === code);
+        if (matchingItems.length) { this.close(); InventoryModule.showProductMatches(matchingItems, 'código de barras'); return; }
         const inst = State.installations.find(x => String(x.barcode || '') === code || String(x.unit || '') === code);
         if (inst) {
           this.close();
@@ -6279,6 +6311,20 @@
         if(startBtn)startBtn.classList.remove('hidden'); if(stopBtn)stopBtn.classList.add('hidden');
         if(manual)this.status('Lector NFC detenido.');
       },
+      useProductInTask(item) {
+        if (!item) return;
+        const raw=window.prompt(`¿Cuántas unidades de «${item.name}» vas a utilizar?`, '1');
+        if(raw===null) { this.status('Lectura cancelada. No se ha añadido material ni descontado stock.'); return; }
+        const qty=Number.parseInt(String(raw).trim(),10);
+        if(!Number.isInteger(qty)||qty<1) { this.status('Cantidad no válida. No se ha añadido material ni descontado stock.', true); return; }
+        const available=Number(item.stock)||0;
+        if(qty>available) { this.status(`Stock disponible: ${available}. No se ha añadido el material.`, true); return; }
+        const sku=item.sku||item.id;
+        item.stock=Math.max(0,available-qty);
+        JobsModule.nfcPendingAdjustments.push({sku,qty});
+        JobsModule.addNfcMaterial(sku,qty);
+        this.status(`${qty} unidad(es) de ${item.name} asociadas a la tarea y descontadas del stock. Si cancelas la tarea, el descuento se revertirá.`);
+      },
       async handleReading(event) {
         let textValue='';
         try {
@@ -6294,32 +6340,35 @@
           const unit = State.installations.find(x => x.id === unitMatch[1] || String(x.unit||'').toLowerCase() === unitMatch[1].toLowerCase());
           if (unit) { this.status(`Instalación NFC: ${unit.unit}`); InstallationsModule.openDetail(unit.id); return; }
         }
-        let item=State.inventory.find(x => (serial && String(x.nfcTagId||'')===serial) || (marker && (marker===`MANTENIPRO:${x.id}` || marker===`MANTENIPRO:PRODUCT:${x.id}` || marker===String(x.sku||'') || marker===String(x.barcode||''))));
-        if (!item && marker.startsWith('MANTENIPRO:')) { const productId=marker.replace(/^MANTENIPRO:(?:PRODUCT:)?/i,''); item=State.inventory.find(x=>x.id===productId); }
-        if (!item) { this.status(`Etiqueta leída (${serial||marker||'sin identificador'}), pero no está vinculada a un producto o instalación.`, true); return; }
-        if(serial && item.nfcTagId!==serial) { item.nfcTagId=serial; Storage.save(); }
-        this.status(`Producto NFC: ${item.name}`);
+        let matches=State.inventory.filter(x => (serial && String(x.nfcTagId||'')===serial) || (marker && (marker===`MANTENIPRO:${x.id}` || marker===`MANTENIPRO:PRODUCT:${x.id}` || marker===String(x.sku||'') || marker===String(x.barcode||''))));
+        if (!matches.length && marker.startsWith('MANTENIPRO:')) { const productId=marker.replace(/^MANTENIPRO:(?:PRODUCT:)?/i,''); matches=State.inventory.filter(x=>x.id===productId); }
+        if (!matches.length) { this.status(`Etiqueta leída (${serial||marker||'sin identificador'}), pero no está vinculada a un producto o instalación.`, true); return; }
+        if(serial) { let changed=false; matches.forEach(x=>{if(x.nfcTagId!==serial){x.nfcTagId=serial;changed=true;}}); if(changed)Storage.save(); }
+        this.status(matches.length>1?`Etiqueta NFC compartida: ${matches.length} productos.`:`Producto NFC: ${matches[0].name}`);
         const inventoryModal=document.getElementById('inv-modal');
         const editingProductId=document.getElementById('inv-id')?.value;
-        if (inventoryModal && !inventoryModal.classList.contains('hidden') && editingProductId===item.id) {
-          InventoryModule.refreshNFCPanel(item);
-          const localStatus=document.getElementById('inv-nfc-label-status');
-          if(localStatus)localStatus.textContent=`Etiqueta leída correctamente para ${item.name}. Identificador: ${serial||marker||'NFC'}`;
-          return;
+        if (inventoryModal && !inventoryModal.classList.contains('hidden') && editingProductId) {
+          const edited=State.inventory.find(x=>x.id===editingProductId);
+          if (edited && !matches.some(x=>x.id===editingProductId)) {
+            // Desde la edición se puede asociar la misma etiqueta física a otro producto de la caja.
+            edited.nfcTagId = serial || `NDEF:${marker}`;
+            matches.push(edited);
+            Storage.save();
+          }
+          if (edited && matches.some(x=>x.id===editingProductId)) {
+            InventoryModule.refreshNFCPanel(edited);
+            const localStatus=document.getElementById('inv-nfc-label-status');
+            if(localStatus)localStatus.textContent=`Etiqueta vinculada a este producto. Identificador compartido: ${serial||marker||'NFC'}`;
+            this.status(`Etiqueta NFC asociada a ${edited.name}.`);
+            return;
+          }
         }
+        if (matches.length > 1) { InventoryModule.showProductMatches(matches, 'etiqueta NFC'); return; }
+        const item=matches[0];
         const jobModal=document.getElementById('job-modal');
         if(jobModal && !jobModal.classList.contains('hidden')) {
-          const raw=window.prompt(`¿Cuántas unidades de «${item.name}» vas a utilizar?`, '1');
-          if(raw===null) { this.status('Lectura cancelada. No se ha añadido material ni descontado stock.'); return; }
-          const qty=Number.parseInt(String(raw).trim(),10);
-          if(!Number.isInteger(qty)||qty<1) { this.status('Cantidad no válida. No se ha añadido material ni descontado stock.', true); return; }
-          const available=Number(item.stock)||0;
-          if(qty>available) { this.status(`Stock disponible: ${available}. No se ha añadido el material.`, true); return; }
-          const sku=item.sku||item.id;
-          item.stock=Math.max(0,available-qty);
-          JobsModule.nfcPendingAdjustments.push({sku,qty});
-          JobsModule.addNfcMaterial(sku,qty);
-          this.status(`${qty} unidad(es) de ${item.name} asociadas a la tarea y descontadas del stock. Si cancelas la tarea, el descuento se revertirá.`);
+          if(matches.length>1) InventoryModule.showProductMatches(matches,'etiqueta NFC',selected=>this.useProductInTask(selected));
+          else this.useProductInTask(item);
           return;
         }
         InventoryModule.openDetail(item.id);
@@ -6331,8 +6380,10 @@
         if(!confirmed)return;
         try {
           const reader=new NDEFReader();
-          await reader.write({ records:[{recordType:'text',data:`MANTENIPRO:${item.id}`}] });
-          item.nfcTagId=`NDEF:${item.id}`;
+          // Si varios productos comparten código de barras, escribir ese código permite que una sola etiqueta los agrupe.
+          const sharedMarker = String(item.barcode || '').trim() || `MANTENIPRO:${item.id}`;
+          await reader.write({ records:[{recordType:'text',data:sharedMarker}] });
+          item.nfcTagId=`NDEF:${sharedMarker}`;
           Storage.save();
           this.status(`Etiqueta escrita y vinculada a ${item.name}. Acércala para comprobar la lectura.`); Helpers.toast('Etiqueta NFC vinculada correctamente', 'success');
           InventoryModule.refreshNFCPanel(item);
