@@ -9,8 +9,8 @@ self.addEventListener('push', event => {
   const title = payload.title || 'ManteniPro';
   const options = {
     body: payload.body || 'Tienes un aviso pendiente.',
-    icon: payload.icon || './icon-192.png',
-    badge: payload.badge || './icon-192.png',
+    ...(payload.icon ? { icon: payload.icon } : {}),
+    ...(payload.badge ? { badge: payload.badge } : {}),
     tag: payload.tag || 'mantenipro-push',
     renotify: true,
     data: payload.data || { url: './' },
