@@ -7858,9 +7858,14 @@
         const base = localDateTime(date, time);
         if (!base) return null;
         let trigger = base;
-        if (job.reminder === 'day_before') trigger = new Date(base.getFullYear(), base.getMonth(), base.getDate() - 1, 9, 0, 0);
-        else if (job.reminder && job.reminder !== 'none') trigger = new Date(base.getTime() - (parseInt(job.reminder, 10) || 0) * 60000);
-        else return null;
+        // Los recordatorios independientes usan directamente su fecha y hora;
+        // no necesitan un margen previo en el campo job.reminder.
+        const isStandaloneReminder = Helpers.resolveJobType(job) === 'RECORDATORIO';
+        if (!isStandaloneReminder) {
+          if (job.reminder === 'day_before') trigger = new Date(base.getFullYear(), base.getMonth(), base.getDate() - 1, 9, 0, 0);
+          else if (job.reminder && job.reminder !== 'none') trigger = new Date(base.getTime() - (parseInt(job.reminder, 10) || 0) * 60000);
+          else return null;
+        }
         if (job.snoozeUntil) {
           const snooze = new Date(job.snoozeUntil);
           if (!Number.isNaN(snooze.getTime()) && snooze > new Date()) trigger = snooze;
