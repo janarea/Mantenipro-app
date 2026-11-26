@@ -1,53 +1,58 @@
-/* ManteniPro 2.5 · receptor de notificaciones del sistema y Web Push.
-   Importante: el Service Worker no programa alarmas locales por sí solo.
-   Para recibir avisos con la app cerrada se necesita una suscripción Push
-   y un servidor que envíe mensajes Web Push (VAPID). */
-self.addEventListener('install', event => { event.waitUntil(self.skipWaiting()); });
-self.addEventListener('activate', event => { event.waitUntil((async () => { await self.clients.claim(); })()); });
+/* ManteniPro 2.5 · Service Worker + Firebase Cloud Messaging.
+   FCM background messages are data-only and displayed here to avoid duplicate notifications. */
 
-self.addEventListener('push', event => {
-  event.waitUntil((async () => {
-    let payload = {};
-    try {
-      if (event.data) {
-        try { payload = event.data.json() || {}; }
-        catch (_) { payload = { body: event.data.text() || '' }; }
-      }
-    } catch (_) { payload = {}; }
-    const title = String(payload.title || 'ManteniPro');
-    const data = (payload.data && typeof payload.data === 'object') ? payload.data : {};
-    if (!data.url) data.url = './';
-    const options = {
-      body: String(payload.body || 'Tienes un aviso pendiente.'),
-      tag: String(payload.tag || 'mantenipro-push'),
-      renotify: true,
-      timestamp: Date.now(),
-      data,
-      vibrate: [180, 80, 180]
-    };
-    if (payload.icon) options.icon = payload.icon;
-    if (payload.badge) options.badge = payload.badge;
-    if (Array.isArray(payload.actions)) options.actions = payload.actions.slice(0, 2);
-    await self.registration.showNotification(title, options);
-  })());
-});
-
+// Register the click handler before importing Firebase Messaging, as recommended by Firebase.
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const data = event.notification.data || {};
-  const target = new URL(data.url || './', self.location.href);
-  // Nunca permitir que un payload externo navegue fuera del origen de la PWA.
-  const safeTarget = target.origin === self.location.origin ? target.href : self.registration.scope;
+  const requested = new URL(data.url || './', self.location.href);
+  const target = requested.origin === self.location.origin ? requested : new URL(self.registration.scope);
+  if (data.jobId) target.searchParams.set('mpJobId', String(data.jobId));
+  if (data.taskId) target.searchParams.set('mpTaskId', String(data.taskId));
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of windows) {
       if ('focus' in client) {
         await client.focus();
-        if (data.jobId) client.postMessage({ type: 'MANTENIPRO_OPEN_JOB', jobId: data.jobId });
-        if (data.taskId) client.postMessage({ type: 'MANTENIPRO_OPEN_TASK', taskId: data.taskId });
+        if (data.jobId) client.postMessage({ type: 'MANTENIPRO_OPEN_JOB', jobId: String(data.jobId) });
+        if (data.taskId) client.postMessage({ type: 'MANTENIPRO_OPEN_TASK', taskId: String(data.taskId) });
         return;
       }
     }
-    if (self.clients.openWindow) await self.clients.openWindow(safeTarget);
+    if (self.clients.openWindow) await self.clients.openWindow(target.href);
   })());
 });
+
+importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: 'AIzaSyAHTrIGeLC5Pl9vwIY3ok7WdAM5081VOcU',
+  authDomain: 'mantenipro-1da42.firebaseapp.com',
+  projectId: 'mantenipro-1da42',
+  storageBucket: 'mantenipro-1da42.firebasestorage.app',
+  messagingSenderId: '948648801124',
+  appId: '1:948648801124:web:4c7d9360fc71d630784071'
+});
+
+const messaging = firebase.messaging();
+messaging.onBackgroundMessage(payload => {
+  const data = payload.data || {};
+  const title = String(data.title || payload.notification?.title || 'ManteniPro');
+  const body = String(data.body || payload.notification?.body || 'Tienes un aviso pendiente.');
+  return self.registration.showNotification(title, {
+    body,
+    tag: String(data.tag || 'mantenipro-push'),
+    renotify: true,
+    timestamp: Date.now(),
+    data: {
+      url: data.url || './',
+      jobId: data.jobId || null,
+      taskId: data.taskId || null
+    },
+    vibrate: [180, 80, 180]
+  });
+});
+
+self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));

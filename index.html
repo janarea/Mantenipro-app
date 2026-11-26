@@ -288,6 +288,9 @@
               <button type="button" onclick="JobsModule.openReminder()" class="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-semibold">
                 Nuevo recordatorio
               </button>
+              <button type="button" onclick="NotificationsModule.requestPermission()" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
+                Activar Push
+              </button>
               <button type="button" onclick="NotificationsModule.clearAll()" class="text-[11px] font-semibold text-slate-500 hover:text-rose-600">Limpiar</button>
             </div>
           </div>
@@ -1364,13 +1367,20 @@
         <button type="button" onclick="InstallationsModule.closeGlobalFieldModal()" class="text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
-      <form onsubmit="InstallationsModule.saveNewGlobalField(event)" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
-        <input type="text" id="global-field-name-input" required placeholder="Nombre del campo técnico..." class="flex-1 min-w-0 px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600">
-        <button type="submit" class="px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-xl shrink-0">
-          + Añadir
-        </button>
+      <div id="installation-migration-banner" class="hidden rounded-xl border border-amber-300 bg-amber-50 p-3 space-y-2">
+        <p class="text-xs font-semibold text-amber-900">Se han encontrado campos de la ficha anterior. Sus valores se conservan y se asignan inicialmente a «Otros datos» como texto.</p>
+        <p class="text-[11px] text-amber-800">Revisa la asignación de sección y tipo. Antes de confirmar se descargará una copia de seguridad completa.</p>
+        <button type="button" onclick="InstallationsModule.confirmSchemaMigration()" class="px-3 py-2 rounded-lg bg-amber-700 text-white text-xs font-semibold">Revisar y confirmar migración</button>
+      </div>
+      <div id="installation-sections-manager" class="rounded-xl border border-slate-200 p-3 space-y-2"></div>
+      <form onsubmit="InstallationsModule.saveNewGlobalField(event)" class="space-y-2 shrink-0">
+        <input type="text" id="global-field-name-input" required placeholder="Nombre del campo personalizado..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600">
+        <div class="grid grid-cols-2 gap-2">
+          <select id="global-field-type-input" class="min-w-0 px-2 py-2 text-xs border border-slate-300 rounded-lg bg-white"><option value="text">Texto</option><option value="tel">Teléfono</option><option value="email">Correo</option><option value="number">Número</option><option value="date">Fecha</option><option value="select">Lista</option><option value="boolean">Sí / No</option><option value="measure">Medidas</option><option value="photo">Fotografía</option></select>
+          <select id="global-field-section-input" class="min-w-0 px-2 py-2 text-xs border border-slate-300 rounded-lg bg-white"><option value="administrativa">Datos administrativos</option><option value="tecnica">Características técnicas</option><option value="otros" selected>Otros datos</option></select>
+        </div>
+        <button type="submit" class="w-full px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-xl">+ Añadir campo a todas las instalaciones</button>
       </form>
-
       <div id="global-fields-manager-list" class="modal-scroll space-y-2 max-h-64"></div>
 
       <div class="modal-footer pt-2 border-t border-slate-100">
@@ -1441,11 +1451,8 @@
         </div>
 
         <div class="min-w-0">
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Fotografía del ticket o recibo (máx. 1,8 MB)</label>
-          <div class="flex flex-wrap gap-2">
-            <label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">▧ Galería<input type="file" id="exp-receipt-gallery" accept="image/*" class="hidden" onchange="ExpensesModule.previewReceiptFile(this)"></label>
-            <label class="cursor-pointer px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">📷 Cámara<input type="file" id="exp-receipt-camera" accept="image/*" capture="environment" class="hidden" onchange="ExpensesModule.previewReceiptFile(this)"></label>
-          </div>
+          <span class="block text-xs font-semibold text-slate-700 mb-1">Fotografía del ticket o recibo</span>
+          <div class="flex flex-wrap gap-2"><label class="cursor-pointer px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">▧ Galería<input type="file" id="exp-receipt-gallery" accept="image/*" class="hidden" onchange="ExpensesModule.previewSelectedReceipt(this)"></label><label class="cursor-pointer px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">📷 Cámara<input type="file" id="exp-receipt-camera" accept="image/*" capture="environment" class="hidden" onchange="ExpensesModule.previewSelectedReceipt(this)"></label></div>
           <img id="exp-receipt-preview" alt="Vista previa del recibo" class="hidden mt-2 max-h-40 rounded-lg border border-slate-200 object-contain" onclick="this.classList.toggle('max-h-40');this.classList.toggle('max-h-none')">
         </div>
 
@@ -1731,6 +1738,10 @@
       categories: [],
       inventory: [],
       globalInstallationFields: [],
+      globalInstallationFieldConfig: {},
+      installationSectionOrder: ['administrativa', 'tecnica', 'otros'],
+      installationSectionLabels: { administrativa: 'Datos administrativos', tecnica: 'Características técnicas', otros: 'Otros datos' },
+      installationSchemaMigrationPending: false,
       installations: [],
       jobs: [],
       notes: [],
@@ -2037,6 +2048,7 @@
               if (!State.globalInstallationFields.includes(entry.fieldName)) {
                 State.globalInstallationFields.splice(idx, 0, entry.fieldName);
               }
+              if (entry.fieldConfig) State.globalInstallationFieldConfig[entry.fieldName] = entry.fieldConfig;
               if (entry.valuesByInstId && typeof entry.valuesByInstId === 'object') {
                 State.installations.forEach(inst => {
                   if (!inst.values) inst.values = {};
@@ -2085,6 +2097,7 @@
             const data = JSON.parse(raw);
             State.categories = Array.isArray(data.categories) ? data.categories : [];
             State.inventory = (data.inventory || []).map(item => ({
+              ...item,
               id: item.id || Helpers.uid('inv'),
               sku: item.sku || '',
               name: item.name || '',
@@ -2094,6 +2107,11 @@
               photos: Array.isArray(item.photos) ? item.photos : []
             }));
             State.globalInstallationFields = Array.isArray(data.globalInstallationFields) ? data.globalInstallationFields : [];
+            const hasTypedFieldConfig = !!(data.globalInstallationFieldConfig && typeof data.globalInstallationFieldConfig === 'object');
+            State.globalInstallationFieldConfig = hasTypedFieldConfig ? data.globalInstallationFieldConfig : {};
+            State.installationSectionOrder = Array.isArray(data.installationSectionOrder) && data.installationSectionOrder.length ? data.installationSectionOrder : ['administrativa','tecnica','otros'];
+            State.installationSectionLabels = { administrativa:'Datos administrativos', tecnica:'Características técnicas', otros:'Otros datos', ...(data.installationSectionLabels || {}) };
+            State.installationSchemaMigrationPending = data.installationSchemaMigrationPending === true || (!hasTypedFieldConfig && State.globalInstallationFields.length > 0);
             State.installations = Array.isArray(data.installations) ? data.installations : [];
             State.jobs = (data.jobs || []).map(j => ({
               ...j,
@@ -2132,9 +2150,8 @@
             inst.values = {};
           }
           State.globalInstallationFields.forEach(field => {
-            if (!(field in inst.values)) {
-              inst.values[field] = '';
-            }
+            if (!(field in inst.values)) inst.values[field] = '';
+            if (!State.globalInstallationFieldConfig[field]) State.globalInstallationFieldConfig[field] = { type:'text', section:'otros', options:[], unit:'' };
           });
         });
       },
@@ -2144,6 +2161,10 @@
           categories: State.categories,
           inventory: State.inventory,
           globalInstallationFields: State.globalInstallationFields,
+          globalInstallationFieldConfig: State.globalInstallationFieldConfig,
+          installationSectionOrder: State.installationSectionOrder,
+          installationSectionLabels: State.installationSectionLabels,
+          installationSchemaMigrationPending: State.installationSchemaMigrationPending,
           installations: State.installations,
           jobs: State.jobs,
           notes: State.notes,
@@ -3058,10 +3079,18 @@
         }).join('');
       },
 
+      previewSelectedReceipt(input) {
+        const file = input?.files?.[0]; if (!file) return;
+        if (!file.type.startsWith('image/')) { Helpers.toast('Selecciona una imagen válida', 'warning'); input.value=''; return; }
+        const reader = new FileReader(); reader.onload = () => { const preview=document.getElementById('exp-receipt-preview'); preview.src=reader.result; preview.classList.remove('hidden'); }; reader.readAsDataURL(file);
+        const otherId = input.id === 'exp-receipt-camera' ? 'exp-receipt-gallery' : 'exp-receipt-camera';
+        const other = document.getElementById(otherId); if (other) other.value='';
+      },
+
       openModal(expId = null) {
         document.getElementById('exp-form').reset();
-        document.getElementById('exp-receipt-gallery').value = '';
-        document.getElementById('exp-receipt-camera').value = '';
+        const receiptPreview = document.getElementById('exp-receipt-preview');
+        if (receiptPreview) { receiptPreview.src=''; receiptPreview.classList.add('hidden'); }
         const delBtn = document.getElementById('exp-delete-btn');
 
         if (expId) {
@@ -3076,8 +3105,7 @@
           document.getElementById('exp-concept').value = ex.concept || '';
           const preview = document.getElementById('exp-receipt-preview');
           preview.src = ex.receiptImage || ''; preview.classList.toggle('hidden', !ex.receiptImage);
-          document.getElementById('exp-receipt-gallery').value = '';
-          document.getElementById('exp-receipt-camera').value = '';
+          document.getElementById('exp-receipt-gallery').value = ''; document.getElementById('exp-receipt-camera').value = '';
           delBtn.classList.remove('hidden');
         } else {
           document.getElementById('exp-modal-title').textContent = 'Nuevo Gasto';
@@ -3104,12 +3132,11 @@
         const unitName = document.getElementById('exp-unit').value.trim();
         const concept = document.getElementById('exp-concept').value.trim();
         let receiptImage = existing?.receiptImage || null;
-        const receiptFile = document.getElementById('exp-receipt-gallery')?.files?.[0] || document.getElementById('exp-receipt-camera')?.files?.[0];
+        const receiptFile = document.getElementById('exp-receipt-camera')?.files?.[0] || document.getElementById('exp-receipt-gallery')?.files?.[0];
         if (receiptFile) {
-          try {
-            const compressed = await PhotoManager.compress(receiptFile);
-            receiptImage = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => reject(reader.error); reader.readAsDataURL(compressed); });
-          } catch (err) { Helpers.toast(err.message || 'No se pudo procesar la fotografía', 'error'); return; }
+          if (!receiptFile.type.startsWith('image/')) { Helpers.toast('Selecciona una imagen válida', 'error'); return; }
+          try { const compressed = await PhotoManager.compress(receiptFile); receiptImage = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(compressed); }); }
+          catch (error) { Helpers.toast(error.message || 'No se pudo comprimir el recibo', 'warning'); return; }
         }
 
         const payload = {
@@ -3147,17 +3174,6 @@
         this.closeModal();
         UI.refreshAll();
         Helpers.toast('Gasto guardado y resumen mensual actualizado', 'success');
-      },
-
-      previewReceiptFile(input) {
-        const file = input?.files?.[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) { Helpers.toast('Selecciona una imagen válida', 'warning'); input.value = ''; return; }
-        const preview = document.getElementById('exp-receipt-preview');
-        const url = URL.createObjectURL(file);
-        preview.src = url; preview.classList.remove('hidden');
-        const other = input.id === 'exp-receipt-gallery' ? document.getElementById('exp-receipt-camera') : document.getElementById('exp-receipt-gallery');
-        if (other) other.value = '';
       },
 
       previewReceipt(id) {
@@ -3894,7 +3910,7 @@
           <div class="border-t border-slate-200 my-3"></div><h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Descripción</h3><p class="text-sm text-slate-700 whitespace-pre-wrap">${esc(job.notes || 'Sin descripción adicional.')}</p>
           ${(job.materials||[]).length ? `<div class="border-t border-slate-200 my-3 pt-3"><h3 class="text-sm font-bold text-slate-900 mb-2">Materiales utilizados</h3><div class="space-y-1">${job.materials.map(m=>`<div class="flex items-center justify-between gap-2 rounded-lg bg-slate-50 p-2 text-xs"><span>${esc(m.name||m.sku||'Repuesto')}</span><strong>${Number(m.qty)||1} ud.</strong></div>`).join('')}</div></div>` : ''}
           ${(job.expenses||[]).length ? `<div class="border-t border-slate-200 my-3 pt-3"><h3 class="text-sm font-bold text-slate-900 mb-2">Gastos de la intervención</h3><div class="space-y-2">${job.expenses.map(ex=>`<div class="rounded-lg border border-indigo-100 p-2"><div class="flex items-center justify-between gap-2 text-xs"><span class="font-semibold">${esc(EXPENSE_META[Helpers.resolveExpenseType(ex.type)]?.label||ex.type)}</span><strong>${Helpers.formatCurrency(ex.amount)}</strong></div>${ex.concept?`<p class="text-[11px] text-slate-600 mt-1">${esc(ex.concept)}</p>`:''}${ex.receiptImage?`<button type="button" onclick="ExpensesModule.previewReceipt('${esc(ex.id)}')" class="mt-2 text-[11px] text-blue-700 underline">Ver fotografía del recibo</button>`:''}</div>`).join('')}</div></div>` : ''}
-          ${(() => { const alerts = (State.notifications || []).filter(n => n.jobId === job.id).slice(0,5); return `<div class="border-t border-slate-200 my-3 pt-3"><h3 class="text-sm font-bold text-slate-900 mb-2">Últimos avisos</h3>${alerts.length ? `<div class="space-y-2">${alerts.map(n => `<button type="button" onclick="document.getElementById('job-detail-modal')?.remove();JobsModule.openDetail('${esc(job.id)}')" class="w-full text-left rounded-lg border border-amber-200 bg-amber-50 p-2"><span class="block text-xs font-semibold text-amber-900">${esc(n.title || 'Aviso')}</span><span class="block text-[11px] text-amber-800">${esc(n.timeLabel || (n.createdAt ? new Date(n.createdAt).toLocaleString('es-ES') : ''))}</span><span class="block text-xs text-slate-700 mt-1">${esc(n.body || '')}</span></button>`).join('')}</div>` : `<p class="text-xs text-slate-400">No hay avisos registrados para esta tarea.</p>`}</div>`; })()}
+          ${(() => { const breakdowns = job.instId ? (State.jobs || []).filter(j => j.instId === job.instId && Helpers.resolveJobType(j) === 'AVERIA').sort((a,b) => String(b.date||'').localeCompare(String(a.date||''))).slice(0,5) : []; return `<div class="border-t border-slate-200 my-3 pt-3"><h3 class="text-sm font-bold text-slate-900 mb-2">Últimas averías de la instalación</h3>${breakdowns.length ? `<div class="space-y-2">${breakdowns.map(a => `<button type="button" onclick="document.getElementById('job-detail-modal')?.remove();JobsModule.openDetail('${esc(a.id)}')" class="w-full text-left rounded-lg border border-rose-200 bg-rose-50 p-2"><span class="block text-xs font-semibold text-rose-900">${esc(a.title || a.description || 'Avería')}</span><span class="block text-[11px] text-rose-800">${esc(Helpers.formatDateShort(a.date))} · ${esc(a.status || 'Pendiente')}</span><span class="block text-xs text-slate-700 mt-1">${esc(a.notes || '')}</span></button>`).join('')}</div>` : `<p class="text-xs text-slate-400">No hay averías registradas para esta instalación.</p>`}</div>`; })()}
           <div class="border-t border-slate-200 my-3"></div><div class="flex items-center justify-between gap-2 mb-2"><h3 class="text-sm font-bold text-slate-900">Últimas intervenciones</h3><span class="text-[10px] text-slate-500">${sessions.length} sesión(es)</span></div>
           <div class="space-y-2">${sessions.map(session => { const green = ['Completada','Completado'].includes(String(session.calendarStatus || '')); const badge = green ? 'bg-emerald-50 text-emerald-700' : session.calendarStatus === 'Pausada' ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-600'; return `<button type="button" onclick="JobsModule.openInterventionDetail('${esc(job.id)}',${session.index})" class="w-full text-left rounded-xl border border-slate-200 p-3 hover:bg-blue-50/50 flex items-center justify-between gap-3"><span class="min-w-0"><span class="block text-xs font-bold text-slate-800">${esc(session.label)}</span><span class="block text-xs text-slate-600 mt-1">${esc(Helpers.formatDateShort(session.date))} · ${esc(session.startTime || '')} – ${esc(session.endTime || '')}</span></span><span class="shrink-0 text-[10px] font-semibold rounded-full px-2 py-1 ${badge}">${green ? 'Completada' : esc(session.calendarStatus || job.status || 'Pendiente')}</span></button>`; }).join('')}</div>
           <div class="flex flex-wrap gap-2 mt-4">${job.status === 'Pausada' ? `<button type="button" onclick="document.getElementById('job-detail-modal').remove();JobsModule.resume('${esc(job.id)}')" class="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl bg-blue-700 text-white text-sm font-semibold">▶ Reanudar tarea</button>` : ''}<button type="button" onclick="document.getElementById('job-detail-modal').remove()" class="flex-1 min-w-[90px] px-3 py-2.5 rounded-xl border text-sm">Cerrar</button><button type="button" onclick="document.getElementById('job-detail-modal').remove();JobsModule.openModal('${esc(job.id)}')" class="flex-1 min-w-[140px] px-3 py-2.5 rounded-xl bg-blue-700 text-white text-sm font-semibold">✎ EDITAR TAREA</button></div>
@@ -3911,8 +3927,22 @@
         const completed = ['Completada','Completado'].includes(String(entry.calendarStatus || ''));
         const ov = document.createElement('div'); ov.id = 'job-intervention-modal';
         ov.style.cssText = 'position:fixed;inset:0;z-index:99990;background:rgba(15,23,42,.62);display:flex;align-items:center;justify-content:center;padding:14px';
-        ov.innerHTML = `<div role="dialog" aria-modal="true" style="width:100%;max-width:430px;background:#fff;border-radius:18px;padding:18px"><div class="flex items-center justify-between gap-2"><h3 class="font-bold text-base">Detalle de intervención</h3><button type="button" onclick="document.getElementById('job-intervention-modal').remove()" class="text-xl">×</button></div><div class="mt-4 space-y-3"><div><div class="text-[10px] text-slate-500 font-semibold">TIPO</div><div class="text-sm font-semibold">${esc(entry.calendarEntryType || 'Primera intervención')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">FECHA</div><div class="text-sm">${esc(Helpers.formatDateShort(entry.date))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">HORARIO</div><div class="text-sm">${esc(entry.startTime || '')} – ${esc(entry.endTime || '')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">ESTADO</div><div class="text-sm font-semibold">${completed ? 'Completada' : esc(entry.calendarStatus || job.status || 'Pendiente')}</div></div></div><div class="flex gap-2 mt-5"><button type="button" onclick="document.getElementById('job-intervention-modal').remove();JobsModule.openDetail('${esc(job.id)}')" class="flex-1 px-3 py-2 rounded-xl border text-sm">Volver</button><button type="button" onclick="document.getElementById('job-intervention-modal').remove();${entryIndex < 0 ? `JobsModule.openModal('${esc(job.id)}')` : `JobsModule.openCalendarEntryEditor('${esc(job.id)}',${entryIndex})`}" class="flex-1 px-3 py-2 rounded-xl bg-blue-700 text-white text-sm font-semibold">Editar intervención</button></div></div>`;
+        ov.innerHTML = `<div role="dialog" aria-modal="true" style="width:100%;max-width:430px;background:#fff;border-radius:18px;padding:18px"><div class="flex items-center justify-between gap-2"><h3 class="font-bold text-base">Detalle de intervención</h3><button type="button" onclick="document.getElementById('job-intervention-modal').remove()" class="text-xl">×</button></div><div class="mt-4 space-y-3"><div><div class="text-[10px] text-slate-500 font-semibold">TIPO</div><div class="text-sm font-semibold">${esc(entry.calendarEntryType || 'Primera intervención')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">FECHA</div><div class="text-sm">${esc(Helpers.formatDateShort(entry.date))}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">HORARIO</div><div class="text-sm">${esc(entry.startTime || '')} – ${esc(entry.endTime || '')}</div></div><div><div class="text-[10px] text-slate-500 font-semibold">ESTADO</div><div class="text-sm font-semibold">${completed ? 'Completada' : esc(entry.calendarStatus || job.status || 'Pendiente')}</div></div></div><div class="flex gap-2 mt-5">${entryIndex >= 0 ? `<button type="button" onclick="JobsModule.deleteCalendarEntry('${esc(job.id)}',${entryIndex})" class="px-3 py-2 rounded-xl border border-rose-300 text-rose-700 text-sm font-semibold">Eliminar</button>` : ''}<button type="button" onclick="document.getElementById('job-intervention-modal').remove();JobsModule.openDetail('${esc(job.id)}')" class="flex-1 px-3 py-2 rounded-xl border text-sm">Volver</button><button type="button" onclick="document.getElementById('job-intervention-modal').remove();${entryIndex < 0 ? `JobsModule.openModal('${esc(job.id)}')` : `JobsModule.openCalendarEntryEditor('${esc(job.id)}',${entryIndex})`}" class="flex-1 px-3 py-2 rounded-xl bg-blue-700 text-white text-sm font-semibold">Editar intervención</button></div></div>`;
         document.body.appendChild(ov); ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+      },
+
+      deleteCalendarEntry(jobId, entryIndex) {
+        const job = State.jobs.find(j => j.id === jobId);
+        if (!job || !Array.isArray(job.calendarEntries) || entryIndex < 0 || entryIndex >= job.calendarEntries.length) return;
+        if (!confirm('¿Eliminar únicamente esta intervención del calendario? La tarea y sus demás intervenciones se conservarán.')) return;
+        job.calendarEntries.splice(entryIndex, 1);
+        Storage.save();
+        document.getElementById('job-intervention-modal')?.remove();
+        document.getElementById('job-session-editor')?.remove();
+        document.getElementById('job-detail-modal')?.remove();
+        UI.refreshAll();
+        this.openDetail(jobId);
+        Helpers.toast('Intervención eliminada. Las demás sesiones se han conservado.', 'success');
       },
 
       openCalendarEntryEditor(jobId, entryIndex) {
@@ -4028,12 +4058,15 @@
           </select>
           <input type="number" step="0.01" min="0" value="${amount}" oninput="JobsModule.updateExpensesSubtotal()" placeholder="Importe €" class="jexp-amount sm:col-span-2 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
           <input type="text" value="${concept.replace(/"/g, '&quot;')}" placeholder="Concepto / nota..." class="jexp-concept sm:col-span-3 px-2.5 py-1.6 text-xs bg-white border border-slate-300 rounded-lg">
-          <label class="sm:col-span-3 text-[10px] text-slate-600">Ticket <input type="file" accept="image/*" class="jexp-receipt block w-full text-[10px] border rounded-lg p-1"><img onclick="this.classList.toggle('max-h-16');this.classList.toggle('max-h-none')" class="jexp-preview ${receiptImage ? '' : 'hidden'} mt-1 max-h-16 rounded border object-contain cursor-zoom-in" src="${receiptImage || ''}" alt="Vista previa del recibo"></label>
+          <div class="sm:col-span-3 text-[10px] text-slate-600">Ticket <div class="flex gap-1 mt-1"><label class="cursor-pointer px-2 py-1 rounded bg-blue-700 text-white">Galería<input type="file" accept="image/*" class="jexp-receipt hidden"></label><label class="cursor-pointer px-2 py-1 rounded bg-slate-700 text-white">Cámara<input type="file" accept="image/*" capture="environment" class="jexp-receipt hidden"></label></div><img onclick="this.classList.toggle('max-h-16');this.classList.toggle('max-h-none')" class="jexp-preview ${receiptImage ? '' : 'hidden'} mt-1 max-h-16 rounded border object-contain cursor-zoom-in" src="${receiptImage || ''}" alt="Vista previa del recibo"></div>
           <button type="button" onclick="this.parentElement.remove(); JobsModule.updateExpensesSubtotal();" class="sm:col-span-1 py-1 text-slate-400 hover:text-rose-600 text-xs font-bold text-center">✕</button>
         `;
         container.appendChild(row);
-        const fileInput = row.querySelector('.jexp-receipt');
-        fileInput?.addEventListener('change', () => { const file = fileInput.files?.[0]; if (!file || !file.type.startsWith('image/')) return; const reader = new FileReader(); reader.onload = () => { const preview = row.querySelector('.jexp-preview'); preview.src = reader.result; preview.classList.remove('hidden'); }; reader.readAsDataURL(file); });
+        row.querySelectorAll('.jexp-receipt').forEach(fileInput => fileInput.addEventListener('change', () => {
+          const file = fileInput.files?.[0]; if (!file || !file.type.startsWith('image/')) return;
+          row.querySelectorAll('.jexp-receipt').forEach(other => { if (other !== fileInput) other.value=''; });
+          const reader = new FileReader(); reader.onload = () => { const preview = row.querySelector('.jexp-preview'); preview.src = reader.result; preview.classList.remove('hidden'); }; reader.readAsDataURL(file);
+        }));
         this.updateExpensesSubtotal();
       },
 
@@ -4330,10 +4363,11 @@
           if (amount > 0) {
             const previous = existing?.expenses?.find(x => x.id === r.dataset.expId) || State.expenses.find(x => x.id === r.dataset.expId) || {};
             let receiptImage = previous.receiptImage || null;
-            const file = r.querySelector('.jexp-receipt')?.files?.[0];
+            const file = Array.from(r.querySelectorAll('.jexp-receipt')).map(input => input.files?.[0]).find(Boolean);
             if (file) {
               if (!file.type.startsWith('image/')) { Helpers.toast('El recibo debe ser una imagen', 'warning'); return; }
-              receiptImage = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+              try { const compressed = await PhotoManager.compress(file); receiptImage = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(compressed); }); }
+              catch (error) { Helpers.toast(error.message || 'No se pudo comprimir el recibo', 'warning'); return; }
             }
             expenses.push({ id: r.dataset.expId || Helpers.uid('jexp'), type: Helpers.resolveExpenseType(r.querySelector('.jexp-type')?.value), amount, concept: (r.querySelector('.jexp-concept')?.value || '').trim(), receiptImage });
           }
@@ -4582,6 +4616,27 @@
       },
       async put(record) { const db = await this.db(); return new Promise((resolve,reject)=>{ const tx=db.transaction(this.STORE,'readwrite'); tx.objectStore(this.STORE).put(record); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); },
       async get(id) { const db=await this.db(); return new Promise((resolve,reject)=>{ const r=db.transaction(this.STORE).objectStore(this.STORE).get(id); r.onsuccess=()=>resolve(r.result||null); r.onerror=()=>reject(r.error); }); },
+      async exportAll() {
+        // Recover from Drive first when an image is cloud-only, so the backup is complete.
+        for (const entity of [...(State.installations||[]), ...(State.inventory||[])]) {
+          for (const meta of (entity.photos||[])) {
+            let local=await this.get(meta.id);
+            if (!local?.blob && meta.driveFileId) {
+              const recovered=await this.getBlob(meta);
+              if (!recovered) throw new Error(`No se pudo recuperar la fotografía ${meta.name||meta.id} desde Drive.`);
+              local=await this.get(meta.id);
+            }
+            if (!local?.blob) throw new Error(`Falta el archivo de la fotografía ${meta.name||meta.id}; no se puede garantizar una copia completa.`);
+          }
+        }
+        const db=await this.db();
+        const records=await new Promise((resolve,reject)=>{const r=db.transaction(this.STORE).objectStore(this.STORE).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error);});
+        const output=[]; for(const record of records){if(record?.blob)output.push({id:record.id,mimeType:record.mimeType||record.blob.type||'image/jpeg',data:await this.blobBase64(record.blob)});} return output;
+      },
+      async importAll(records) {
+        const db=await this.db(); await new Promise((resolve,reject)=>{const tx=db.transaction(this.STORE,'readwrite');tx.objectStore(this.STORE).clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+        for(const item of (Array.isArray(records)?records:[])){if(!item?.id||!item.data)continue;const bytes=Uint8Array.from(atob(item.data),c=>c.charCodeAt(0));await this.put({id:item.id,blob:new Blob([bytes],{type:item.mimeType||'image/jpeg'}),mimeType:item.mimeType||'image/jpeg'});}
+      },
       async remove(id) { const db=await this.db(); return new Promise((resolve,reject)=>{ const tx=db.transaction(this.STORE,'readwrite'); tx.objectStore(this.STORE).delete(id); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); },
       async compress(file) {
         if (!file.type.startsWith('image/')) throw new Error('El archivo no es una imagen');
@@ -4994,10 +5049,10 @@
             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Referencia / SKU</span><strong class="text-sm text-slate-800">${item.sku || '—'}</strong></div>
             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Categoría</span><strong class="text-sm text-slate-800">${item.category || 'General'}</strong></div>
             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2"><span class="text-[11px] text-slate-400 block">Ubicación</span><strong class="text-sm text-slate-800">${item.location || 'Sin ubicación indicada'}</strong></div>
-            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock actual</span><div class="flex items-center justify-between gap-2 mt-1"><strong class="text-sm text-slate-800">${item.stock}</strong><div class="flex gap-1"><button type="button" onclick="InventoryModule.adjustStock('${item.id}',-1);InventoryModule.openDetail('${item.id}')" class="w-7 h-7 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold" aria-label="Restar una unidad">−1</button><button type="button" onclick="InventoryModule.adjustStock('${item.id}',1);InventoryModule.openDetail('${item.id}')" class="w-7 h-7 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold" aria-label="Sumar una unidad">+1</button></div></div></div>
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock actual</span><div class="mt-1"><strong class="text-sm text-slate-800">${item.stock}</strong></div></div>
             <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Stock mínimo</span><strong class="text-sm text-slate-800">${item.minStock}</strong></div>
           </div>
-          <section class="rounded-xl border border-blue-200 bg-blue-50/50 p-3 space-y-2"><div class="text-xs font-bold text-slate-800">Ajuste rápido de existencias</div><div class="flex items-center gap-3"><button type="button" onclick="InventoryModule.adjustStock('${item.id}',-1);InventoryModule.refreshDetail('${item.id}')" class="w-11 h-10 rounded-lg border border-slate-300 bg-white font-bold text-lg">−1</button><div class="flex-1 text-center"><span class="block text-[10px] text-slate-500">Stock actual</span><strong class="text-lg text-slate-900">${item.stock}</strong></div><button type="button" onclick="InventoryModule.adjustStock('${item.id}',1);InventoryModule.refreshDetail('${item.id}')" class="w-11 h-10 rounded-lg border border-slate-300 bg-white font-bold text-lg">+1</button></div></section>
+          <section class="rounded-xl border border-blue-200 bg-blue-50/50 p-3 space-y-2"><div class="text-xs font-bold text-slate-800">Ajuste rápido de existencias</div><div class="flex items-center gap-2"><label for="inv-quick-qty" class="text-xs text-slate-600">Cantidad</label><input id="inv-quick-qty" type="number" min="1" step="1" value="1" inputmode="numeric" class="w-20 px-2 py-2 rounded-lg border border-slate-300 text-sm text-center"></div><div class="grid grid-cols-2 gap-2"><button type="button" onclick="InventoryModule.adjustStockByInput('${item.id}',-1)" class="px-3 py-2 rounded-lg border border-rose-200 bg-white text-rose-700 text-xs font-semibold">− Retirar</button><button type="button" onclick="InventoryModule.adjustStockByInput('${item.id}',1)" class="px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold">+ Añadir</button></div><p class="text-[10px] text-slate-500">Stock actual: <strong>${item.stock}</strong></p></section>
           <section class="space-y-2"><h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Fotografías del producto</h4><div id="inv-detail-photos" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div></section>
           <div class="flex justify-end"><button type="button" onclick="InventoryModule.closeDetail()" class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-300">Cerrar</button><button type="button" onclick="InventoryModule.closeDetail(); InventoryModule.openModal('${item.id}')" class="ml-2 px-4 py-2 text-xs font-semibold rounded-xl bg-blue-700 text-white">Editar producto</button></div>`;
         modal.classList.remove('hidden');
@@ -5013,6 +5068,23 @@
         Storage.save();
         UI.refreshAll();
       },
+      adjustStockByInput(id, direction) {
+        const item = State.inventory.find(i => i.id === id);
+        const input = document.getElementById('inv-quick-qty');
+        const qty = Number(input?.value);
+        if (!item || !Number.isInteger(qty) || qty < 1) {
+          Helpers.toast('Introduce una cantidad entera mayor que cero.', 'warning');
+          return;
+        }
+        if (direction < 0 && qty > Number(item.stock || 0)) {
+          Helpers.toast(`No puedes retirar ${qty}; solo hay ${item.stock} unidades.`, 'warning');
+          return;
+        }
+        this.adjustStock(id, direction * qty);
+        this.openDetail(id);
+      },
+
+
 
       openModal(itemId = null) {
         const sel = document.getElementById('inv-category');
@@ -5237,37 +5309,25 @@
 
       renderGlobalFieldInputsInModal(instObj = null) {
         const currentInputs = {};
-        document.querySelectorAll('#inst-global-fields-inputs [data-gfield]').forEach(inp => {
-          currentInputs[inp.dataset.gfield] = inp.value;
-        });
-
+        document.querySelectorAll('#inst-global-fields-inputs [data-gfield]').forEach(inp => { currentInputs[inp.dataset.gfield] = inp.type === 'checkbox' ? String(inp.checked) : inp.value; });
         const container = document.getElementById('inst-global-fields-inputs');
-        if (State.globalInstallationFields.length === 0) {
-          container.innerHTML = `<p class="col-span-full text-xs text-slate-400 italic">No hay campos globales todavía. Escribe arriba uno para añadirlo a todas las fichas.</p>`;
-          return;
-        }
-
-        container.innerHTML = State.globalInstallationFields.map((fieldName, idx) => {
-          const val = (fieldName in currentInputs)
-            ? currentInputs[fieldName]
-            : ((instObj && instObj.values && instObj.values[fieldName]) || '');
-          const safeVal = String(val).replace(/"/g, '&quot;');
-          const safeField = fieldName.replace(/'/g, "\\'");
-
-          return `
-            <div class="min-w-0 bg-white/80 p-2 rounded-xl border border-slate-200/80">
-              <div class="flex items-center justify-between gap-1 mb-1">
-                <label class="text-xs font-semibold text-slate-700 truncate">${idx + 1}. ${fieldName}</label>
-                <div class="flex items-center gap-0.5 shrink-0">
-                  <button type="button" onclick="InstallationsModule.renameGlobalField('${safeField}')" title="Renombrar categoría" class="px-1.6 py-0.5 text-[11px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-100">✎</button>
-                  <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', -1)" ${idx === 0 ? 'disabled' : ''} title="Subir campo" class="px-1.6 py-0.5 text-[11px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↑</button>
-                  <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', 1)" ${idx === State.globalInstallationFields.length - 1 ? 'disabled' : ''} title="Bajar campo" class="px-1.6 py-0.5 text-[11px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↓</button>
-                </div>
-              </div>
-              <input type="text" data-gfield="${fieldName.replace(/"/g, '&quot;')}" value="${safeVal}" placeholder="${fieldName}..." class="w-full px-3 py-1.6 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600">
-            </div>
-          `;
-        }).join('');
+        if (!State.globalInstallationFields.length) { container.innerHTML = `<p class="col-span-full text-xs text-slate-400 italic">No hay campos personalizados. Usa «Gestionar todos» para crear campos comunes a todas las fichas.</p>`; return; }
+        const order = State.installationSectionOrder || ['administrativa','tecnica','otros'];
+        const groups = order.map(section => ({ section, label:State.installationSectionLabels?.[section]||section, fields:State.globalInstallationFields.filter(name => (State.globalInstallationFieldConfig[name]?.section||'otros')===section) })).filter(g=>g.fields.length);
+        const unassigned = State.globalInstallationFields.filter(name => !order.includes(State.globalInstallationFieldConfig[name]?.section || 'otros'));
+        if (unassigned.length) { const other=groups.find(g=>g.section==='otros'); if(other) other.fields.push(...unassigned); else groups.push({section:'otros',label:'Otros datos',fields:unassigned}); }
+        container.innerHTML = groups.map(group => `<section class="col-span-full rounded-xl border border-slate-200 p-3 space-y-2"><h4 class="text-[11px] font-bold uppercase tracking-wide text-slate-500">${group.label}</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${group.fields.map(fieldName => {
+          const cfg=State.globalInstallationFieldConfig[fieldName]||{type:'text',section:'otros',options:[],unit:''};
+          const val=String((fieldName in currentInputs)?currentInputs[fieldName]:((instObj?.values&&instObj.values[fieldName])??''));
+          const safeVal=val.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+          let input='';
+          if(cfg.type==='boolean') { const legacy=val && !['true','false','Sí','Si','No'].includes(val); input=`<select data-gfield="${fieldName.replace(/"/g,'&quot;')}" class="w-full px-3 py-1.6 text-xs border rounded-lg"><option value="">Sin indicar</option><option value="true" ${['true','Sí','Si'].includes(val)?'selected':''}>Sí</option><option value="false" ${['false','No'].includes(val)?'selected':''}>No</option>${legacy?`<option value="${safeVal}" selected>${safeVal} (valor anterior)</option>`:''}</select>`; }
+          else if(cfg.type==='select') { const opts=Array.isArray(cfg.options)?cfg.options:[]; input=`<select data-gfield="${fieldName.replace(/"/g,'&quot;')}" class="w-full px-3 py-1.6 text-xs border rounded-lg"><option value="">Seleccionar…</option>${val&&!opts.includes(val)?`<option value="${safeVal}" selected>${safeVal} (valor anterior)</option>`:''}${opts.map(o=>`<option value="${String(o).replace(/"/g,'&quot;')}" ${val===o?'selected':''}>${o}</option>`).join('')}</select>`; }
+          else if(cfg.type==='photo') input=`${val.startsWith('data:image/')?`<img src="${val}" alt="${fieldName}" class="w-20 h-20 object-cover rounded-lg border mb-2">`:''}<input type="file" accept="image/*" data-gfield-photo="${fieldName.replace(/"/g,'&quot;')}" class="w-full text-[11px] border rounded-lg p-2 bg-white"><p class="text-[10px] text-slate-400">Se comprime al guardar (máx. 1,8 MB).</p>`;
+          else if(cfg.type==='measure') { const valid=!val||Number.isFinite(Number(val)); input=`<div class="flex items-center gap-2"><input type="${valid?'number':'text'}" step="any" data-gfield="${fieldName.replace(/"/g,'&quot;')}" value="${safeVal}" class="min-w-0 flex-1 px-3 py-1.6 text-xs border rounded-lg">${cfg.unit?`<span class="text-xs text-slate-500">${cfg.unit}</span>`:''}</div>`; }
+          else { let type=['text','tel','email','number','date'].includes(cfg.type)?cfg.type:'text'; if(type==='number'&&val&&!Number.isFinite(Number(val)))type='text'; if(type==='date'&&val&&!/^\d{4}-\d{2}-\d{2}$/.test(val))type='text'; input=`<input type="${type}" data-gfield="${fieldName.replace(/"/g,'&quot;')}" value="${safeVal}" placeholder="${fieldName.replace(/"/g,'&quot;')}..." class="w-full px-3 py-1.6 text-xs border rounded-lg">`; }
+          return `<div class="min-w-0 bg-white/80 p-2 rounded-xl border border-slate-200/80"><label class="block text-xs font-semibold text-slate-700 mb-1">${fieldName}</label>${input}</div>`;
+        }).join('')}</div></section>`).join('');
       },
 
       openModal(instId = null) {
@@ -5343,6 +5403,7 @@
         }
 
         State.globalInstallationFields.push(name);
+        State.globalInstallationFieldConfig[name] = { type: document.getElementById('global-field-type-input')?.value || 'text', section: document.getElementById('global-field-section-input')?.value || 'otros', options: [], unit: '' };
         Storage.syncAllInstallationsWithSchema();
         Storage.save();
         input.value = '';
@@ -5360,11 +5421,15 @@
         const latitude = document.getElementById('inst-lat').value === '' ? null : Number(document.getElementById('inst-lat').value);
         const longitude = document.getElementById('inst-lon').value === '' ? null : Number(document.getElementById('inst-lon').value);
 
-        const values = {};
-        State.globalInstallationFields.forEach(f => { values[f] = ''; });
-        document.querySelectorAll('#inst-global-fields-inputs [data-gfield]').forEach(inp => {
-          values[inp.dataset.gfield] = inp.value.trim();
-        });
+        const previousValues = id ? (State.installations.find(i => i.id === id)?.values || {}) : {};
+        const values = { ...previousValues };
+        State.globalInstallationFields.forEach(f => { if (!(f in values)) values[f] = ''; });
+        document.querySelectorAll('#inst-global-fields-inputs [data-gfield]').forEach(inp => { values[inp.dataset.gfield] = inp.type === 'checkbox' ? !!inp.checked : inp.value.trim(); });
+        for (const fileInput of document.querySelectorAll('#inst-global-fields-inputs [data-gfield-photo]')) {
+          const file=fileInput.files?.[0]; if(!file) continue;
+          try { const blob=await PhotoManager.compress(file); values[fileInput.dataset.gfieldPhoto]=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(r.error);r.readAsDataURL(blob);}); }
+          catch(error){Helpers.toast(`No se pudo guardar la fotografía: ${error.message}`,'warning');return;}
+        }
 
         if (id) {
           const idx = State.installations.findIndex(i => i.id === id);
@@ -5428,6 +5493,18 @@
         document.getElementById('global-fields-modal').classList.add('hidden');
       },
 
+      setGlobalFieldConfig(fieldName,key,value) {
+        const cfg=State.globalInstallationFieldConfig[fieldName]||{type:'text',section:'otros',options:[],unit:''}; cfg[key]=value;
+        if(key==='type'&&value==='select'&&!(cfg.options||[]).length){const a=prompt(`Opciones de «${fieldName}», separadas por comas:`,'');cfg.options=a?a.split(',').map(x=>x.trim()).filter(Boolean):[];}
+        if(key==='type'&&value==='measure'&&!cfg.unit)cfg.unit=prompt(`Unidad de medida de «${fieldName}» (mm, bar, kW…)`,'')||'';
+        State.globalInstallationFieldConfig[fieldName]=cfg;Storage.save();this.renderGlobalFieldsManagerList();
+        if(!document.getElementById('inst-modal').classList.contains('hidden'))this.renderGlobalFieldInputsInModal(State.installations.find(i=>i.id===document.getElementById('inst-id').value)||null);
+      },
+      editGlobalFieldOptions(fieldName){const cfg=State.globalInstallationFieldConfig[fieldName]||{};const a=prompt(`Opciones de «${fieldName}», separadas por comas:`,(cfg.options||[]).join(', '));if(a===null)return;cfg.options=a.split(',').map(x=>x.trim()).filter(Boolean);State.globalInstallationFieldConfig[fieldName]=cfg;Storage.save();this.renderGlobalFieldsManagerList();},
+      moveInstallationSection(section,delta){const a=[...State.installationSectionOrder],i=a.indexOf(section),j=i+delta;if(i<0||j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];State.installationSectionOrder=a;Storage.save();this.renderGlobalFieldsManagerList();},
+      renameInstallationSection(section){const old=State.installationSectionLabels[section]||section;const a=prompt('Nuevo nombre de la sección:',old);if(a===null||!a.trim())return;State.installationSectionLabels[section]=a.trim();Storage.save();this.renderGlobalFieldsManagerList();},
+      async confirmSchemaMigration(){if(!State.installationSchemaMigrationPending)return;const summary=State.globalInstallationFields.map(n=>`${n} → ${State.installationSectionLabels[State.globalInstallationFieldConfig[n]?.section||'otros']} (${State.globalInstallationFieldConfig[n]?.type||'text'})`).join('\n');if(!confirm('Se descargará primero una copia de seguridad completa, incluidas fotografías y documentos adjuntos. Los valores actuales se conservarán sin cambios.\n\nAsignación propuesta:\n'+summary+'\n\n¿Continuar?'))return;const backedUp=await Backup.exportJSON();if(!backedUp)return;State.installationSchemaMigrationPending=false;Storage.save();document.getElementById('installation-migration-banner')?.classList.add('hidden');Helpers.toast('Migración confirmada. Los valores antiguos se han conservado.','success');},
+
       saveNewGlobalField(e) {
         e.preventDefault();
         const input = document.getElementById('global-field-name-input');
@@ -5471,26 +5548,12 @@
       },
 
       renderGlobalFieldsManagerList() {
-        const list = document.getElementById('global-fields-manager-list');
-        if (State.globalInstallationFields.length === 0) {
-          list.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay campos globales creados.</p>`;
-          return;
-        }
-
-        list.innerHTML = State.globalInstallationFields.map((fieldName, idx) => {
-          const safeField = fieldName.replace(/'/g, "\\'");
-          return `
-            <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
-              <span class="text-xs font-semibold text-slate-800 truncate"><span class="text-blue-700 font-bold mr-1">${idx + 1}.</span>${fieldName}</span>
-              <div class="flex items-center gap-1 shrink-0">
-                <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', -1)" ${idx === 0 ? 'disabled' : ''} title="Subir" class="px-2 py-1 text-xs font-bold rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↑</button>
-                <button type="button" onclick="InstallationsModule.moveGlobalField('${safeField}', 1)" ${idx === State.globalInstallationFields.length - 1 ? 'disabled' : ''} title="Bajar" class="px-2 py-1 text-xs font-bold rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30">↓</button>
-                <button type="button" onclick="InstallationsModule.renameGlobalField('${safeField}')" title="Renombrar" class="text-xs font-semibold text-blue-700 hover:underline px-1.6">Editar</button>
-                <button type="button" onclick="InstallationsModule.deleteGlobalField('${safeField}')" class="text-xs font-semibold text-rose-600 hover:underline px-1.6">Quitar</button>
-              </div>
-            </div>
-          `;
-        }).join('');
+        const banner=document.getElementById('installation-migration-banner');if(banner)banner.classList.toggle('hidden',!State.installationSchemaMigrationPending);
+        const sections=document.getElementById('installation-sections-manager');
+        if(sections)sections.innerHTML=`<div class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Secciones · ordenar y renombrar</div>${State.installationSectionOrder.map((sec,i)=>`<div class="flex items-center justify-between gap-2 text-xs py-1"><span class="font-semibold">${State.installationSectionLabels[sec]||sec}</span><span class="flex gap-1"><button type="button" onclick="InstallationsModule.moveInstallationSection('${sec}',-1)" ${i===0?'disabled':''} class="px-2 py-1 border rounded disabled:opacity-30">↑</button><button type="button" onclick="InstallationsModule.moveInstallationSection('${sec}',1)" ${i===State.installationSectionOrder.length-1?'disabled':''} class="px-2 py-1 border rounded disabled:opacity-30">↓</button><button type="button" onclick="InstallationsModule.renameInstallationSection('${sec}')" class="px-2 py-1 border rounded text-blue-700">Renombrar</button></span></div>`).join('')}`;
+        const list=document.getElementById('global-fields-manager-list');
+        if(!State.globalInstallationFields.length){list.innerHTML='<p class="text-xs text-slate-400 text-center py-4">No hay campos personalizados creados.</p>';return;}
+        list.innerHTML=State.globalInstallationFields.map((name,i)=>{const safe=name.replace(/'/g,"\\'");const cfg=State.globalInstallationFieldConfig[name]||{type:'text',section:'otros',options:[],unit:''};const types=[['text','Texto'],['tel','Teléfono'],['email','Correo'],['number','Número'],['date','Fecha'],['select','Lista'],['boolean','Sí / No'],['measure','Medidas'],['photo','Fotografía']];return `<div class="rounded-xl bg-slate-50 border border-slate-200 p-2 space-y-2"><div class="flex items-center justify-between gap-2"><span class="text-xs font-semibold text-slate-800 truncate"><strong class="text-blue-700 mr-1">${i+1}.</strong>${name}</span><span class="flex gap-1 shrink-0"><button type="button" onclick="InstallationsModule.moveGlobalField('${safe}',-1)" ${i===0?'disabled':''} class="px-2 py-1 text-xs border rounded bg-white disabled:opacity-30">↑</button><button type="button" onclick="InstallationsModule.moveGlobalField('${safe}',1)" ${i===State.globalInstallationFields.length-1?'disabled':''} class="px-2 py-1 text-xs border rounded bg-white disabled:opacity-30">↓</button><button type="button" onclick="InstallationsModule.renameGlobalField('${safe}')" class="px-2 py-1 text-xs text-blue-700">Editar</button><button type="button" onclick="InstallationsModule.deleteGlobalField('${safe}')" class="px-2 py-1 text-xs text-rose-600">Quitar</button></span></div><div class="grid grid-cols-2 gap-2"><select aria-label="Tipo de campo" onchange="InstallationsModule.setGlobalFieldConfig('${safe}','type',this.value)" class="min-w-0 px-2 py-1.5 text-[11px] border rounded-lg bg-white">${types.map(([v,l])=>`<option value="${v}" ${cfg.type===v?'selected':''}>${l}</option>`).join('')}</select><select aria-label="Sección" onchange="InstallationsModule.setGlobalFieldConfig('${safe}','section',this.value)" class="min-w-0 px-2 py-1.5 text-[11px] border rounded-lg bg-white">${State.installationSectionOrder.map(sec=>`<option value="${sec}" ${(cfg.section||'otros')===sec?'selected':''}>${State.installationSectionLabels[sec]||sec}</option>`).join('')}</select></div>${cfg.type==='select'?`<button type="button" onclick="InstallationsModule.editGlobalFieldOptions('${safe}')" class="text-[11px] text-blue-700 underline">Editar opciones (${(cfg.options||[]).length})</button>`:''}${cfg.type==='measure'?`<button type="button" onclick="InstallationsModule.setGlobalFieldConfig('${safe}','unit',prompt('Unidad de medida:','${String(cfg.unit||'').replace(/'/g,"\\'")}')||'')" class="text-[11px] text-blue-700 underline">Unidad: ${cfg.unit||'sin definir'}</button>`:''}</div>`;}).join('');
       },
 
       renameGlobalField(oldName) {
@@ -5511,6 +5574,8 @@
         }
 
         State.globalInstallationFields[idx] = newName;
+        State.globalInstallationFieldConfig[newName] = State.globalInstallationFieldConfig[oldName] || {type:'text',section:'otros',options:[],unit:''};
+        delete State.globalInstallationFieldConfig[oldName];
 
         // Conserva los valores ya guardados en todas las fichas bajo el nuevo nombre
         State.installations.forEach(inst => {
@@ -5538,6 +5603,7 @@
         const idx = State.globalInstallationFields.indexOf(fieldName);
         if (idx === -1) return;
         const valuesByInstId = {};
+        const fieldConfig = State.globalInstallationFieldConfig[fieldName] ? JSON.parse(JSON.stringify(State.globalInstallationFieldConfig[fieldName])) : null;
         State.installations.forEach(inst => {
           valuesByInstId[inst.id] = inst.values ? inst.values[fieldName] : '';
           if (inst.values && fieldName in inst.values) {
@@ -5545,6 +5611,7 @@
           }
         });
         State.globalInstallationFields = State.globalInstallationFields.filter(f => f !== fieldName);
+        delete State.globalInstallationFieldConfig[fieldName];
         Storage.save();
         this.renderGlobalFieldsManagerList();
         if (!document.getElementById('inst-modal').classList.contains('hidden')) {
@@ -5556,6 +5623,7 @@
           fieldName,
           index: idx,
           valuesByInstId,
+          fieldConfig,
           message: `Campo global "${fieldName}" eliminado`
         });
       },
@@ -5570,14 +5638,10 @@
           .filter(j => j.instId === inst.id)
           .sort((a, b) => b.date.localeCompare(a.date));
 
-        const customRows = State.globalInstallationFields.map(fieldName => {
-          const val = (inst.values && inst.values[fieldName]) || '—';
-          return `
-            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-              <span class="text-[11px] text-slate-400 block">${fieldName}</span>
-              <span class="text-xs font-semibold text-slate-800">${val}</span>
-            </div>
-          `;
+        const customRows = (State.installationSectionOrder || ['administrativa','tecnica','otros']).map(section => {
+          const fields=State.globalInstallationFields.filter(name=>(State.globalInstallationFieldConfig[name]?.section||'otros')===section);
+          if(!fields.length)return '';
+          return `<section class="mt-3"><h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">${State.installationSectionLabels[section]||section}</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${fields.map(name=>{const cfg=State.globalInstallationFieldConfig[name]||{};const val=inst.values?.[name]??'';const shown=cfg.type==='boolean'?(val===true||val==='true'?'Sí':val===false||val==='false'?'No':'—'):cfg.type==='photo'&&String(val).startsWith('data:image/')?`<img src="${val}" alt="${name}" class="max-w-full max-h-36 object-contain rounded-lg">`:(val===''||val==null?'—':String(val)+(cfg.type==='measure'&&cfg.unit?' '+cfg.unit:''));return `<div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">${name}</span><span class="text-xs font-semibold text-slate-800">${shown}</span></div>`;}).join('')}</div></section>`;
         }).join('');
 
         const linkedNotes = (State.notes || []).filter(n => n.linkRef === `installation:${inst.id}`)
@@ -5611,8 +5675,11 @@
               `;
             }).join('');
 
+        const coordinatesHTML = Number.isFinite(Number(inst.latitude)) && Number.isFinite(Number(inst.longitude)) && inst.latitude !== null && inst.longitude !== null
+          ? `<div class="text-xs font-semibold text-slate-800">${inst.latitude}, ${inst.longitude}</div><a class="text-xs text-blue-700 underline" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${encodeURIComponent(inst.latitude+','+inst.longitude)}">Abrir ubicación en el mapa</a>`
+          : `<p class="text-xs text-slate-400">No hay coordenadas GPS guardadas.</p>`;
         document.getElementById('detail-inst-body').innerHTML = `
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <section class="space-y-2"><h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Datos administrativos y generales</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
               <span class="text-[11px] text-slate-400 block">Unidad</span>
               <span class="text-xs font-semibold text-slate-800">${inst.unit}</span>
@@ -5621,11 +5688,13 @@
               <span class="text-[11px] text-slate-400 block">Dirección</span>
               <span class="text-xs font-semibold text-slate-800">${inst.address}</span>
             </div>
-            ${customRows}
-          </div>
+            ${inst.barcode ? `<div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100"><span class="text-[11px] text-slate-400 block">Código de barras</span><span class="text-xs font-semibold text-slate-800">${inst.barcode}</span></div>` : ''}
+          </div></section>
+          ${customRows}
+          <section class="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3"><h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Ubicación y coordenadas GPS</h4>${coordinatesHTML}</section>
 
           <section class="space-y-2">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Fotografías de la instalación</h4>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Fotografías y documentación de la instalación</h4>
             <div id="detail-inst-photos" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2"></div>
           </section>
 
@@ -5917,10 +5986,10 @@
         this.resumeHandlersInstalled = true;
         const resume = () => {
           if (document.visibilityState === 'hidden') return;
-          // Recupera avisos vencidos mientras Android suspendía la pestaña/PWA.
           this.checkDueReminders();
           if (typeof NotesTasksModule !== 'undefined') NotesTasksModule.checkDueReminders();
           this.updatePermissionUI();
+          if (typeof ManteniProPush !== 'undefined') ManteniProPush.resumeRegistration();
           const now = Date.now();
           if (now - this.lastSWUpdateCheck > 5 * 60 * 1000) {
             this.lastSWUpdateCheck = now;
@@ -5936,8 +6005,7 @@
       async registerServiceWorker(checkForUpdate = false) {
         if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return null;
         try {
-          const swUrl = new URL('./sw.js', location.href);
-          this.swRegistration = await navigator.serviceWorker.register(swUrl, { scope: './', updateViaCache: 'none' });
+          this.swRegistration = await navigator.serviceWorker.register(new URL('./sw.js', location.href), { scope: './', updateViaCache: 'none' });
           const readyRegistration = await navigator.serviceWorker.ready;
           this.swRegistration = readyRegistration || this.swRegistration;
           if (checkForUpdate && this.swRegistration && typeof this.swRegistration.update === 'function') {
@@ -5957,13 +6025,10 @@
         if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
         try {
           const reg = this.swRegistration || await this.registerServiceWorker();
-          if (reg && typeof reg.showNotification === 'function') {
-            await reg.showNotification(title, { body: options.body || '', icon: options.icon || undefined, badge: options.badge || undefined, tag: options.tag || 'mantenipro', renotify: true, timestamp: Date.now(), data: options.data || { url: './' }, vibrate: [180, 80, 180] });
-          } else if (!('serviceWorker' in navigator)) {
-            new Notification(title, options);
+          if (reg && reg.showNotification) {
+            await reg.showNotification(title, { body: options.body || '', icon: options.icon || undefined, badge: options.badge || undefined, tag: options.tag || 'mantenipro', data: options.data || {}, vibrate: [180, 80, 180] });
           } else {
-            console.warn('ManteniPro: no hay un registro activo del Service Worker para mostrar la notificación.');
-            return false;
+            new Notification(title, options);
           }
           return true;
         } catch (e) {
@@ -5978,14 +6043,20 @@
           return;
         }
         try {
-          const perm = await Notification.requestPermission();
+          const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
           this.updatePermissionUI();
           DashboardModule.renderUpcomingReminders();
           if (perm === 'granted') {
             await this.registerServiceWorker();
-            await this.showSystemNotification('ManteniPro · Avisos activados', { body: 'Las notificaciones del sistema están autorizadas en este dispositivo.', tag: 'mantenipro-permission-test' });
-            this.playAlertSound();
-            Helpers.toast('Permiso concedido. Comprueba que Android no tenga bloqueadas las notificaciones.', 'success');
+            await this.showSystemNotification('ManteniPro · Avisos activados', { body: 'El permiso de notificaciones está concedido en este dispositivo.', tag: 'mantenipro-permission-test' });
+            try {
+              await ManteniProPush.registerDevice();
+              await ManteniProPush.sendTest();
+              this.playAlertSound();
+              Helpers.toast('Notificaciones Push conectadas. Hemos enviado una prueba al dispositivo.', 'success');
+            } catch (pushError) {
+              Helpers.toast('Permiso concedido; los avisos locales siguen disponibles, pero falta completar Push: ' + (pushError.message || 'error del servicio'), 'warning');
+            }
           } else {
             Helpers.toast('Permiso no concedido. Seguirás viendo avisos dentro de ManteniPro.', 'warning');
           }
@@ -6948,28 +7019,20 @@
         Helpers.toast('Horas y desplazamientos exportados a Excel', 'success');
       },
 
-      exportJSON() {
-        const blob = new Blob([JSON.stringify({
-          categories: State.categories,
-          inventory: State.inventory,
-          globalInstallationFields: State.globalInstallationFields,
-          installations: State.installations,
-          jobs: State.jobs,
-          expenses: State.expenses,
-          notifications: State.notifications,
-          orderQuantities: State.orderQuantities,
-          soundEnabled: State.soundEnabled,
-          analytics: State.analytics
-        }, null, 2)], { type: 'application/json' });
-        this.download(blob, `mantenipro_backup_${Helpers.relDate(0)}.json`);
-        Helpers.toast('Copia de seguridad descargada', 'success');
+      async exportJSON() {
+        try {
+          const snapshot=Storage.snapshot(); snapshot.photoBlobs=await PhotoManager.exportAll();
+          const blob=new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'});
+          this.download(blob,`mantenipro_backup_${Helpers.relDate(0)}.json`);
+          Helpers.toast('Copia de seguridad completa descargada, incluidas las fotografías','success'); return true;
+        } catch(error) { console.error('Error creando copia completa:',error); Helpers.toast('No se pudo completar la copia: '+(error.message||'error'),'warning'); return false; }
       },
 
       importJSON(event) {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
           try {
             const data = JSON.parse(e.target.result);
             if (!Array.isArray(data.jobs) || !Array.isArray(data.inventory)) {
@@ -6978,6 +7041,7 @@
             }
             State.categories = Array.isArray(data.categories) ? data.categories : [];
             State.inventory = (data.inventory || []).map(item => ({
+              ...item,
               id: item.id || Helpers.uid('inv'),
               sku: item.sku || '',
               name: item.name || '',
@@ -6987,12 +7051,19 @@
               photos: Array.isArray(item.photos) ? item.photos : []
             }));
             State.globalInstallationFields = Array.isArray(data.globalInstallationFields) ? data.globalInstallationFields : [];
+            State.globalInstallationFieldConfig = data.globalInstallationFieldConfig && typeof data.globalInstallationFieldConfig === 'object' ? data.globalInstallationFieldConfig : {};
+            State.installationSectionOrder = Array.isArray(data.installationSectionOrder) && data.installationSectionOrder.length ? data.installationSectionOrder : ['administrativa','tecnica','otros'];
+            State.installationSectionLabels = { administrativa:'Datos administrativos', tecnica:'Características técnicas', otros:'Otros datos', ...(data.installationSectionLabels || {}) };
+            State.installationSchemaMigrationPending = false;
             State.installations = Array.isArray(data.installations) ? data.installations : [];
             State.jobs = (data.jobs || []).map(j => ({
               ...j,
               notifiedKeys: Array.isArray(j.notifiedKeys) ? j.notifiedKeys : [],
               expenses: Array.isArray(j.expenses) ? j.expenses : []
             }));
+            State.notes = Array.isArray(data.notes) ? data.notes : [];
+            State.independentTasks = Array.isArray(data.independentTasks) ? data.independentTasks : [];
+            State.notesCurrentTechnician = String(data.notesCurrentTechnician || '');
             State.expenses = Array.isArray(data.expenses) ? data.expenses : [];
             State.notifications = Array.isArray(data.notifications) ? data.notifications : [];
             State.orderQuantities = data.orderQuantities || {};
@@ -7006,6 +7077,8 @@
               State.analytics.workdayHistory = Array.isArray(data.analytics.workdayHistory) ? data.analytics.workdayHistory : [];
             }
             AnalyticsModule.ensureWorkdayHistory();
+            Storage.syncAllInstallationsWithSchema();
+            if (Array.isArray(data.photoBlobs)) await PhotoManager.importAll(data.photoBlobs);
             Storage.save();
             this.closeModal();
             UI.refreshAll();
@@ -7681,7 +7754,200 @@
       }, {passive:true});
     })();
 
-  </script>
+  
+    /* ManteniPro Push — registro anónimo por instalación y sincronización remota de avisos. */
+    const ManteniProPush = (() => {
+      const API = 'https://mantenipro-push.janarea.workers.dev';
+      const VAPID_KEY = 'BON4KeF4CTqoELbDZNxob-7fw_DclSwRCQmxowy6mJj3yRzG4GaOri2gw-A4nSbIIGLYHv4LBFqJMYBrT7tx-UM';
+      const FIREBASE_CONFIG = {
+        apiKey: 'AIzaSyAHTrIGeLC5Pl9vwIY3ok7WdAM5081VOcU',
+        authDomain: 'mantenipro-1da42.firebaseapp.com',
+        projectId: 'mantenipro-1da42',
+        storageBucket: 'mantenipro-1da42.firebasestorage.app',
+        messagingSenderId: '948648801124',
+        appId: '1:948648801124:web:4c7d9360fc71d630784071'
+      };
+      const ID_KEY = 'mantenipro_push_installation_id_v1';
+      const TOKEN_KEY = 'mantenipro_push_installation_token_v1';
+      const READY_KEY = 'mantenipro_push_device_registered_v1';
+      let sdkPromise = null;
+      let syncTimer = null;
+      let messageHandlerInstalled = false;
+      let lastRegistrationRefresh = 0;
+
+      function identity() {
+        return { id: localStorage.getItem(ID_KEY) || '', token: localStorage.getItem(TOKEN_KEY) || '' };
+      }
+      async function ensureIdentity() {
+        const current = identity();
+        if (current.id && current.token) return current;
+        const response = await fetch(API + '/api/installations', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid' })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.installationId || !result.installationToken) {
+          throw new Error(result.error || 'No se pudo registrar esta instalación.');
+        }
+        localStorage.setItem(ID_KEY, result.installationId);
+        localStorage.setItem(TOKEN_KEY, result.installationToken);
+        return { id: result.installationId, token: result.installationToken };
+      }
+      async function post(path, payload) {
+        const current = await ensureIdentity();
+        const response = await fetch(API + path, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: 'Bearer ' + current.token },
+          body: JSON.stringify(payload || {})
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || `Error del servicio (${response.status}).`);
+        return result;
+      }
+      async function getMessaging() {
+        if (!sdkPromise) {
+          sdkPromise = (async () => {
+            const [appSdk, messagingSdk] = await Promise.all([
+              import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),
+              import('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js')
+            ]);
+            const app = appSdk.getApps().length ? appSdk.getApp() : appSdk.initializeApp(FIREBASE_CONFIG);
+            return { sdk: messagingSdk, messaging: messagingSdk.getMessaging(app) };
+          })();
+        }
+        return sdkPromise;
+      }
+      async function registerDevice() {
+        if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+          throw new Error('Este navegador no admite notificaciones Push.');
+        }
+        if (Notification.permission !== 'granted') throw new Error('Primero concede el permiso de notificaciones.');
+        const registration = await navigator.serviceWorker.register(new URL('./sw.js', location.href), { scope: './', updateViaCache: 'none' });
+        await navigator.serviceWorker.ready;
+        const { sdk, messaging } = await getMessaging();
+        if (sdk.isSupported && !(await sdk.isSupported())) throw new Error('Firebase Messaging no es compatible con este navegador.');
+        if (!messageHandlerInstalled) {
+          sdk.onMessage(messaging, async payload => {
+            const data = payload.data || {};
+            if (data.kind === 'test') {
+              await NotificationsModule.showSystemNotification(data.title || 'ManteniPro · Prueba Push', {
+                body: data.body || 'La conexión con el servicio de notificaciones funciona.',
+                tag: data.tag || 'mantenipro-test',
+                data: { url: './' }
+              });
+            }
+          });
+          messageHandlerInstalled = true;
+        }
+        const fcmToken = await sdk.getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+        if (!fcmToken) throw new Error('Firebase no ha generado el token de este dispositivo.');
+        await post('/api/push/register', { fcmToken });
+        localStorage.setItem(READY_KEY, '1');
+        await syncReminders();
+        return true;
+      }
+      function localDateTime(date, time) {
+        if (!date) return null;
+        const parts = String(date).split('-').map(Number);
+        const clock = String(time || '09:00').split(':').map(Number);
+        if (parts.length !== 3 || parts.some(n => !Number.isFinite(n))) return null;
+        return new Date(parts[0], parts[1] - 1, parts[2], clock[0] || 0, clock[1] || 0, 0, 0);
+      }
+      function jobReminder(job, id, date, time) {
+        const base = localDateTime(date, time);
+        if (!base) return null;
+        let trigger = base;
+        if (job.reminder === 'day_before') trigger = new Date(base.getFullYear(), base.getMonth(), base.getDate() - 1, 9, 0, 0);
+        else if (job.reminder && job.reminder !== 'none') trigger = new Date(base.getTime() - (parseInt(job.reminder, 10) || 0) * 60000);
+        else return null;
+        if (job.snoozeUntil) {
+          const snooze = new Date(job.snoozeUntil);
+          if (!Number.isNaN(snooze.getTime()) && snooze > new Date()) trigger = snooze;
+        }
+        return {
+          id, fireAt: Math.floor(trigger.getTime() / 1000),
+          title: 'Aviso ' + Helpers.resolveJobType(job),
+          body: (job.unitName || 'Tarea programada') + (job.notes ? ' · ' + job.notes : ''),
+          jobId: job.id, repeatRule: 'none'
+        };
+      }
+      function collectReminders() {
+        const now = Math.floor(Date.now() / 1000);
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid';
+        const reminders = [];
+        (State.jobs || []).forEach(job => {
+          if (Helpers.isJobCompleted(job) || job.status === 'Pausada') return;
+          const main = jobReminder(job, 'job:' + job.id + ':main', job.date, job.startTime);
+          if (main && main.fireAt >= now - 60) { main.timezone = timezone; reminders.push(main); }
+          (job.calendarEntries || []).forEach((entry, index) => {
+            if (['Pausada','Completada','Completado'].includes(String(entry.calendarStatus || ''))) return;
+            const stableId = entry.sessionId || String(index);
+            const item = jobReminder(job, 'job:' + job.id + ':entry:' + stableId, entry.date, entry.startTime);
+            if (item && item.fireAt >= now - 60) { item.timezone = timezone; reminders.push(item); }
+          });
+        });
+        (State.independentTasks || []).forEach(task => {
+          if (task.done) return;
+          const snooze = task.snoozedUntil ? new Date(task.snoozedUntil) : null;
+          const due = snooze && !Number.isNaN(snooze.getTime()) && snooze > new Date() ? snooze : localDateTime(task.dueDate, task.dueTime || '09:00');
+          if (!due || Number.isNaN(due.getTime()) || due.getTime() / 1000 < now - 60) return;
+          reminders.push({
+            id: 'task:' + task.id, fireAt: Math.floor(due.getTime() / 1000),
+            title: task.title || 'Recordatorio', body: task.body || '',
+            taskId: task.id, repeatRule: ['daily', 'weekly', 'monthly'].includes(task.repeat) ? task.repeat : 'none',
+            timezone
+          });
+        });
+        return reminders.slice(0, 500);
+      }
+      async function syncReminders() {
+        return post('/api/reminders/sync', { reminders: collectReminders() });
+      }
+      function scheduleSync() {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => {
+          if (Notification.permission === 'granted' && localStorage.getItem(READY_KEY) === '1') {
+            syncReminders().catch(error => console.warn('ManteniPro Push: sincronización pendiente', error));
+          }
+        }, 1500);
+      }
+      async function sendTest() { return post('/api/push/test', {}); }
+      async function resumeRegistration() {
+        if (Date.now() - lastRegistrationRefresh < 10 * 60 * 1000) return;
+        if (Notification.permission === 'granted' && localStorage.getItem(READY_KEY) === '1') {
+          lastRegistrationRefresh = Date.now();
+          try { await registerDevice(); } catch (error) { console.warn('ManteniPro Push: no se pudo renovar el registro', error); }
+        }
+      }
+      return { registerDevice, syncReminders, scheduleSync, sendTest, resumeRegistration };
+    })();
+    window.ManteniProPush = ManteniProPush;
+
+    const __mpStorageSaveBeforePush = Storage.save.bind(Storage);
+    Storage.save = function() {
+      const result = __mpStorageSaveBeforePush();
+      try { ManteniProPush.scheduleSync(); } catch (_) {}
+      return result;
+    };
+
+    (() => {
+      const params = new URL(location.href).searchParams;
+      const jobId = params.get('mpJobId');
+      const taskId = params.get('mpTaskId');
+      if (!jobId && !taskId) return;
+      window.addEventListener('load', () => setTimeout(() => {
+        if (jobId && State.jobs.some(item => item.id === jobId)) JobsModule.openDetail(jobId);
+        if (taskId && State.independentTasks.some(item => item.id === taskId)) {
+          UI.navigate('notes');
+          NotesTasksModule.openDetail(taskId, 'task');
+        }
+        params.delete('mpJobId'); params.delete('mpTaskId');
+        const clean = new URL(location.href); clean.search = params.toString();
+        history.replaceState({}, '', clean.toString());
+      }, 800), { once: true });
+    })();
+</script>
 
 
 </body>
