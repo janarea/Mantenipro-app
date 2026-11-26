@@ -5811,9 +5811,12 @@
       audioCtx: null,
       swRegistration: null,
       swMessageHandlerInstalled: false,
+      resumeHandlersInstalled: false,
+      lastSWUpdateCheck: 0,
 
       init() {
         this.registerServiceWorker();
+        this.installResumeHandlers();
         if ('serviceWorker' in navigator && !this.swMessageHandlerInstalled) {
           navigator.serviceWorker.addEventListener('message', (event) => {
             const message = event.data || {};
@@ -5909,17 +5912,43 @@
         }
       },
 
-      async registerServiceWorker() {
+      installResumeHandlers() {
+        if (this.resumeHandlersInstalled) return;
+        this.resumeHandlersInstalled = true;
+        const resume = () => {
+          if (document.visibilityState === 'hidden') return;
+          // Recupera avisos vencidos mientras Android suspendía la pestaña/PWA.
+          this.checkDueReminders();
+          if (typeof NotesTasksModule !== 'undefined') NotesTasksModule.checkDueReminders();
+          this.updatePermissionUI();
+          const now = Date.now();
+          if (now - this.lastSWUpdateCheck > 5 * 60 * 1000) {
+            this.lastSWUpdateCheck = now;
+            this.registerServiceWorker(true);
+          }
+        };
+        document.addEventListener('visibilitychange', resume);
+        window.addEventListener('pageshow', resume);
+        window.addEventListener('focus', resume);
+        window.addEventListener('online', resume);
+      },
+
+      async registerServiceWorker(checkForUpdate = false) {
         if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return null;
         try {
-          this.swRegistration = await navigator.serviceWorker.register(new URL('./sw.js', location.href), { scope: './' });
-          await navigator.serviceWorker.ready;
+          const swUrl = new URL('./sw.js', location.href);
+          this.swRegistration = await navigator.serviceWorker.register(swUrl, { scope: './', updateViaCache: 'none' });
+          const readyRegistration = await navigator.serviceWorker.ready;
+          this.swRegistration = readyRegistration || this.swRegistration;
+          if (checkForUpdate && this.swRegistration && typeof this.swRegistration.update === 'function') {
+            try { await this.swRegistration.update(); } catch (updateError) { console.warn('ManteniPro: no se pudo comprobar la actualización del Service Worker', updateError); }
+          }
           this.updatePermissionUI();
           return this.swRegistration;
         } catch (e) {
           console.warn('ManteniPro: no se pudo registrar el Service Worker', e);
           const status = document.getElementById('notif-perm-status');
-          if (status) status.textContent = 'Avisos en app activos · falta instalar el Service Worker';
+          if (status) status.textContent = 'Avisos dentro de la app activos · Service Worker no disponible';
           return null;
         }
       },
@@ -5928,10 +5957,13 @@
         if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
         try {
           const reg = this.swRegistration || await this.registerServiceWorker();
-          if (reg && reg.showNotification) {
-            await reg.showNotification(title, { body: options.body || '', icon: options.icon || undefined, badge: options.badge || undefined, tag: options.tag || 'mantenipro', data: options.data || {}, vibrate: [180, 80, 180] });
-          } else {
+          if (reg && typeof reg.showNotification === 'function') {
+            await reg.showNotification(title, { body: options.body || '', icon: options.icon || undefined, badge: options.badge || undefined, tag: options.tag || 'mantenipro', renotify: true, timestamp: Date.now(), data: options.data || { url: './' }, vibrate: [180, 80, 180] });
+          } else if (!('serviceWorker' in navigator)) {
             new Notification(title, options);
+          } else {
+            console.warn('ManteniPro: no hay un registro activo del Service Worker para mostrar la notificación.');
+            return false;
           }
           return true;
         } catch (e) {
