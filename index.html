@@ -13,7 +13,7 @@
   <link id="dynamic-manifest-link" rel="manifest">
   <link id="appAppleIcon" rel="apple-touch-icon" sizes="192x192">
   <link id="dynamic-apple-icon" rel="apple-touch-icon" sizes="192x192">
-  <title>ManteniPro 2.5 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
+  <title>ManteniPro 2.5.1 | Gestión Técnica, Calendario, Almacén, Instalaciones y Gastos</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1490,7 +1490,7 @@
   <div id="backup-modal" class="modal-backdrop hidden">
     <div class="modal-card modal-sm p-5 space-y-4 animate-fade">
       <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-200 shrink-0">
-        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p id="backup-version-label" style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 2.5</p></div>
+        <div class="min-w-0"><h3 class="font-bold text-slate-900 text-base truncate">Copias de Seguridad, Datos e Instalación</h3><p id="backup-version-label" style="font-size:11px;font-weight:700;color:#2563eb;margin-top:3px">Versión 2.5.1</p></div>
         <button type="button" onclick="Backup.closeModal()" class="text-slate-400 hover:text-slate-600 shrink-0">✕</button>
       </div>
 
@@ -7832,7 +7832,7 @@
     };
 
     const VersionModule = {
-      current: '2.5',
+      current: '2.5.1',
       async check() {
         const label=document.getElementById('backup-version-label'); if(label) label.textContent='Versión '+this.current;
         if (!/^https?:$/.test(location.protocol)) return;
