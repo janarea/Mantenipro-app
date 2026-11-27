@@ -85,3 +85,11 @@ CAMBIOS EN PREPARACIÓN (NO PUBLICAR TODAVÍA)
 - El código HTML incluye el renombrado de categorías de almacén conservando los productos asociados.
 - El script de Google Apps Script admite una carpeta común Fotografias/Gastos, sin subcarpetas por gasto.
 - Pendiente integrar y verificar la sincronización de recibos y la caducidad configurable antes de publicar.
+
+ACTUALIZACION 2.5.1 - FOTOGRAFIAS DE GASTOS
+- Añade conservación configurable de fotografías de gastos: sin caducidad (valor inicial), 3, 6, 12 o 24 meses.
+- Las fotografías se mantienen en el almacenamiento local actual del dispositivo y se sincronizan como archivos independientes en Fotografias/Gastos en Google Drive.
+- La caducidad desvincula primero la fotografía del gasto y de la tarea vinculada, guarda el registro económico y después elimina la copia de Drive. Si no hay conexión, la eliminación queda en cola.
+- El registro del gasto (importe, fecha, concepto y demás campos) se conserva.
+- El código ManteniPro_Code_Fotos.gs incluido admite entityType "expenses" y utiliza la carpeta común Fotografias/Gastos. Para activar la subida y el borrado remoto de estas fotos, sustituye Code.gs por el archivo incluido y publica una nueva versión de la implementación web manteniendo la misma URL /exec.
+- No se activa caducidad automáticamente: el valor predeterminado es "Sin caducidad". Al elegir un plazo, la aplicación solicita confirmación porque las fotos antiguas que ya superen ese plazo se eliminarán.
