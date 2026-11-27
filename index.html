@@ -335,9 +335,9 @@ body.mpro-dark{background:#0f172a!important;color:#e2e8f0!important}body.mpro-da
 
         <!-- Ajustes generales: restaurado el icono original de la primera versión 2.6 -->
         <button type="button" onclick="SettingsModule.open()" title="Ajustes" aria-label="Ajustes" class="w-10 h-10 inline-flex items-center justify-center p-0 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
-          <svg class="w-5 h-5 block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 1.7-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V20h-2.4v-.2a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.7-1.7.06-.06A1.7 1.7 0 0 0 8.46 15a1.7 1.7 0 0 0-1.56-1.03H6.7v-2.4h.2A1.7 1.7 0 0 0 8.46 10a1.7 1.7 0 0 0-.34-1.88l-.06-.06 1.7-1.7.06.06a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 12.73 5.2V5h2.4v.2a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.7 1.7-.06.06A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.56 1.03h.2v2.4h-.2A1.7 1.7 0 0 0 19.4 15Z"></path>
+          <svg class="w-5 h-5 block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M 12.000,2.600 L 13.834,2.781 L 16.210,1.837 L 18.111,2.854 L 18.647,5.353 L 19.816,6.778 L 22.163,7.790 L 22.789,9.854 L 21.400,12.000 L 21.219,13.834 L 22.163,16.210 L 21.146,18.111 L 18.647,18.647 L 17.222,19.816 L 16.210,22.163 L 14.146,22.789 L 12.000,21.400 L 10.166,21.219 L 7.790,22.163 L 5.889,21.146 L 5.353,18.647 L 4.184,17.222 L 1.837,16.210 L 1.211,14.146 L 2.600,12.000 L 2.781,10.166 L 1.837,7.790 L 2.854,5.889 L 5.353,5.353 L 6.778,4.184 L 7.790,1.837 L 9.854,1.211 Z"/>
+            <circle cx="12" cy="12" r="3.25"/>
           </svg>
         </button>
 
@@ -5438,7 +5438,8 @@ body.mpro-dark{background:#0f172a!important;color:#e2e8f0!important}body.mpro-da
       openModal(instId = null) {
         Storage.syncAllInstallationsWithSchema();
         document.getElementById('inst-form').reset();
-        document.getElementById('inst-inline-new-global-field').value = '';
+        const inlineGlobalField = document.getElementById('inst-inline-new-global-field');
+        if (inlineGlobalField) inlineGlobalField.value = '';
         // Vaciar los inputs de la ficha anterior: si no, sus valores tapaban los de esta ficha
         document.getElementById('inst-global-fields-inputs').innerHTML = '';
         const delBtn = document.getElementById('inst-delete-btn');
